@@ -19,3 +19,17 @@
 * For a given class of derivatives (both vanilla and exotics) compare the performance
 
 * Write a report
+
+
+Bibliography: 
+1. Heston (1993), "A Closed-Form Solution for Options with Stochastic Volatility with Applications to Bond and Currency Options”
+
+2. Gatheral (2006), "Volatility Surface", Ch. 2
+
+3. Andersen (2006), “Efficient Simulation of the Heston Stochastic Volatility Model”
+
+4. Broadie, Kaya (2006), “Exact Simulation of Stochastic Volatility and Other Affine Jump Diffusion Processes”
+
+5. Mrázek, Pospíšil (2017), “Calibration and simulation of Heston model”
+
+6. Rouah (2013), “The Heston Model and Its Extensions in Matlab and C#”, Ch. 3
