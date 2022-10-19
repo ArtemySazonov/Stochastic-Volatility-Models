@@ -1,0 +1,223 @@
+\subsection{Stochastic Volatility Model}
+
+    \begin{frame}
+        \onslide<1->
+            Assume that the spot asset at time $t$ follows the diffusion
+            \begin{equation}\label{Heston93:eq0}
+                dS(t) = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t)
+            \end{equation}
+        
+        \onslide<2->
+            If the volatility follows an Ornstein-Uhlenbeck process, 
+            \begin{equation}
+                d\sqrt{v(t)} = -\beta \sqrt{v(t)}dt +\delta dZ_2(t),
+            \end{equation}
+            then It\^{o}'s lemma shows that the variance $v(t)$ follows the process
+        
+        \onslide<3->
+            \begin{equation}
+                dv(t) = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t),
+            \end{equation}
+            where $Z_1$, $Z_2$ are the Wiener processes, and $\correlation\left(Z_1, Z_2\right) = \rho$
+    \end{frame}
+
+    \begin{frame}
+        \onslide<1->
+            For  simplicity  at  this  stage, we  assume  a  constant  interest  rate  $r$.  
+            Therefore,  the  price  at  time  $t$  of a  unit  discount  bond  that  matures  at  time $t+\tau$ is
+            \begin{equation}
+                P(t, t + \tau) = e^{-r\tau}.
+            \end{equation}
+            
+        \onslide<2->
+            These assumptions are still insufficient to price some instruments because we have not yet made an 
+            assumption that gives us the 'price of volatility risk'. Standart arbitrage arguments demonstrate that the value
+            of any asset $U(S, v ,t)$ must satisfy the following PDE:
+            \begin{multline}\label{Heston93:assetpde}
+                \frac{1}{2}vS^2\frac{\partial^2 U}{\partial S^2} + \rho\sigma v S \frac{\partial^2 U}{\partial S \partial v} + \frac{1}{2}\sigma^2 v \frac{\partial^2 U}{\partial v^2} + 
+                rS\frac{\partial U}{\partial S} +\\+ \left(\kappa(\theta - v(t)) - \lambda(S, v, t)\right)\frac{\partial U}{\partial v}
+                - rU + \frac{\partial U}{\partial t} = 0
+            \end{multline}
+    \end{frame}
+
+    \begin{frame}
+        \onslide<1->
+            \begin{multline}
+                \frac{1}{2}vS^2\frac{\partial^2 U}{\partial S^2} + \rho\sigma v S \frac{\partial^2 U}{\partial S \partial v} + \frac{1}{2}\sigma^2 v \frac{\partial^2 U}{\partial v^2} + 
+                rS\frac{\partial U}{\partial S} +\\+ \left(\kappa(\theta - v(t)) - \lambda(S, v, t)\right)\frac{\partial U}{\partial v}
+                - rU + \frac{\partial U}{\partial t} = 0 \nn
+            \end{multline}
+            The unspecified term $\lambda(S, v, t)$ represents the price of volatility risk and \textbf{must} be independent of the particular asset.        
+        
+        \onslide<2-> 
+            To motivate the choice of $\lambda(S, v, t)$, we note that in Breeden's consumption-based model,
+            \begin{equation}
+                \lambda(S, v, t)dt = \gamma \covariance \left(dv, \frac{dC}{C}\right),
+            \end{equation}
+            where $C(t)$ is the consumption rate, and $\gamma$ is the relative-risk aversion of an investor. 
+    \end{frame}
+
+    \begin{frame}
+        \onslide<1->
+            Consider the consumption process $C(t)$
+            \begin{equation}
+                dC(t) = \mu_c v(t) C(t) dt + \sigma_C \sqrt{v(t)} CdZ^3(t).
+            \end{equation}
+            where consumption growth has constant correlation with the spot-asset return.
+            This generates a risk premium proportional to the variance process. 
+    \end{frame}
+
+    \begin{frame}
+        A European  call  option  with  strike   $K$  and  maturity $T$
+        satisfies  the  PDE  \eqref{Heston93:assetpde}  subject  to  the  following  boundary  conditions:
+        \begin{align}
+            & U(S, v, t) = \max \left(0, S-K\right) \\
+            & U(0, v, t) = 0 \\
+            & \frac{\partial U}{\partial S}(\infty, v, t) = 1 \\
+            & rS \frac{\partial U}{\partial S}(S, 0, t) + \kappa \theta\frac{\partial U}{\partial v}(S, 0, t) - r U(S, 0, t) +\frac{\partial U}{\partial t}(S, 0, t) = 0 \\
+            & U(S, \infty, t) = S.
+        \end{align}
+    \end{frame}
+
+    \begin{frame}
+        \onslide<1->
+        By analogy with the BS formula, we guess a solution of the form
+        \begin{equation}
+            C(S, v, t) = S P_1 - KP(t, T)P_2,
+        \end{equation}
+        where the first term is the present value of the spot asset upon optimal exercise, and 
+        the second term is the PV of the strike-price payment. Both of these terms 
+        \textbf{must satisfy} the PDE \eqref{Heston93:assetpde}. 
+        \onslide<2->
+        We shall get the desired probabilities via substituting 
+        the price $C$ and probabilities' characteristic functions\footnote{in the Appendix Heston shows that those satisfy our PDE too with some other boundary conditions} in the \eqref{Heston93:assetpde} and using the inverse 
+        formula to calculate the explicit value, which is equal to
+        \begin{align}
+            & P_j(\log S, v, T; \log K) = \frac{1}{2} + \frac{1}{\pi}\int_{0}^{\infty}\Re\left(\frac{e^{-i\phi\log K} f_j(\log S, v, T; \phi)}{i\phi}\right) d\phi \\ 
+            & f_j(\log S, v, T; ) = e^{C(T-t, \phi) + D(T-t, \phi)v +i\phi\log S} \text{ for some known C, D}
+        \end{align}
+    \end{frame}
+
+\subsection{Bond Options, Currency Options, and Other Extensions}
+
+    \begin{frame}
+        \onslide<1->
+        One  can  incorporate  stochastic  interest  rates  into  the  option  pricing model,
+        following  Merton  (1973)  and  Ingersoll  (1990).  In  this  manner,
+        one  can  apply  the  model  to  options  on  bonds  or  on  foreign  
+        currency. This  section  outlines  these  generalizations  to  show  the  
+        broad  applicability  of  the  stochastic  volatility  model.  
+        
+        \onslide<2->These generalizations  are equivalent  to  the  model  of  the  previous  section,  
+        except  that  certain parameters  become  time-dependent  to  reflect  the  
+        changing  characteristics  of  bonds  as  they  approach  maturity. To  
+        incorporate  stochastic  interest  rates,  we  modify  equation  
+        \eqref{Heston93:eq0}  to allow  time  dependence  in  the  volatility  of  the  
+        spot  asset:
+        \begin{equation}\label{Heston93:stspot}
+            dS(t) = \mu_S S(t) dt + \sigma_S(t) \sqrt{(v(t))}S(t)  dZ_1(t)
+        \end{equation}
+    \end{frame}
+
+    \begin{frame}
+        Although  the  results  of  this  section  do  not  depend  on  the specific
+        form  of $\sigma_S$,  if  the  spot  asset  is  a  discount  bond  then  
+        $\sigma_S$  must vanish  at  maturity  in  order  for  the  bond  price  
+        to  reach  par  with  probability  $1$.  The  specification  of  the  drift
+        term  $\mu_S$ is  not important  because it  will  not  affect  option  prices. 
+        We  specify  analogous  dynamics  for the  bond  price:
+        \begin{equation}\label{Heston93:stbond}
+            dP(t; T) = \mu_P P(t; T) dt + \sigma_P(t) \sqrt{(v(t))} P(t; T)dZ_2(t)
+        \end{equation}
+    \end{frame}
+    
+    \begin{frame}
+        we assume that the variances of both the spot asset and the bond are determined 
+        by the same variable $v(t)$. In this model, the valuation equation is
+
+        \begin{multline}
+            \frac{1}{2}\sigma_S(t)^2vS^2\frac{\partial^2U}{\partial S^2} + \frac{1}{2}\sigma_P^2(t)vP^2\frac{\partial^2U}{\partial P^2} + \frac{1}{2}\sigma^2v\frac{\partial^2U}{\partial v^2} +\\+ \rho_{SP}\sigma_S(t)\sigma_P(t)vSP\frac{\partial^2 U}{\partial S \partial P} +
+            \rho_{Sv}\sigma_S(t)\sigma vS\frac{\partial^2 U}{\partial S\partial v} +\\+ \rho_{Pv}\sigma_P(t)\sigma vP\frac{\partial^2 U}{\partial P \partial v} + rS\frac{\partial U}{\partial S} + rP\frac{\partial U}{\partial P} + \\ +
+            \left(\kappa(\theta - v(t))-\lambda v\right)\frac{\partial U}{\partial v} - rU +\frac{\partial U}{\partial t} = 0
+        \end{multline}
+    \end{frame}
+
+    \begin{frame}
+        One  can  also  apply  the  model  when  the  spot  asset  $S(t)$  is  
+        the  dollar price  of  foreign  currency.  We  assume  that  the  foreign 
+        price  of  a  foreign discount  bond,  $F(t;  T)$,  follows  
+        dynamics  analogous  to  the  domestic bond  in  equation \eqref{Heston93:stbond}:
+        \begin{equation}\label{Heston93:stfx}
+            dF(t; T) = \mu_P F(t; T) dt + \sigma_P(t) \sqrt{(v(t))} F(t; T)dZ_2(t)
+        \end{equation}
+
+        For clarity, we denote the domestic interest rate by $r_D$, and the foreign one by $r_F$.
+    \end{frame}
+
+    \begin{frame}
+        Although  the  stochastic  interest  rate  models  of  this  section  are
+        tractable,  they  would  be  more  complicated  to  estimate  than  the  
+        simpler  model  of  the  previous  section.  For  short-maturity  options  
+        on equities,  any  increase  in  accuracy  would  likely  be  outweighed  by  the
+        estimation  error  introduced  by  implementing  a  more  complicated
+        model.  As  option  maturities  extend  beyond  one  year,  however,  the
+        interest  rate  effects  can  become  more  important  [Koch  (1992)].  The
+        more  complicated  models  illustrate  how  the  stochastic  volatility  model
+        can  be  adapted  to  a  variety  of  applications.
+    \end{frame}
+
+\subsection{Effects  of  the  Stochastic  Volatility  Model  Options  Prices}
+
+    \begin{frame}
+        \onslide<1->
+        In  this  section,  Heston  studies  the  effects  of  stochastic  volatility  
+        on  options prices  and  contrasts  results  with  the traditional Black-Scholes  model.  
+        Many  effects are  related  to  the  time-series  dynamics  of  volatility.  
+        For  example,  a higher  variance  $v(t)$  raises  the  prices  of  all  options,  
+        just  as  it  does  in the   Black-Scholes   model.   
+        \onslide<2->
+        In   the   risk-neutralized   pricing   probabilities,  the  variance  
+        follows  a  square-root  process
+        \begin{equation}
+            dv(t) = \kappa^* \left(\theta^* - v(t)\right)dt + \sigma \sqrt{v(t)}dZ_2(t),
+        \end{equation}
+        where $\kappa^* = \kappa + \lambda$, and $\theta^* = \frac{\kappa\theta}{\kappa+\theta}$.
+        The stochastic volatility model can conveniently explain properties of option prices in 
+        terms of the underlying distribution of spot returns. To illustrate effects on options 
+        prices, we shall use the parameters in Table 1.
+    \end{frame}
+
+    \begin{frame}
+        \begin{figure}
+            \includegraphics[width=\linewidth]{assets/part1/fig01.png}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Probability Density}
+        \begin{figure}
+            \includegraphics[height=180pt]{assets/part1/fig02.png}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Price Difference (\$)}
+        \begin{figure}
+            \includegraphics[height=180pt]{assets/part1/fig03.png}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}
+        The parameter $\sigma$ controls the volatility of volatility. When $\sigma$ is zero, the volatility is deterministic, and continuously compounded spot returns have a normal distribution. Otherwise, $\sigma$ increases the kurtosis of spot returns. Figure 3 shows how this creates two fat tails in the distribution of spot returns. 
+        As Figure 4 shows, this has the effect of raising far-in-the-money and far-out-of-the-money option prices and lowering near-the-money prices. Note, however, that there is little effect on skewness or on the overall pricing of in-the-money options relative to out-of-the-money options.
+    \end{frame}
+
+    \begin{frame}{Probability Density}
+        \begin{figure}
+            \includegraphics[height=180pt]{assets/part1/fig04.png}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Price Difference (\$)}
+        \begin{figure}
+            \includegraphics[height=180pt]{assets/part1/fig05.png}
+        \end{figure}
+    \end{frame}

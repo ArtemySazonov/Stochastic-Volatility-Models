@@ -1,0 +1,126 @@
+\subsection{Introduction}
+    \begin{frame}{Volatility modeling}
+        Log-prices $Y_t$ are often modeled as continuous semimartingales:
+            $$dY_t = \mu_tdt + \sigma dt,$$
+        Volatility is the most important ingedient of the model: \\
+        $$\text{(BS): }\sigma \text{ is either constant or a deterministic function of time};$$
+        $$\text{(Dupire): }\sigma \text{ is a deterministic function of time and underlying price};$$
+        $$\text{(SV): }\sigma \text{ is a continuous Brownian semimartingale};$$
+        $$\text{Advanced models: (SLV), (RSLV), (PSLV).}$$
+    \end{frame}
+
+    \begin{frame}{Fractional volatility}
+        To construct the model which accommodates the stylized fact (1) that $$\text{"Volatility is a long memory process",}$$ one can proposed to model log-volatility using (fBM) with Hurst parameter (H > 0.5).
+    \end{frame}
+
+    \begin{frame}{Fractional volatility}
+        The (fBM) $(W_t^H)_{t\in \mathbb{R}}$ with Hurst parameter $H \in (0, 1)$ is a centered self-similar Gaussian process with stationary increments satisfying for any $t \in \mathbb{R}, \Delta \geq 0, q > 0:$ $$\mathbb{E}[|W_{t + \delta}^H - W_t^H|^q] = K_q \Delta^{qH},$$ with $K_q$ the moment of order $q$ of the absolute value of a standard Gaussian variable. Finally, when $H > 0.5$, the increments of the (fBM) are positive correlated and exhibit long memory in the sense that $$\sum_{k = 0}^{+\infty} Cov[W_1^H, W_k^H - W_{k - 1}^H] = +\infty.$$
+    \end{frame}
+
+    \begin{frame}{The shape of implied volatility}
+                While (SV) models capture crucial stylized facts of the volatility dynamics, they cannot perfectly calibrate the (IV) surface, especially for short maturities.\\
+                The (LV) model allows someone reproduce exactly the shape of (IV) surface, but the dynamic is not sufficient.\\
+                The reason, why people use (SLV) model is that one cannot exactly reproduce the surface, but there is a good dynamic.\\
+    \end{frame}
+    
+    \begin{frame}{The shape of implied volatility surface}
+            \includegraphics[width=0.5\linewidth]{assets/APPLICATIONS/ATM.png}\\ \>\>\>\>\>where $\psi(\tau) := |$$\frac{\partial \sigma_{BS}(k, \tau)}{\partial k}$$|_{k = 0}$
+    \end{frame}
+
+    \begin{frame}{The shape of implied volatility surface}
+        Using Martingale Expansion Fukasawa shows that a (SV) model with (fBM) generates an ATM volatility skew of the form $\psi (\tau) \sim \tau^{H - 0.5}$ for small $\tau$.
+        
+        Therefore ongoing model is consistent with the shape of the volatility surface. 
+    \end{frame}
+
+    \begin{frame}{Volatility modeling}
+        It is empirically revealed that parameter of smoothness of the log-volatility for assets (would be present further) lies between $0.08$ and $0.2$.\\
+        \includegraphics[width=0.5\linewidth]{assets/APPLICATIONS/fBM.png}
+        \\The current model will be called (RFSV) in order to emphasize the value of $H$ $(H < 0.5)$.
+    \end{frame}
+
+\subsection{Smoothness of the vol. empirical results}
+    \begin{frame}{Estimating the smoothness}
+        One can define $$m(q, \Delta) = \frac{1}{N}\sum_{k = 1}^{N}|log(\sigma_{k\Delta}) - log(\sigma_{(k - 1)\Delta})|^q.$$
+        Main assumption of the article is that for some $s_q > 0$ and $b_q > 0$, as $\Delta$ tends to zero, $$N^{qs_q}m(q, \Delta) \to b_q.$$
+        The volatility process belongs to the Besov smoothness space $\mathbf{B}_{q, \infty}^{s_q}$ and does not belongs to the Besov space $\mathbf{B}_{q, \infty}^{s_{q'}}$, for $s_q > s_{q'}.$ Hence $s_q$ can actually be viewed as the regularity of the volatility. Main goal is to estimate $s_q$ for each $q$ by computing the $m(q, \Delta)$ for different values of $\Delta$.
+    \end{frame}
+
+    \begin{frame}{DAX \& Bund futures contracts}
+        \includegraphics[width=0.3\linewidth]{assets/APPLICATIONS/GRAPH_1.png}\\
+        Under stationarity assumtions, this implies that the log-volatility increments enjoy the following scaling property: $$\mathbb{E}[|log(\sigma_{\Delta}) - log(\sigma_0)|^q] = K_q\Delta^{\zeta_q},$$ where $\zeta_q > 0$ is the slope of the line assotiated to $q$. Moreover, the parameter $s_q$ does not depend on $q$.
+    \end{frame}
+
+    \begin{frame}{DAX \& Bund futures contracts}
+        \includegraphics[width=0.3\linewidth]{assets/APPLICATIONS/GRAPH_2.png}\\
+        Approximately value of H:\\
+        \>\>\>\>\>\>\>\>\>\>\>\>DAX  - 0.125,\\
+        \>\>\>\>\>\>\>\>\>\>\>\>Bund - 0.082,\\
+        \>\>\>\>\>\>\>\>\>\>\>\>S\&P - 0.142,\\
+        \>\>\>\>\>\>\>\>\>\>\>\>NASDAQ - 0.139.\\
+    \end{frame}
+
+    \begin{frame}{Distribution of the increments}
+        That the distribution of increments of log-volatility is close to Gaussian is a well-established stylized fact (3).\\
+        \includegraphics[width=0.5\linewidth]{assets/APPLICATIONS/GRAPH_3.png}\\
+    \end{frame}
+
+    \begin{frame}{Changing of the H}
+        \includegraphics[width=0.5\linewidth]{assets/APPLICATIONS/H.png}
+    \end{frame}
+    
+
+\input{part2/part3.tex}
+
+
+\subsection{The microstructural foundations of the irregularity}
+            \begin{frame}{The microstructural foundations of the irregularity}
+               The Hawkes process is extension of Poisson process where the intensity at a given time depends on the 
+               location of the past jumps. Assuming the point process $N_t$ follows a Hawkes process means its intensity at 
+               time $t$, $\lambda t$, takes the form:
+
+               \begin{equation*}
+                \lambda_t = \mu + \sum_{0 < J_t < t} \phi (t - J_i),
+               \end{equation*}
+
+               Two main phenomena almost systematically occur:
+               \begin{itemize}
+                   \item The $L^1$ norm of $\phi$ is close to one; (endogeneity of the market.) 
+                   \item The function $\phi$ has a power law tail. (given order influences other orders.)
+               \end{itemize}
+            \end{frame}
+\subsection{Pricing under (RHeston) model}
+            \begin{frame}{RVolatility model}
+                The rough volatility model:\\
+                asset price is in the form of\\
+                $$\frac{dS_t}{S_t} = \sqrt{V_t}(\rho dW_t^1 + \sqrt{1 - \rho^2}dW_t^2)$$
+                with
+                $$V_u = V_t + \frac{\lambda}{\Gamma(H + 0.5)}\int_{t}^{u}\frac{\theta^t(s) - V_s}{(u - s)^{0.5 - H}} ds + \frac{\lambda \nu}{\Gamma(H + 0.5)}\int_{t}^{u}\frac{\sqrt{V_s}}{(u - 0.5)^{0.5 - H}} dW_s^1.$$
+            \end{frame}
+            \begin{frame}{RVolatility model}
+                (RHeston) model:\\
+                \>\>\>1.	time-varying volatility and fat tails.\\
+                \>\>\>2.	It generates similar shapes and dynamics for the implied volatility surface.\\ 
+                \>\>\>3.	Efficient computation for the classical Heston model using the explicit formula for the characteristic function of the asset log-price.\\
+            \end{frame}
+            \begin{frame}{Riccati equation}
+                \>\>\>The only difference is that the classical Riccati equation is replaced with the fractional Riccati equation. In a precise form he characteristic function of the (RHeston) model is as following:\\
+                $$\phi_t(a, T) = \mathbb{E}[e^{iaX_t}] = exp(g_1(a, t) + V_0g_2(a, t)$$
+                and
+                $$g_1(a, t) = \theta \lambda \int_{0}^{t} h(a, s) ds, g_2(a, t) = I^{1 - \alpha} h(a, t),$$
+                where $\alpha = H + \frac{1}{2}$ and $h$ is the unique solution of the fRiccati equation:\\
+                $$D^{\alpha}h(a, t) = \frac{1}{2}(-a^2 - ia) + \lambda(ia\rho\nu - 1)h(a, t) + \frac{(\theta\nu)^2}{2}h^2(a, t), I^{1 - \alpha}h(a, 0) = 0.$$
+            \end{frame}
+
+            \begin{frame}{The value of option}
+                \>\>\>One can turn to the inversion of the characteristic function which leads to the option price, the key aspect of this work. The call option price can be denoted in the form of:\\
+                $$C^{RH}(S, K, T) = Se^{-qT} - \frac{1}{\pi}\sqrt{SK}e^{-(r + q)T/2}\int_{0}^{\infty}Re[e^{iuk}\phi_T(u - i/2)\frac{du}{u^2 + 0.25}],$$
+                where $S$ is the current stock price, $q$ is the dividend yield, $T$ is the time to maturity, $K$ is the strike price of the option, $r$ is the interest rate and $k = log(\frac{K}{S}).$ 
+            \end{frame}
+            \begin{frame}{The value of option}
+                There are some numerical methods:\\ 
+                \>\>\> Fractional Adams–Bashforth–Moulton method;\\
+                \>\>\> Multipoint Padé approximation method;\\
+                \>\>\> Semimartingale and continuous-time Markov chain approximation for rough stochastic local volatility models;\\
+                for solving the fractional Riccati equation. 
+            \end{frame}
