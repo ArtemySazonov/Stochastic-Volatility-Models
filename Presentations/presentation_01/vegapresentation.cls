@@ -198,7 +198,7 @@
             \hspace{\defindent}\usebeamerfont{title}\textbf{\inserttitle}\par
 
             \bigskip
-            \hspace{\defindent}\usebeamerfont{subtitle}\insertauthor\par
+            \hspace{\defindent}\usebeamerfont{author}\small{\insertauthor}\par
             \smallskip
             \hspace{\defindent}\usebeamerfont{institute}\insertinstitute\par
             \medskip
