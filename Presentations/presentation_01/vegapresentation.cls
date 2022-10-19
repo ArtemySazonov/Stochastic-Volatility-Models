@@ -194,10 +194,11 @@
         \vspace{3cm}
 
         {\color{white}
+            \hspace{\defindent}\small{\insertsubtitle}\par
             \hspace{\defindent}\usebeamerfont{title}\textbf{\inserttitle}\par
-            \hspace{\defindent}\usebeamerfont{subtitle}\insertsubtitle\par
+
             \bigskip
-            \hspace{\defindent}\usebeamerfont{author}\insertauthor\par
+            \hspace{\defindent}\usebeamerfont{subtitle}\insertauthor\par
             \smallskip
             \hspace{\defindent}\usebeamerfont{institute}\insertinstitute\par
             \medskip
