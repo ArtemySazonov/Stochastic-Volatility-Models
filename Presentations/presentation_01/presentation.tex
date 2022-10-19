@@ -1,37 +1,44 @@
-\input{preamble.tex}
+\documentclass{vegapresentation}
 
+\DeclareMathOperator*{\cor}{\operatorname{corr}}
+
+
+
+\title{Methods of Simulation of the Heston Model: A Review}
+\author{Artemy Sazonov, Danil Legenky, Kirill Korban}
+\institute{Lomonosov Moscow State Univesity, Faculty of Mechanics and Mathematics}
 \begin{document}
     \begin{frame}
         \maketitle
     \end{frame}
 
-    \section{Steven L. Heston -- 'A Closed-Form Solution for Options with Stochastic Volatility'}
-    \input{part1/part1.tex}
+    \section{A Brief Introduction to the Heston Model}
+        \begin{frame}{Heston Model Definition}
+            Assume that the spot asset at time $t$ follows the diffusion
+            \begin{align}
+                dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
+                dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+            \end{align}
+            where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$
+        \end{frame}
 
-    \section{Gatheral, Jaisson, Rosenbaum -- 'Volatility is rough'}
-    \input{part2/part2.tex}
+    \section{Euler Simulation Method}
+        \input{part1/part1.tex}
+
+    \section{Broadie-Kaya Simulation Method} 
+        \input{part2/part2.tex}
+
+    \section{Andersen Simulation Method}
+        \input{part3/part3.tex}
 
     \section{Conclusion}
         \begin{frame}{Conclusion}
+            We introduced the three most common simulation methods for dynamics of the Heston stochastic volatility model:
             \begin{enumerate}
-                \item We introduced method for option pricing under conventional (Heston) model, presenting incompatibility with empirical facts
-                \item We estimated exceptionally important element of supposed model (RHeston) - the Hurst parameter
-                \item We described advantages of (RHeston) and method that allows someone to compute option price.
+                \item Euler scheme \\
+                \item Broadie-Kaya scheme \\
+                \item Andersen scheme
             \end{enumerate}
-        \end{frame}
-
-        \begin{frame}{Bibliography}
-            $[$1$]$ Steven L. Heston, A Closed-Form Solution for Options with Stochastic Volatility with Applications to Bond and Currency Options, 1993;\\
-
-            $[$2$]$ Gatheral, Jaisson, Rosenbaum. Volatility is rough. 2014;\\
-
-            $[$3$]$ Elisa Alòs and Jorge A. León, An Intuitive Introduction to Fractional and Rough Volatilities;\\
-
-            $[$4$]$ Siow W. Jeng and Adem Kilicman, Fractional Riccati Equation and Its Applications to Rough Heston Model Using Numerical Methods.\\
-        \end{frame}
-
-        \begin{frame}
-            $$\textbf{Thank you for your attention}$$
         \end{frame}
 
 \end{document}

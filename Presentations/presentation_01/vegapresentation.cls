@@ -183,7 +183,7 @@
 % Title page etc
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\newcommand{\defindent}{0cm}
 \def\maketitle
 {
     \frame[plain,noframenumbering]{
@@ -194,15 +194,14 @@
         \vspace{3cm}
 
         {\color{white}
-            \hspace{0.5cm}\usebeamerfont{title}\textbf{\inserttitle}\par
-
-            \hspace{0.5cm}\usebeamerfont{subtitle}\insertsubtitle\par
+            \hspace{\defindent}\usebeamerfont{title}\textbf{\inserttitle}\par
+            \hspace{\defindent}\usebeamerfont{subtitle}\insertsubtitle\par
             \bigskip
-            \hspace{0.5cm}\usebeamerfont{author}\insertauthor\par
+            \hspace{\defindent}\usebeamerfont{author}\insertauthor\par
             \smallskip
-            \hspace{0.5cm}\usebeamerfont{institute}\insertinstitute\par
+            \hspace{\defindent}\usebeamerfont{institute}\insertinstitute\par
             \medskip
-            \hspace{0.5cm}\usebeamerfont{date}\insertdate\par
+            \hspace{\defindent}\usebeamerfont{date}\insertdate\par
         }
     }
 }
