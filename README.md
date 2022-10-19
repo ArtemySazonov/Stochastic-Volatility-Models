@@ -1,5 +1,6 @@
 # Student Research Group "Stochastic Volatility Models"
 ## Project 'Heston-2'
+**Tasks**
 1. Report: a review of Heston numerical simulations
 
 * Give a talk on Euler, Broadie-Kaya, and Andersen schemes 
@@ -21,7 +22,7 @@
 * Write a report
 
 
-Bibliography: 
+**Bibliography** 
 1. Heston (1993), "A Closed-Form Solution for Options with Stochastic Volatility with Applications to Bond and Currency Options”
 
 2. Gatheral (2006), "Volatility Surface", Ch. 2
