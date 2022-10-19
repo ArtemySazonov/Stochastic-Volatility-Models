@@ -136,9 +136,9 @@
 \let\TOC\tableofcontents
 \let\LOT\listoftables
 \let\LOF\listoffigures
-\renewcommand{\tableofcontents}{\newpage\addcontentsline{toc}{chapter}{\textIntroduction}\TOC}
-\renewcommand{\listoffigures}  {\newpage\addcontentsline{toc}{chapter}{\textListoffigures}\LOF}
-\renewcommand{\listoftables}   {\newpage\addcontentsline{toc}{chapter}{\textListoftables}\LOT}
+\renewcommand{\tableofcontents}{\newpage\TOC\addcontentsline{toc}{chapter}{\textTableofcontents}}
+\renewcommand{\listoffigures}  {\newpage\LOF\addcontentsline{toc}{chapter}{\textListoffigures}}
+\renewcommand{\listoftables}   {\newpage\LOT\addcontentsline{toc}{chapter}{\textListoftables}}
 
 \renewcommand{\maketitle}
 {
@@ -173,19 +173,20 @@
             \end{Large}
         }
         \end{titlepage}
+        \newpage
         \restoregeometry
         \pagestyle{empty}\pagenumbering{roman}
-        \tableofcontents
-        \listoffigures
+        \tableofcontents\newpage
+        \listoffigures\newpage
         \listoftables
         \newpage
         \pagestyle{fancy}\pagenumbering{arabic}\setcounter{page}{3}
 }
 
 
-\newcommand{\introduction}{\newpage\addcontentsline{toc}{chapter}{\textIntroduction}\chapter*{\textIntroduction}}
-\newcommand{\conclusion}  {\newpage\addcontentsline{toc}{chapter}{\textConclusion}\chapter*{\textConclusion}}
-\newcommand{\references}  {\newpage\addcontentsline{toc}{chapter}{\textReferences}\printbibliography}
+\newcommand{\introduction}{\newpage\part*{\textIntroduction}\addcontentsline{toc}{part}{\textIntroduction}}
+\newcommand{\conclusion}  {\newpage\part*{\textConclusion}\addcontentsline{toc}{part}{\textConclusion}}
+\newcommand{\references}  {\newpage\printbibliography\addcontentsline{toc}{chapter}{\textReferences}}
 
 \newtheorem{definition}{\textDefinition}
 \newtheorem{theorem}{\textTheorem}
