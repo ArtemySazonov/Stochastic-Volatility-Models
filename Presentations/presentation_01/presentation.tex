@@ -8,30 +8,34 @@
 \author{Artemy Sazonov, Danil Legenky, Kirill Korban}
 \institute{Lomonosov Moscow State Univesity, Faculty of Mechanics and Mathematics}
 \begin{document}
-    \begin{frame}
-        \maketitle
+    \maketitle
+
+    \begin{frame}{Heston Model Definition}
+        Assume that the spot asset at time $t$ follows the diffusion
+        \begin{align}
+            dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
+            dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+        \end{align}
+        where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
     \end{frame}
 
-    \section{A Brief Introduction to the Heston Model}
-        \begin{frame}{Heston Model Definition}
-            Assume that the spot asset at time $t$ follows the diffusion
-            \begin{align}
-                dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
-                dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t), \label{Heston:variance}
-            \end{align}
-            where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
-        \end{frame}
-
-    \section{Euler Simulation Method}
+    \section{Introduction to Monte-Carlo Methods}
         \input{part1/part1.tex}
 
-    \section{Broadie-Kaya Simulation Method} 
+    \section{Euler Simulation Method}
         \input{part2/part2.tex}
 
-    \section{Andersen Simulation Method}
+    \section{Broadie-Kaya Simulation Method} 
         \input{part3/part3.tex}
 
+    \section{Andersen Simulation Method}
+        \input{part4/part4.tex}
+
+    \section{Computation Examples}
+        \input{part5/part5.tex}
+
     \section{Greeks Computation}
+        \input{part6/part6.tex}
     
     \section{Conclusion}
         \begin{frame}{Conclusion}

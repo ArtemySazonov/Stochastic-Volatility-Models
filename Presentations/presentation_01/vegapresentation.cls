@@ -267,7 +267,7 @@
 \DeclareMathOperator*{\cov}{cov}
 \DeclareMathOperator*{\law}{Law}
 
-\newcommand{\1}{I}% \mathbbm{1}} 
+\newcommand{\1}{\mathbbm{1}} 
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
 \renewcommand{\P}{\mathbb{P}}
