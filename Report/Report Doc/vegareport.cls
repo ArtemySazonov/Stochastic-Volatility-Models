@@ -184,9 +184,9 @@
 }
 
 
-\newcommand{\introduction}{\newpage\part*{\textIntroduction}\addcontentsline{toc}{part}{\textIntroduction}}
+\newcommand{\introduction}{\newpage\chapter*{\textIntroduction}\addcontentsline{toc}{part}{\textIntroduction}}
 \newcommand{\conclusion}  {\newpage\part*{\textConclusion}\addcontentsline{toc}{part}{\textConclusion}}
-\newcommand{\references}  {\newpage\printbibliography\addcontentsline{toc}{chapter}{\textReferences}}
+\newcommand{\references}  {\newpage\printbibliography\addcontentsline{toc}{part}{\textReferences}}
 
 \newtheorem{definition}{\textDefinition}
 \newtheorem{theorem}{\textTheorem}

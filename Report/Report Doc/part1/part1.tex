@@ -1,9 +1,20 @@
-\chapter{A review of the Heston model}
-    \begin{figure}[htbp]
-        \begin{tabular}{|c|c|c|c|}\hline
-            \textbf {Method} & \textbf {Euler} & \textbf {Broadie-Kaya} & \textbf {Andersen}\\
-            \hline
-            \textbf {Elapsed, s} & 0.0001 & 0.0001 & 0.0001\\
-            \hline
-        \end{tabular}
-    \end{figure}
+\chapter{A review of the original Heston model}
+    \section{Basic facts}
+        We shall use the following resources in this chapter: \cite{Heston1993} and \cite{Gatheral2012}.
+        Assume that the spot asset's price $S$ at time $t$ follows the diffusion \eqref{Heston:price} -- \eqref{Heston:variance}:
+        \begin{align}
+            dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
+            dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+        \end{align}
+        where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
+    \section{PDEs}
+    \section{A closed-form solution for the European call option}
+\chapter{A review of the Monte-Carlo methods for diffusions}
+
+\chapter{The Three Methods of Simulation of the Heston Model}
+    \section{Euler Scheme}
+
+    \section{Broadie-Kaya Scheme}
+
+    \section{Andersen Scheme}
+
