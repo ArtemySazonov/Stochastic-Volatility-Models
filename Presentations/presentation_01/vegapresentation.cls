@@ -8,7 +8,7 @@
 \LoadClass[aspectratio=169]{beamer}
 
 \beamertemplatenavigationsymbolsempty
-\setbeamersize{text margin left=1.5cm,text margin right=1.5cm}
+\setbeamersize{text margin left=1cm,text margin right=2cm}
 
 \setbeamertemplate{enumerate items}[default]
 \setbeamertemplate{itemize items}[circle]
@@ -226,7 +226,7 @@
     \@tempdima=\textwidth%
     \advance\@tempdima by\beamer@leftmargin%
     \advance\@tempdima by\beamer@rightmargin%
-    \hspace*{25pt}
+    \hspace*{14.17pt}%
     \begin{beamercolorbox}[sep=0.5cm,left,wd=\the\@tempdima]{frametitle}
         \usebeamerfont{frametitle}%
         \vbox{}\vskip-1ex%

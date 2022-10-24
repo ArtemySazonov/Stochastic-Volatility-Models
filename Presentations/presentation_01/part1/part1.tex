@@ -1,4 +1,63 @@
-\subsection{}
-    \begin{frame}{}
+\subsection{Statistical Estimation}
+    \begin{frame}{Statistical Estimation}
+        Let $X, X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables with a distribution function $F(x)$.
+        Unbiased consistent estimators of $\E\left[X\right]$ and $\var \left[X\right]$ are:
+        \begin{itemize}
+            \item The sample mean is the average of the sample values:
+            \begin{equation}
+                \bar{X} = \frac{1}{n} \sum_{i=1}^n X_i
+            \end{equation}
+            \item The sample variance is the average squared deviation from the mean:
+            \begin{equation}
+                S^2 = \frac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2
+            \end{equation}
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Statistical Estimation}
+        \begin{lemma}
+            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
+        \end{lemma}
+        Thus, we could write the unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+        \begin{equation}
+            \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
+        \end{equation}
+    \end{frame}
 
+\subsection{Random and Pseudo-Random Numbers}
+    \begin{frame}{Random and Pseudo-Random Numbers}
+        \begin{definition}
+            A random sequence of numbers is a sequence (in time or in space) with no discernable pattern.
+        \end{definition}
+        \begin{definition}
+            Pseudorandom number generator is an algorithm that generates a sequence of numbers that has no internal pattern. However, the series requires a starting seed, and if the algorithm is started repeatedly with the same seed, it will go through precisely the same sequence of numbers.
+        \end{definition}
+
+        Check out the lecture by A.N.Shiryaev (Probability Theory Department x Vega Institute Foundation Seminar, Oct 19) for more details.
+    \end{frame}
+
+\subsection{A Flashback from the Probability course}
+    \begin{frame}{Law of Large Numbers}
+        \begin{theorem}[Khinchin]
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with a distribution function $F(x)$ and $\E X_i = \mu$. Then
+            \begin{equation}
+                \plim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i = \mu.
+            \end{equation}
+        \end{theorem}
+        \begin{theorem}[Kolmogorov]
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with a distribution function $F(x)$ and $\E X_i = \mu$. Then
+            \begin{equation}
+                \lim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i \overset{\text{a.s.}}{=} \mu.
+            \end{equation}
+        \end{theorem}
+    \end{frame}
+
+    \begin{frame}{Central Limit Theorem}
+        \begin{theorem}[Lindeberg-L\'evy]
+            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\mathbb{E}[X_i] = \mu$ and $\var\left[X_i\right] = \sigma^2$. 
+            Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
+            \begin{equation}
+                \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
+            \end{equation}
+        \end{theorem}
     \end{frame}
