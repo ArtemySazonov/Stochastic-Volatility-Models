@@ -191,7 +191,7 @@
             \node [fill, rectangle, top color=color1bg,  bottom color=color2bg, anchor=north, minimum width=\paperwidth, minimum height=\paperheight,shading angle=20] (box) at (current page.north){};
             \node [anchor=north east] at (current page.north east){\includegraphics[width=2cm]{vega_letter_white.pdf}};
         \end{tikzpicture}
-        \vspace{3cm}
+        \vspace{4.5cm}
 
         {\color{white}
             \hspace{\defindent}\small{\insertsubtitle}\par
