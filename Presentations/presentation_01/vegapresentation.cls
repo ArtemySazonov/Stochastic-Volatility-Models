@@ -177,7 +177,7 @@
     \renewcommand{\textProposition}    {Предложение}
 \fi
 
-\AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection]\end{frame}}
+\AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
