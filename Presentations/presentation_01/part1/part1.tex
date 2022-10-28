@@ -7,7 +7,7 @@
             \begin{equation}
                 \bar{X} = \frac{1}{n} \sum_{i=1}^n X_i
             \end{equation}
-            \item The sample variance is the average squared deviation from the mean:
+            \item The sample variance is the corrected by the factor of $\frac{n}{n-1}$ average squared deviation from the mean:
             \begin{equation}
                 S^2 = \frac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2
             \end{equation}
@@ -33,19 +33,19 @@
             Pseudorandom number generator is an algorithm that generates a sequence of numbers that has no internal pattern. However, the series requires a starting seed, and if the algorithm is started repeatedly with the same seed, it will go through precisely the same sequence of numbers.
         \end{definition}
 
-        Check out the lecture by A.N.Shiryaev (Probability Theory Department x Vega Institute Foundation Seminar, Oct 19) for more details.
+        Check out the lecture by A.N.Shiryaev (Probability Theory Department $\times$ Vega Institute Foundation Seminar, Oct 19) for more details.
     \end{frame}
 
-\subsection{A Flashback from the Probability course}
+\subsection{LLN and CLT}
     \begin{frame}{Law of Large Numbers}
         \begin{theorem}[Khinchin]
-            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with a distribution function $F(x)$ and $\E X_i = \mu$. Then
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E X_i = \mu$. Then
             \begin{equation}
                 \plim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i = \mu.
             \end{equation}
         \end{theorem}
         \begin{theorem}[Kolmogorov]
-            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with a distribution function $F(x)$ and $\E X_i = \mu$. Then
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables. Then $\exists \E X_i = \mu$, if and only if
             \begin{equation}
                 \lim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i \overset{\text{a.s.}}{=} \mu.
             \end{equation}
@@ -60,4 +60,14 @@
                 \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
             \end{equation}
         \end{theorem}
+        \begin{nb}
+            Law of large numbers is a corollarary of the central limit theorem.
+        \end{nb}
+    \end{frame}
+
+\subsection{Monte Carlo Simulation}
+    \begin{frame}{Monte Carlo Simulation}
+        \begin{definition}
+            Monte Carlo simulation is a set of techniques that use pseudo-random number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
+        \end{definition}
     \end{frame}

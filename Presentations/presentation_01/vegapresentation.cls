@@ -155,6 +155,7 @@
 \newcommand{\textExample}        {Example}
 \newcommand{\textProposition}    {Proposition}
 
+\newtheorem*{nb}{NB}
 
 
 \ProcessKeyvalOptions*
