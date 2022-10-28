@@ -1,4 +1,75 @@
-\subsection{}
-    \begin{frame}{}
+\begin{frame}{Forward Euler Scheme for ODEs}{Definition}
+    Suppose that we have an ODE of the form
+    \begin{equation}
+        dX(t) = f(X(t), t)dt, \quad X(0) = X_0. \label{eq:ode}
+    \end{equation}
+    Then it could be numerically solved by the following finite difference scheme:
+    \begin{equation}
+        X_{n+1} = X_n + f(t_n, X_n)h_n, \label{Euler:ODE}
+    \end{equation}
+    where $t_n = \sum_{k=0}^n h_n$ is a mesh grid. 
+\end{frame}
 
-    \end{frame}
+\begin{frame}{Forward Euler Scheme for ODEs}{Global truncation error}
+    \begin{lemma}
+        Let the solution of \eqref{eq:ode} have an $M$-bounded second derivative and let $f$ be $L$-Lipshitz continious in its second argument. Then the global truncation error of the mesh solution \eqref{Euler:ODE} is
+        \begin{equation}
+            \left|X(T) - X_N\right| \leq \frac{hM}{2L}\left(e^{LT} - 1\right) = O(h).
+        \end{equation}
+    \end{lemma}
+\end{frame}
+
+\begin{frame}{Euler-Maruyama Scheme for SDEs}{Definition}
+    Suppose we have a diffusion of the form 
+    \begin{equation*}
+        dX(t) = f(X(t), t)dt + \sigma(X(t), t)dW(t), \quad X_0 = X_0.
+    \end{equation*}
+    Then it could be numerically solved by the following finite difference scheme:
+    \begin{equation}
+        X_{n+1} = X_n + f(t_n, X_n)h_n + \sigma(t_n, X_n) \sqrt{h_n} Z_n, \label{Euler:SDE}
+    \end{equation}
+    where $(Z_n)_{n=1, 2, \dots}$ is a sample of standard normal random variables, and $t_n = \sum_{k=0}^n h_n$ is a mesh grid.
+    The same method could be generalized for the two-factor Gaussian diffusions.
+\end{frame}
+
+\begin{frame}{Euler-Maruyama Scheme for SDEs {\color{red}TBD}}{Global truncation error}
+    Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
+
+\end{frame}
+
+\begin{frame}{Euler-Maruyama Scheme for SDEs {\color{red}TBD}}{Global truncation error}
+
+\end{frame}
+
+\begin{frame}{Euler Scheme for the Heston Model}{Classical Euler-Maruyama Scheme}
+    Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme:
+    \begin{align}
+        S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
+        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + 2\delta \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
+    \end{align}
+    where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=0}^n h_n$ is a mesh grid.
+\end{frame}
+
+\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
+    But we have a problem: during simulation of the Heston model using Euler method $S_{t_n}$ and $v_{t_n}$ could be negative. How do we deal with this inconvenience?
+    Let us introduce the log-prices
+    \begin{equation}
+        X(t) := \log\frac{S(t)}{S(0)}.
+    \end{equation}
+\end{frame}
+
+\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
+    There are two options:
+    \begin{enumerate}
+        \item Positive part of variance:
+        \begin{align}
+            X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
+            v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + 2\delta \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
+        \end{align}
+        \item Absolute value of variance:
+        \begin{align}
+            X_{n+1} & = X_n + (\mu - 0.5 |v_n|)h_n + \sqrt{|v_n|} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:absmod}\\
+            v_{n+1} & = |v_n| + \left(\delta^2 - 2\beta |v_n|\right) h_n + 2\delta \sqrt{|v_n|} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:absmod}
+        \end{align}
+    \end{enumerate}
+\end{frame}
