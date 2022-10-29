@@ -32,13 +32,25 @@
     The same method could be generalized for the two-factor Gaussian diffusions.
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs {\color{red}TBD}}{Global truncation error}
-    Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
-
+\begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error analogue -- strong and weak convergence}
+    \begin{definition}
+        Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
+        Then a scheme is said to have a strong convergence of order $p$ if 
+        \begin{equation}
+            \left|\hat X^n(t) - X(t)\right| \leq C\left(\frac{h}{n}\right)^p, \quad n \to \infty.
+        \end{equation}
+        A scheme is said to have a weak convergence of order $p$ if
+        \begin{equation}
+            \left|\hat X^n(t) - X(t)\right| \leq C\left(\frac{h}{n}\right)^p + \frac{C}{n^p}, \quad n \to \infty.
+        \end{equation}
+    \end{definition}
+    
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs {\color{red}TBD}}{Global truncation error}
-
+\begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error -- strong and weak convergence}
+    \begin{theorem}
+        Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1$ and a weak convergence of order $1/2$.
+    \end{theorem}
 \end{frame}
 
 \begin{frame}{Euler Scheme for the Heston Model}{Classical Euler-Maruyama Scheme}
