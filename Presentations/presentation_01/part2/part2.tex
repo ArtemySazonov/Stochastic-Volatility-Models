@@ -71,17 +71,10 @@
 \end{frame}
 
 \begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
-    There are two options:
-    \begin{enumerate}
-        \item Positive part of variance:
-        \begin{align}
-            X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
-            v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + 2\delta \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
-        \end{align}
-        \item Absolute value of variance:
-        \begin{align}
-            X_{n+1} & = X_n + (\mu - 0.5 |v_n|)h_n + \sqrt{|v_n|} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:absmod}\\
-            v_{n+1} & = |v_n| + \left(\delta^2 - 2\beta |v_n|\right) h_n + 2\delta \sqrt{|v_n|} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:absmod}
-        \end{align}
-    \end{enumerate}
+    We take the positive part of the variance:
+    \begin{align}
+        X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
+        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + 2\delta \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
+    \end{align}
+    However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor expansion
 \end{frame}

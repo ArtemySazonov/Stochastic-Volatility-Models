@@ -1,20 +1,5 @@
 \subsection{Statistical Estimation}
     \begin{frame}{Statistical Estimation}
-        Let $X, X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables with a distribution function $F(x)$.
-        Unbiased consistent estimators of $\E\left[X\right]$ and $\var \left[X\right]$ are:
-        \begin{itemize}
-            \item The sample mean is the average of the sample values:
-            \begin{equation}
-                \bar{X} = \frac{1}{n} \sum_{i=1}^n X_i
-            \end{equation}
-            \item The sample variance is the corrected by the factor of $\frac{n}{n-1}$ average squared deviation from the mean:
-            \begin{equation}
-                S^2 = \frac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2
-            \end{equation}
-        \end{itemize}
-    \end{frame}
-    
-    \begin{frame}{Statistical Estimation}
         \begin{lemma}
             Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
         \end{lemma}
@@ -70,4 +55,9 @@
         \begin{definition}
             Monte Carlo simulation is a set of techniques that use pseudo-random number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
         \end{definition}
+        Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
+        \begin{equation}
+            \mu \in \left(\hat{\mu} - z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}, \hat{\mu} + z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}\right).
+        \end{equation}
+        That means that $LTE = 2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
     \end{frame}
