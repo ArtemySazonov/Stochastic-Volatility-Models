@@ -33,15 +33,16 @@
 \end{frame}
 
 \begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error analogue -- strong and weak convergence}
+    Let $(t_i)_{i = 0, 1, \dots}$ be a uniform grid with $t_i = ih$.
     \begin{definition}
         Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
         Then a scheme is said to have a strong convergence of order $p$ if 
         \begin{equation}
-            \left|\hat X^n(t) - X(t)\right| \leq C\left(\frac{h}{n}\right)^p, \quad n \to \infty.
+            \E\left[\hat X^n(T) - X(T)\right] \leq Ch^p, \quad n \to \infty.
         \end{equation}
-        A scheme is said to have a weak convergence of order $p$ if
+        A scheme is said to have a weak convergence of order $p$ if for any polynomial $f: \R \to \R$ we have
         \begin{equation}
-            \left|\hat X^n(t) - X(t)\right| \leq C\left(\frac{h}{n}\right)^p + \frac{C}{n^p}, \quad n \to \infty.
+            \left|\E\left[f(\hat X^n(T))\right] - \E\left[f(X(T))\right]\right| \leq Ch^p, \quad n \to \infty.
         \end{equation}
     \end{definition}
     
@@ -49,7 +50,7 @@
 
 \begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error -- strong and weak convergence}
     \begin{theorem}
-        Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1$ and a weak convergence of order $1/2$.
+        Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
     \end{theorem}
 \end{frame}
 
