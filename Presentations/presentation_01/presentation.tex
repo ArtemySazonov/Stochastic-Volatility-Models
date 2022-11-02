@@ -4,6 +4,7 @@
 \DeclareMathOperator*{\plim}{\ensuremath{\operatorname{\P-lim}}}
 
 
+
 \subtitle{Student Research Group 'Stochastic Volatility Models', Project 'Heston--2'}
 \title{Methods of Simulation of the Heston Model: A Review}
 \author{Artemy Sazonov, Danil Legenky, Kirill Korban}
@@ -17,7 +18,7 @@
         Assume that the spot asset at time $t$ follows the diffusion
         \begin{align}
             dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
-            dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + 2\delta \sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+            dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + \sigma\sqrt{v(t)} dZ_2(t), \label{Heston:variance}
         \end{align}
         where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
     \end{frame}

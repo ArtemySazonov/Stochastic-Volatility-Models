@@ -7,7 +7,7 @@
     \begin{equation}
         X_{n+1} = X_n + f(t_n, X_n)h_n, \label{Euler:ODE}
     \end{equation}
-    where $t_n = \sum_{k=0}^n h_n$ is a mesh grid. 
+    where $t_n = \sum_{k=0}^n h_n$ is a grid. 
 \end{frame}
 
 \begin{frame}{Forward Euler Scheme for ODEs}{Global truncation error}
@@ -28,17 +28,17 @@
     \begin{equation}
         X_{n+1} = X_n + f(t_n, X_n)h_n + \sigma(t_n, X_n) \sqrt{h_n} Z_n, \label{Euler:SDE}
     \end{equation}
-    where $(Z_n)_{n=1, 2, \dots}$ is a sample of standard normal random variables, and $t_n = \sum_{k=0}^n h_n$ is a mesh grid.
-    The same method could be generalized for the two-factor Gaussian diffusions.
+    where $(Z_n)_{n=1, 2, \dots}$ is a sample of standard normal random variables, and $t_n = \sum_{k=1}^n h_n, t_0 = 0$ is a grid.
+    The same method could be generalized for the two-factor Gaussian diffusions. Further we assume
+    that $(t_i)_{i = 0, 1, \dots}$ is a uniform grid with $t_i = ih$.
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error analogue -- strong and weak convergence}
-    Let $(t_i)_{i = 0, 1, \dots}$ be a uniform grid with $t_i = ih$.
+\begin{frame}{Euler-Maruyama Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
     \begin{definition}
         Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
         Then a scheme is said to have a strong convergence of order $p$ if 
         \begin{equation}
-            \E\left[\hat X^n(T) - X(T)\right] \leq Ch^p, \quad n \to \infty.
+            \E\left[\left|\hat X^n(T) - X(T)\right|\right] \leq Ch^p, \quad n \to \infty.
         \end{equation}
         A scheme is said to have a weak convergence of order $p$ if for any polynomial $f: \R \to \R$ we have
         \begin{equation}
@@ -48,17 +48,21 @@
     
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs}{Global truncation error -- strong and weak convergence}
+\begin{frame}{Euler-Maruyama Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
     \begin{theorem}
         Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
     \end{theorem}
+
+    \begin{nb}
+        Since our goal is to approximate $\E\left[h(X)\right]$ with a given accuracy and the least possible number of simulations, we need to compare the weak convergence rate between the methods.
+    \end{nb}
 \end{frame}
 
 \begin{frame}{Euler Scheme for the Heston Model}{Classical Euler-Maruyama Scheme}
     Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme:
     \begin{align}
         S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
-        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + 2\delta \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
+        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + \sigma \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
     \end{align}
     where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=0}^n h_n$ is a mesh grid.
 \end{frame}
@@ -72,10 +76,16 @@
 \end{frame}
 
 \begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
+    
     We take the positive part of the variance:
     \begin{align}
         X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
-        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + 2\delta \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
+        v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + \sigma \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
     \end{align}
-    However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor expansion
+    and then we take the exponential of the log-prices:
+    \begin{equation}
+        S_{n} = S_0 e^{X_{n}}.
+    \end{equation}
+    
+    However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor expansion.
 \end{frame}

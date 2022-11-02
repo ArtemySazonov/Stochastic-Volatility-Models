@@ -3,7 +3,7 @@
         \begin{lemma}
             Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
         \end{lemma}
-        Thus, we could write the unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+        Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
         \begin{equation}
             \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
         \end{equation}
@@ -11,14 +11,23 @@
 
 \subsection{Random and Pseudo-Random Numbers}
     \begin{frame}{Random and Pseudo-Random Numbers}
-        \begin{definition}
-            A random sequence of numbers is a sequence (in time or in space) with no discernable pattern.
-        \end{definition}
-        \begin{definition}
-            Pseudorandom number generator is an algorithm that generates a sequence of numbers that has no internal pattern. However, the series requires a starting seed, and if the algorithm is started repeatedly with the same seed, it will go through precisely the same sequence of numbers.
-        \end{definition}
+        \begin{block}{A. N. Kolmogorov -- <<On Logical Foundations of Probability Theory>>}
+            \it In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
+            (as absence of any regularity) and stochastic randomness (which is the subject of the probability theory).
 
-        Check out the lecture by A.N.Shiryaev (Probability Theory Department $\times$ Vega Institute Foundation Seminar, Oct 19) for more details.
+            Since randomness is defined as absence of regularity, we should
+            primarily specify the concept of regularity. The natural means of such a specification is the theory of algorithms and recursive functions...
+        \end{block}
+        Check out the \href{https://youtu.be/qKVoFqp1DzA}{lecture by A. N. Shiryaev} for more details.
+    \end{frame}
+
+    \begin{frame}{Random and Pseudo-Random Numbers}{Collins Dictionary Definitions}
+        \begin{definition}[\href{https://www.collinsdictionary.com/dictionary/english/random-numbers}{Random numbers}]
+            a sequence of numbers that do not form any progression, used to facilitate unbiased sampling of a population.
+        \end{definition}
+        \begin{definition}[\href{https://www.collinsdictionary.com/dictionary/english/pseudorandom}{Pseudorandom numbers}]
+            a sequence of numbers that satisfies statistical tests for randomness but is produced by a reproducible mathematical procedure.
+        \end{definition}
     \end{frame}
 
 \subsection{LLN and CLT}
@@ -46,14 +55,14 @@
             \end{equation}
         \end{theorem}
         \begin{nb}
-            Law of large numbers is a corollarary of the central limit theorem.
+            Law of large numbers is an informal corollary of the central limit theorem.
         \end{nb}
     \end{frame}
 
 \subsection{Monte Carlo Simulation}
     \begin{frame}{Monte Carlo Simulation}
         \begin{definition}
-            Monte Carlo simulation is a set of techniques that use pseudo-random number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
+            Monte Carlo simulation is a set of techniques that use pseudorandom number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
         \end{definition}
         Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
         \begin{equation}
