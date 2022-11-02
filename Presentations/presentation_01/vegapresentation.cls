@@ -16,6 +16,14 @@
 
 \setbeamertemplate{theorems}[numbered]
 
+\setbeamertemplate{footline}
+{
+  \hbox{\begin{beamercolorbox}[wd=1\paperwidth,ht=0ex,dp=1ex,right]{framenumber}%
+      \usebeamerfont{framenumber}\insertframenumber{} / \inserttotalframenumber\hspace*{0.6cm}
+    \end{beamercolorbox}}%
+  \vskip3pt%
+}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options: > russian: pass if document is in Russian to change the language of pre-defined text
