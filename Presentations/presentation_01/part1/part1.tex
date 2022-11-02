@@ -1,19 +1,10 @@
-\subsection{Statistical Estimation}
-    \begin{frame}{Statistical Estimation}
-        \begin{lemma}
-            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
-        \end{lemma}
-        Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
-        \begin{equation}
-            \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
-        \end{equation}
-    \end{frame}
-
 \subsection{Random and Pseudo-Random Numbers}
     \begin{frame}{Random and Pseudo-Random Numbers}
         \begin{block}{A. N. Kolmogorov -- <<On Logical Foundations of Probability Theory>>}
             \it In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
             (as absence of any regularity) and stochastic randomness (which is the subject of the probability theory).
+
+            ...
 
             Since randomness is defined as absence of regularity, we should
             primarily specify the concept of regularity. The natural means of such a specification is the theory of algorithms and recursive functions...
@@ -60,7 +51,17 @@
     \end{frame}
 
 \subsection{Monte Carlo Simulation}
-    \begin{frame}{Monte Carlo Simulation}
+    \begin{frame}{Monte Carlo Simulation}{Statistical Estimation}
+        \begin{lemma}
+            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
+        \end{lemma}
+        Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+        \begin{equation}
+            \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
+        \end{equation}
+    \end{frame}
+
+    \begin{frame}{Monte Carlo Simulation}{Local Truncation Error}
         \begin{definition}
             Monte Carlo simulation is a set of techniques that use pseudorandom number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
         \end{definition}
