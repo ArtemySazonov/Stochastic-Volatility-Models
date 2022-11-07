@@ -1,4 +1,72 @@
-\subsection{}
-    \begin{frame}{}
+\subsection{Quadratic-Exponential Discretization Scheme}
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Motivation}
+        We denote 
+        \begin{align}
+            m    &= \E\left[\left.\hat{V}(t+\Delta)\right| \hat{V}(t)\right], \\
+            s^2  &= \E\left[\left.\left(\hat{V}(t+\Delta) - m\right)^2\right| \hat{V}(t)\right], \\
+            \psi &= \frac{s^2}{m^2}.
+        \end{align}
+    \end{frame}
 
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Motivation}
+        Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the first step of Broadie and Kaya's method.
+        He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually difers when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
+        The scheme is constructed from the following two subschemes:
+        \begin{enumerate}
+            \item Quadratic sampling scheme ($\psi \leq 2$);
+            \item Exponential sampling scheme ($\psi \geq 1$).
+        \end{enumerate}
+        Fortunately, these two intervals cover the whole positive real line. Furthermore, these two schemes could be applied at the same time when $\psi\in[1, 2]$. This implicates that there exist some critical value $\psi_{\text{crit}}\in[1, 2]$, which could be an indicator of which scheme is more applicable at the given value of $\psi$. Let us show you this.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{The Problem with Variance}
+        For large enough $\hat{V}(t)$ (in the $CV$-sense) we can approximate the distribution of $\hat{V}(t+\Delta)$ by the scaled non-central chi-squared distribution with $1$ degree of freedom:
+        \begin{align}
+            \law\left(\left.\hat{V}(t+\Delta) \right| \hat V(t)\right) =  a(\Delta, \hat{V}(t), VP) \chi'^2_1(b(\Delta, \hat{V}(t), VP)),
+        \end{align}
+        where $VP$ is the vector of parameters of the CIR variance.
+        However, if $\hat{V}(t)$ is close to zero, then we have a problem in finding such $a = a(\Delta, \hat{V}(t), VP)$ and $b = b(\Delta, \hat{V}(t), VP)$ such that the moments of the desired conditional distribution could be properly matched.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{The Problem with Variance}
+        Therefore, we approximate the desired distribution with the following method. Let $\xi$ and $\eta$ be independent random variables and  $\xi \sim Be(1-p)$, $\eta \sim Exp(\beta)$ for some $p \in (0, 1)$ and $\beta > 0$. Then we have (given $\hat{V}(t)$)
+        \begin{equation}
+            \hat{V}(t+\Delta) = \xi\cdot\eta,
+        \end{equation}
+        what gives us the following distribution density:
+        \begin{equation}
+            p_{\hat{V}(t+\Delta)\vert \hat{V}(t)} = p\cdot \delta(x) + (1-p) \cdot\beta e^{-\beta x},
+        \end{equation}
+        where $\delta(x)$ is a standart delta function and for some $\beta$ and $p$.
+        Sampling $\xi$ and $\eta$: Smirnov's transform. Or we can use the Smirnov transform with the cdf of the desired distribution.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Finding the constants}
+        \begin{lemma}
+            We have
+            \begin{align}
+                b^2 &= \frac{2}{\psi} -1 +\sqrt{\frac{2}{\psi}\left(\frac{2}{\psi}-1\right)}, \\ 
+                a   &= \frac{m}{1+b^2}.
+            \end{align}
+        \end{lemma}
+        \begin{proof}
+            Plain equating of the theoretical and real moments.
+        \end{proof}
+        \textbf{Remark:} The above lemma is not valid for $\psi \geq 2$.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Finding the constants}
+        \begin{lemma}
+            We have
+            \begin{equation}
+                p     = \frac{\psi - 1}{\psi + 1}, \qquad \beta = \frac{1-p}{m} = \frac{2}{m(\psi+1)}.
+            \end{equation}
+        \end{lemma}
+        \begin{proof}
+            By direct integration of the given densities we get the following:
+            \begin{equation}
+                \frac{1-p}{\beta} = m, \qquad \frac{1-p^2}{\beta^2} = s^2.
+            \end{equation}
+        \end{proof}
+        \textbf{Remark:} The above lemma is not valid for $\psi \leq 1$.
     \end{frame}
