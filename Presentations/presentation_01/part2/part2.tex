@@ -22,7 +22,7 @@
 \begin{frame}{Euler-Maruyama Scheme for SDEs}{Definition}
     Suppose we have a diffusion of the form 
     \begin{equation*}
-        dX(t) = f(X(t), t)dt + \sigma(X(t), t)dW(t), \quad X_0 = X_0.
+        dX(t) = f(X(t), t)dt + \sigma(X(t), t)dW(t), \quad X(0) = X_0.
     \end{equation*}
     Then it could be numerically solved by the following finite difference scheme:
     \begin{equation}
@@ -64,7 +64,7 @@
         S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
         v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + \sigma \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
     \end{align}
-    where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a mesh grid.
+    where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a grid.
 \end{frame}
 
 \begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
