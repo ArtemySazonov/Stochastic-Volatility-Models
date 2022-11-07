@@ -18,10 +18,10 @@
     As shown in Cox et al. (1985) the distribution of $v_t$ given $v_u$ for some u < t is, up to a  scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
 
     \begin{equation}
-        v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi{}_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa()t-u})} v_u  \right), t > u , \label{BK:vol_law}
+        v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa()t-u})} v_u  \right), t > u , \label{BK:vol_law}
     \end{equation}
 
-    where $\chi{}_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
+    where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
     variable with d degrees of freedom, and noncentrality
     parameter $\lambda$, and
 
@@ -36,24 +36,24 @@
     Thus, we can sample from the distribution of $v_t$ exactly,
     provided that we can sample from the noncentral chisquared distribution.
 
-    Johnson et al. (1994) show that for d > 1, the following representation is valid:
+    Johnson et al. (1994) show that for $d > 1$, the following representation is valid:
 
 
     \begin{equation}
-        \chi{}_d'^{2}(\lambda) = \chi{}_1'^{2}(\lambda) + \chi{}_{d-1}'^{2} = N(\lambda, 1)^2 + \chi{}_{d-1}^{2}
+        \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}
     \end{equation}
 
-    Therefore,  when d > 1 sampling from a noncentral chi-squared distribution
+    Therefore,  when $d > 1$ sampling from a noncentral chi-squared distribution
     is reduced to sampling from an ordinary chi-squared and
     an independent normal.
 
-    When d < 1 we can use the the fact that:
+    When $d < 1$ we can use the the fact that:
 
     \begin{equation}
-        \chi{}_d'^{2}(\lambda) \(\sim \) \chi{}_{d + 2N}^{2}
+        \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2}
     \end{equation}
 
-    Where N is a Poisson random variable with mean $\frac{\lambda}{2}$
+    Where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$
 
     
 \end{frame}
@@ -67,17 +67,17 @@
         \exp{\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     }
     \end{align}
 
-    Therefore,  when d > 1 sampling from a noncentral chi-squared distribution
+    Therefore,  when $d > 1$ sampling from a noncentral chi-squared distribution
     is reduced to sampling from an ordinary chi-squared and
     an independent normal.
 
-    When d < 1 we can use the the fact that:
+    When $d < 1$ we can use the the fact that:
 
     \begin{equation}
-        \chi{}_d'^{2}(\lambda) \(\sim \) \chi{}_{d + 2N}^{2}
+        \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2}
     \end{equation}
 
-    Where N is a Poisson random variable with mean $\frac{\lambda}{2}$
+    Where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$
 
     
 \end{frame}
