@@ -23,7 +23,7 @@
 
     where $\chi{}_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
     variable with d degrees of freedom, and noncentrality
-    parameter \lambda, and
+    parameter $\lambda$, and
 
     \begin{equation}
         d = \frac{4\theta\kappa}{\sigma^2} \label{BK:vol_law:parameter}
@@ -35,7 +35,7 @@
 \begin{frame}{Broadie-Kaya Simulatation Method}{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
     Thus, we can sample from the distribution of $v_t$ exactly,
     provided that we can sample from the noncentral chisquared distribution.
-    \\
+
     Johnson et al. (1994) show that for d > 1, the following representation is valid:
 
 
@@ -46,7 +46,7 @@
     Therefore,  when d > 1 sampling from a noncentral chi-squared distribution
     is reduced to sampling from an ordinary chi-squared and
     an independent normal.
-    \\
+
     When d < 1 we can use the the fact that:
 
     \begin{equation}
@@ -60,17 +60,17 @@
 
 \begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
     The folowing formula can be derived 
-    \\
+
     
-    \begin{allign}
+    \begin{align}
         \phi(a) = \E\left[  \exp{ia\int_{u}^t V_s ds} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
         \exp{\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     }
-    \end{allign}
+    \end{align}
 
     Therefore,  when d > 1 sampling from a noncentral chi-squared distribution
     is reduced to sampling from an ordinary chi-squared and
     an independent normal.
-    \\
+
     When d < 1 we can use the the fact that:
 
     \begin{equation}
