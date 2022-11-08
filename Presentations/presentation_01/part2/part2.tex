@@ -79,7 +79,7 @@
     
     We take the positive part of the variance:
     \begin{align}
-        X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} X_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
+        X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
         v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n^+\right) h_n + \sigma \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
     \end{align}
     and then we take the exponential of the log-prices:
