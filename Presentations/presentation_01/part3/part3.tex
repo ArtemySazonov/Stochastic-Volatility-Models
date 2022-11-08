@@ -98,6 +98,29 @@
 
 \begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
 
+    The discretization error $e_d$ can be bounded above and
+below by using a Poisson summation formula 
+
+    \begin{equation}
+        0 \leq e_d(h) = \sum_{k=1}^\infty[ F(\frac{2k\pi}{h} + x) - F(\frac{2k\pi}{h} - x)] \leq 1 - F(\frac{2\pi}{h} - x)
+    \end{equation}
+
+    If we want to achieve a discretization error \alpha, then the
+    step size should be
+
+    \begin{equation}
+        h = 2\frac{2\pi}{x+ u_\alpha} \geq \frac{\pi}{u_\alpha}
+    \end{equation}
+
+    where $1-F(u_\alpha) = \alpha$ and $0 \leq x \leq u_\alpha$
+
+
+\end{frame}
+
+
+
+\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+
 
     To be able to calculate $P(V(u, t) < x )$ using (28), we
     need to determine a point at which the summation can be
@@ -123,7 +146,7 @@
     Because the integrand is oscillating, the bound for the last term gives a good estimate for the truncation error, i.e. we cam set $e_t(N) = h \frac{2[\Phi(u)]}{\pi u} $ The summation is terminated at j = N when
 
     \begin{equation}
-        \frac{2[\Phi(u)]}{\pi u} < e_t(N)/2
+        \frac{2[\Phi(u)]}{\pi u} < e_t(N)/x
      \end{equation}
     
 \end{frame}
@@ -173,3 +196,5 @@
 
         
 \end{frame}
+
+
