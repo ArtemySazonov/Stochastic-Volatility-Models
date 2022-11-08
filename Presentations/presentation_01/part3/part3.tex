@@ -78,9 +78,10 @@
     
     Then we need to invert the characteristic function to get Cumulative distribution function
     
-    \begin{equation}
-        P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] = \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du
-    \end{equation}
+    \begin{multline}
+        F(x) = P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] = \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du \\
+        = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du
+    \end{multline}
     
     
 \end{frame}
@@ -105,7 +106,7 @@ below by using a Poisson summation formula
         0 \leq e_d(h) = \sum_{k=1}^\infty[ F(\frac{2k\pi}{h} + x) - F(\frac{2k\pi}{h} - x)] \leq 1 - F(\frac{2\pi}{h} - x)
     \end{equation}
 
-    If we want to achieve a discretization error \alpha, then the
+    If we want to achieve a discretization error $\alpha$, then the
     step size should be
 
     \begin{equation}
