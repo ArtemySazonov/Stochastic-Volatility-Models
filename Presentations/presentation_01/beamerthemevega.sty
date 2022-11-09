@@ -1,11 +1,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Developers:
 %   - Artemy Sazonov (July 2022 - now)
+%
+%
+%
+%
+% Options: 
+%   - russian: pass if document is in Russian to change the language of the pre-defined text
+%   - disabletoc: pass if you want to disable the table of contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newif\ifbeamer@russian
+\beamer@russianfalse
+\DeclareOptionBeamer{russian}{\beamer@russiantrue}
 
-\NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{vegapresentation}[2022/08/16 Vega Presentation Class]
-\LoadClass[aspectratio=169]{beamer}
+\newif\ifbeamer@disabletoc
+\beamer@russianfalse
+\DeclareOptionBeamer{disabletoc}{\beamer@disabletoctrue}
+
+\ProcessOptionsBeamer
+
+\mode<presentation>
 
 \beamertemplatenavigationsymbolsempty
 \setbeamersize{text margin left=1cm,text margin right=2cm}
@@ -24,18 +38,6 @@
   \vskip3pt%
 }
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Options: > russian: pass if document is in Russian to change the language of pre-defined text
-%          > 
-%          > 
-%          > 
-%          > 
-%          > 
-%          > 
-%          > 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Packages and Options
@@ -45,7 +47,6 @@
 \RequirePackage{cmap}
 \RequirePackage[T1,T2A]{fontenc}
 \RequirePackage[utf8]{inputenc}
-\RequirePackage{kvoptions}
 
 \RequirePackage{tikz}
 \RequirePackage{geometry}
@@ -54,7 +55,6 @@
 
 \RequirePackage{booktabs}
 \RequirePackage{bbm}
-\RequirePackage{hyperref}
 
 \RequirePackage{amsmath,amssymb}
 \RequirePackage{mathtext}
@@ -62,20 +62,6 @@
 
 \RequirePackage[backend=biber,style=alphabetic,sorting=ynt]{biblatex}
 \RequirePackage{csquotes}
-
-
-% Bool options
-\DeclareBoolOption{russian}
-\DeclareBoolOption{figures}
-\DeclareBoolOption{tables}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Headers and Footers
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,10 +73,7 @@
 \RequirePackage{paratype}
 \usefonttheme[onlymath]{serif}
 
-
-
 \RequirePackage{xcolor}
-
 
 \definecolor{color1bg}{HTML}{2C3389}
 \definecolor{color2bg}{HTML}{EFA69D}
@@ -114,10 +97,9 @@
 \setbeamercolor{palette secondary}{bg=white,fg=color3bg}
 \setbeamercolor{palette tertiary}{bg=white,fg=colormainblue}
 \setbeamercolor{palette quaternary}{bg=white,fg=colormainblue}
-\setbeamercolor{structure}{fg=colormainblue} % itemize, enumerate, etc
-\setbeamercolor{section in toc}{fg=colormainblue} % TOC sections
+\setbeamercolor{structure}{fg=colormainblue}
+\setbeamercolor{section in toc}{fg=colormainblue}
 
-% Override palette coloring with secondary
 \setbeamercolor{subsection in head/foot}{bg=white,fg=colormainblue}
 
 \setbeamercolor{footnote}{fg=color3bg}
@@ -131,65 +113,45 @@
 \setbeamercolor{block title}{bg=color2lightened}
 \setbeamercolor{block body}{bg=color2lightened}
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Language-dependent commands
+% Language-dependent commands:
 % Default:   English
 % Available: English, Russian
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\ProcessKeyvalOptions*
-\ifvegapresentation@russian
-    \RequirePackage[english,russian]{babel}
-    \renewcommand{\epsilon}{\varepsilon}
-    \renewcommand{\phi}{\varphi}
+\newcommand{\textLectureNotes}   {Lecture Slides}
 
-\else
-    \RequirePackage[russian,english]{babel}
-\fi
-
-\newcommand{\textLectureNotes}   {Lecture Notes}
-
-\newcommand{\textTableofcontents}{Table of Contents}
+\newcommand{\textTableofcontents}{Outline}
 \newcommand{\textListoffigures}  {List of Figures}
 \newcommand{\textListoftables}   {List of Tables}
 \newcommand{\textIntroduction}   {Introduction}
 \newcommand{\textConclusion}     {Conclusion}
 \newcommand{\textReferences}     {Bibliography}
 
-\newcommand{\textDefinition}     {Definition}
-\newcommand{\textTheorem}        {Theorem}
-\newcommand{\textLemma}          {Lemma}
-\newcommand{\textCorollary}      {Corollary}
-\newcommand{\textExample}        {Example}
 \newcommand{\textProposition}    {Proposition}
 
-\newtheorem*{nb}{NB}
-
-
-\ProcessKeyvalOptions*
-\ifvegapresentation@russian
-    \renewcommand{\textLectureNotes}   {Конспект лекций}
+\ifx\ifbeamer@russian
+    \renewcommand{\textLectureNotes}   {Лекционные слайды}
 
     \renewcommand{\textTableofcontents}{Содержание}
-    \renewcommand{\textListoffigures}  {Список иллюстраций}
+    \renewcommand{\textListoffigures}  {Список рисунков}
     \renewcommand{\textListoftables}   {Список таблиц}
     \renewcommand{\textIntroduction}   {Введение}
     \renewcommand{\textConclusion}     {Заключение}
     \renewcommand{\textReferences}     {Список литературы}
 
-    \renewcommand{\textDefinition}     {Определение}
-    \renewcommand{\textTheorem}        {Теорема}
-    \renewcommand{\textLemma}          {Лемма}
-    \renewcommand{\textCorollary}      {Следствие}
-    \renewcommand{\textExample}        {Пример}
-    \renewcommand{\textProposition}    {Предложение}
-\fi
+    \renewcommand{\textProposition}    {Утверждение}
 
-\AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
+    \RequirePackage[english,russian]{babel}
+    \renewcommand{\epsilon}{\varepsilon}
+    \renewcommand{\phi}{\varphi}
+\fi
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Title page etc
+% Title Page, Frames, and End of Document
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\defindent}{0cm}
@@ -216,18 +178,9 @@
     }
 }
 
-\setbeamertemplate{endpage}{
-    {
-        \frame[plain,noframenumbering]{
-            \begin{tikzpicture}[remember picture,overlay]
-                \node [anchor=center] at (current page.center){\includegraphics[width=5cm]{vega_letter_color.pdf}};
-            \end{tikzpicture}
-        }
-    }
-}
-\AtEndDocument{\usebeamertemplate{endpage}}
-
-
+\ifx\ifbeamer@disabletoc\else
+    \AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
+\fi
 
 \setbeamertemplate{frametitle}{
     \vspace*{10pt}
@@ -245,25 +198,29 @@
             \ifx\insertframesubtitle\@empty%
             \else%
             {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\insertframesubtitle\strut\par}%
-            \fi
+            \fi%
         }%
         \vskip-1ex%
-        \if@tempswa\else\vskip-.3cm\fi% set inside beamercolorbox... evil here...
+        \if@tempswa\else\vskip-.3cm\fi%
     \end{beamercolorbox}%
     \begin{tikzpicture}[remember picture,overlay]
         \node [anchor=north east] at (current page.north east){\includegraphics[width=2cm]{vega_letter_color.pdf}};
     \end{tikzpicture}
 }
 
+\setbeamertemplate{endpage}{
+    {
+        \frame[plain,noframenumbering]{
+            \begin{tikzpicture}[remember picture,overlay]
+                \node [anchor=center] at (current page.center){\includegraphics[width=5cm]{vega_letter_color.pdf}};
+            \end{tikzpicture}
+        }
+    }
+}
+\AtEndDocument{\usebeamertemplate{endpage}}
 
-
-%\renewtheorem{definition}{\textDefinition}
-%\renewtheorem{theorem}{\textTheorem}
-%\renewtheorem{corollary}{\textCorollary}[theorem]
-%\renewtheorem{lemma}[theorem]{\textLemma}
-%\renewtheorem{example}{\textExample}
-%\newtheorem{proposition}{\textProposition}
-
+\newtheorem{proposition}{\textProposition}
+\newtheorem*{nb}{NB}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -284,23 +241,4 @@
 
 \newcommand{\independent}{\perp\!\!\!\!\perp}
 
-
-\newcommand\cA{{\cal A}}
-\newcommand\cE{{\cal E}}
-\newcommand\cC{{\cal C}}
-\newcommand\cF{{\cal F}}
-\newcommand\cG{{\cal G}}
-\newcommand\cK{{\cal K}}
-\newcommand\cL{{\cal L}}
-\newcommand\cB{{\cal B}}
-\newcommand\cN{{\cal N}}
-\newcommand\cM{{\cal M}}
-\newcommand\cX{{\cal X}}
-\newcommand\cD{{\cal D}}
-\newcommand\cR{{\cal R}}
-\newcommand\cP{{\cal P}}
-\newcommand\cQ{{\cal Q}}
-\newcommand\cS{{\cal S}}
-\newcommand\cT{{\cal T}}
-\newcommand\cV{{\cal V}}
-\newcommand\cZ{{\cal Z}}
+\mode<all>
