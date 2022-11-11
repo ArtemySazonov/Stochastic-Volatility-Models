@@ -14,7 +14,7 @@
 \DeclareOptionBeamer{russian}{\beamer@russiantrue}
 
 \newif\ifbeamer@disabletoc
-\beamer@russianfalse
+\beamer@disabletocfalse
 \DeclareOptionBeamer{disabletoc}{\beamer@disabletoctrue}
 
 \ProcessOptionsBeamer
@@ -178,9 +178,11 @@
     }
 }
 
-\ifx\ifbeamer@disabletoc\else
-    \AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
-\fi
+%\ifx\ifbeamer@disabletoc
+%\else
+%\fi
+\AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
+
 
 \setbeamertemplate{frametitle}{
     \vspace*{10pt}

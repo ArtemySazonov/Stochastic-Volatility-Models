@@ -19,7 +19,7 @@
     \end{lemma}
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs}{Definition}
+\begin{frame}{Euler-Maruyama Discretization Scheme for SDEs}{Definition}
     Suppose we have a diffusion of the form 
     \begin{equation*}
         dX(t) = f(X(t), t)dt + \sigma(X(t), t)dW(t), \quad X(0) = X_0.
@@ -33,7 +33,7 @@
     that $(t_i)_{i = 0, 1, \dots}$ is a uniform grid with $t_i = ih$.
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
+\begin{frame}{Euler-Maruyama Discretization Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
     \begin{definition}
         Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
         Then a scheme is said to have a strong convergence of order $p$ if 
@@ -48,9 +48,9 @@
     
 \end{frame}
 
-\begin{frame}{Euler-Maruyama Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
+\begin{frame}{Euler-Maruyama Discretization Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
     \begin{theorem}
-        Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
+        Under some technical assumptions the Euler-Maruyama Discretization scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
     \end{theorem}
 
     \begin{nb}
@@ -58,7 +58,7 @@
     \end{nb}
 \end{frame}
 
-\begin{frame}{Euler Scheme for the Heston Model}{Classical Euler-Maruyama Scheme}
+\begin{frame}{Euler Scheme for the Heston Model}{Classical Euler-Maruyama Discretization Scheme}
     Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme:
     \begin{align}
         S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
@@ -67,7 +67,7 @@
     where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a grid.
 \end{frame}
 
-\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
+\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Discretization Scheme}
     But we have a problem: during simulation of the Heston model using Euler method $S_{t_n}$ and $v_{t_n}$ could be negative. How do we deal with this inconvenience?
     Let us introduce the log-prices
     \begin{equation}
@@ -75,7 +75,7 @@
     \end{equation}
 \end{frame}
 
-\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Scheme}
+\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Discretization Scheme}
     
     We take the positive part of the variance:
     \begin{align}
