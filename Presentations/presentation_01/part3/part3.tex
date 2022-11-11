@@ -1,4 +1,4 @@
-\begin{frame}{Broadie-Kaya Simulatation Method}{Definition}
+\begin{frame}{Broadie-Kaya Simulation Method}{Definition}
     It follows from Heston model, that for $t > u$
     \begin{align}
          S_t &= S_u e^{\left( r(t-u)-\frac{1}{2} \int_{u}^{t} v_s \, ds  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}, \label{BK:Price_int} \\
@@ -14,7 +14,7 @@
     \end{enumerate}
 \end{frame}
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
     As shown in Cox et al. (1985) the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
 
     \begin{equation}
@@ -32,7 +32,7 @@
 \end{frame}
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
     Thus, we can sample from the distribution of $v_t$ exactly,
     provided that we can sample from the noncentral chisquared distribution.
     Johnson et al. (1994) show that for $d > 1$, the following representation is valid:
@@ -53,7 +53,7 @@
     
 \end{frame}
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
     The folowing formula can be derived. The derivation could be found in in the original paper.
     \begin{multline}
         \phi(a) = \E\left[  \exp{(ia\int_{u}^t V_s ds)} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
@@ -66,7 +66,7 @@
 
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
     
     Let $V(u,t)$  denote the random
     variable that has the same distribution as the integral $\int_{u}^t V_s ds$ conditional on $v_u$ and $v_t$.    
@@ -79,7 +79,7 @@
     
 \end{frame}
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
 
     To calculate the integral the trapezoidal rule is being used, because the errors tend to annihilate for periodic and other oscillating integrands
 
@@ -90,7 +90,7 @@
 
 \end{frame}
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
 
     The discretization error $e_d$ can be bounded above and
 below by using a Poisson summation formula 
@@ -113,7 +113,7 @@ below by using a Poisson summation formula
 
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
 
 
     To be able to calculate $P(V(u, t) < x )$ using (28), we
@@ -135,7 +135,7 @@ below by using a Poisson summation formula
 
 \end{frame}
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
     
     Because the integrand is oscillating, the bound for the last term gives a good estimate for the truncation error, i.e. we can set $e_t(N) = h \frac{2[\Phi(u)]}{\pi u} $ 
     
@@ -149,7 +149,7 @@ below by using a Poisson summation formula
 
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 2:  Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
 
     
     To simulate the value of the integral, the inverse transform method is used. We generate a uniform random variable U and then find the value of x for which 
@@ -161,7 +161,7 @@ below by using a Poisson summation formula
 \end{frame}
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 3: Recover $\int_{u}^t \sqrt{v_s} dZ_1(s)$ given $v_t$, $v_u$, and
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 3: Recover $\int_{u}^t \sqrt{v_s} dZ_1(s)$ given $v_t$, $v_u$, and
         $\int_{t}^u v_s ds$}
 
     The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated samples for $v_t , v_u, V(u, t)$
@@ -180,7 +180,7 @@ below by using a Poisson summation formula
 
 
 
-\begin{frame}{Broadie-Kaya Simulatation Method}{Step 4: Generate a sample from the distribution of $S_t$ given $\int_{u}^t \sqrt{v_s} dZ_1(s)$ , $\int_{u}^t \sqrt{v_s} dZ_2(s)$ and $\int_{u}^t v_s ds$}
+\begin{frame}{Broadie-Kaya Simulation Method}{Step 4: Generate a sample from the distribution of $S_t$ given $\int_{u}^t \sqrt{v_s} dZ_1(s)$ , $\int_{u}^t \sqrt{v_s} dZ_2(s)$ and $\int_{u}^t v_s ds$}
 
     Lastly we need to bring everything together:
     \begin{itemize}
