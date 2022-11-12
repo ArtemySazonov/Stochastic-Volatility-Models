@@ -7,15 +7,14 @@
 %
 % Options: 
 %   - russian: pass if document is in Russian to change the language of the pre-defined text
-%   - disabletoc: pass if you want to disable the table of contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newif\ifbeamer@russian
 \beamer@russianfalse
 \DeclareOptionBeamer{russian}{\beamer@russiantrue}
 
-\newif\ifbeamer@disabletoc
-\beamer@disabletocfalse
-\DeclareOptionBeamer{disabletoc}{\beamer@disabletoctrue}
+\newif\ifbeamer@toc
+\beamer@tocfalse
+\DeclareOptionBeamer{toc}{\beamer@toctrue}
 
 \ProcessOptionsBeamer
 
@@ -178,11 +177,7 @@
     }
 }
 
-%\ifx\ifbeamer@disabletoc
-%\else
-%\fi
 \AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
-
 
 \setbeamertemplate{frametitle}{
     \vspace*{10pt}

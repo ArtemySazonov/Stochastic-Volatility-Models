@@ -1,6 +1,8 @@
 \documentclass[aspectratio=169]{beamer}
 \usetheme{vega}
 
+\addbibresource{assets/pricing_lib.bib}
+
 \DeclareMathOperator*{\plim}{\ensuremath{\operatorname{\P-lim}}}
 
 \newcommand{\cA}{\mathcal{A}}
@@ -48,17 +50,17 @@
         \begin{frame}{Conclusion}
             We introduced the three most common simulation methods for dynamics of the two-factor Gaussian diffusion model:
             \begin{enumerate}
-                \item Euler scheme; 
+                \item Euler-Maruyama scheme (classical and modified); 
                 \item Broadie-Kaya scheme;
-                \item Andersen scheme.
+                \item Andersen schemes (TG and QE. Only for stochastic variance).
             \end{enumerate}
         \end{frame}
-        \begin{frame}{To-do}
-            \begin{itemize}
-                \item TG scheme;
-                \item Martingale correction in TG and QE schemes;
-                \item Numerical stability of implied volatility calculations.
-            \end{itemize}
+        \begin{frame}{To-dos}
+            \begin{enumerate}
+                \item How do we approximate the log-prices?
+                \item Martingale correction in the Andersen schemes
+                \item Numerical stability of implied volatility calculations
+            \end{enumerate}
         \end{frame}
 
 \end{document}

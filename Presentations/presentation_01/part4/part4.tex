@@ -1,5 +1,13 @@
+\subsection{About Andersen's Article}
+\begin{frame}{Motivation}
+    \begin{itemize}
+        \item Euler scheme is not very accurate, but fast and easy to implement;
+        \item Broadie-Kaya scheme is more accurate, but significantly slower and way more complicated;
+    \end{itemize}
+\end{frame}
+
 \subsection{Quadratic-Exponential Discretization Scheme}
-    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Motivation}
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{}\label{frame:Andersen:denotemeanstd}
         We denote 
         \begin{align}
             m    &= \E\left[\left.\hat{V}(t+\Delta)\right| \hat{V}(t)\right], \\
@@ -8,7 +16,7 @@
         \end{align}
     \end{frame}
 
-    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Motivation}
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Idea}
         Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the first step of Broadie and Kaya's method.
         He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually difers when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
         The scheme is constructed from the following two subschemes:
@@ -69,4 +77,49 @@
             \end{equation}
         \end{proof}
         \textbf{Remark:} The above lemma is not valid for $\psi \leq 1$.
+    \end{frame}
+
+
+\subsection{Truncated Gaussian Discretization Scheme}
+    \begin{frame}{Truncated Gaussian Discretization Scheme}{Idea}
+        \begin{block}{Andersen:}
+            \emph{In this scheme the idea is to sample from a moment-matched Gaussian density where all probability
+            mass below zero is inserted into a delta-function at the origin.}
+        \end{block} 
+        Same, but in the formular form:
+        \begin{equation}
+            \left(\left.\hat{V}(t+\Delta)\right| V(t)\right) = \left(\mu + \sigma Z\right)^+,
+        \end{equation}
+        where $Z$ is a standard normal random variable and $\mu$ and $\sigma$ are the 'mean' and the 'standard deviation' of the desired distribution.
+        We find $\mu$ and $\sigma$ from the same old moment-matching techniques (see Slide \ref{frame:Andersen:denotemeanstd}).
+    \end{frame}
+
+    \begin{frame}{Truncated Gaussian Discretization Scheme}{Finding the constants}
+        \begin{proposition}
+            Let $\phi(x)$ be a standart Gaussian density and define a function $r:\mathbb{R} \to \mathbb{R}$ by the following equation:
+            \begin{equation}
+                r(x)\phi(r(x))+\Phi(r(x))(1+r(x)^2)= (1+x)\left(\phi(r(x)) + r(x)\Phi(r(x))\right)^2.
+            \end{equation}
+            Then the moment-matching parameters are
+            \begin{align}
+                \mu &= \frac{m}{\frac{\phi(r(\psi))}{r(\psi)} + \Phi(r(\psi))},\\ 
+                \sigma &= \frac{m}{\phi(r(\psi)) + r(\psi)\Phi(r(\psi))}.
+            \end{align}
+        \end{proposition}
+    \end{frame}
+
+    \begin{frame}{Truncated Gaussian Discretization Scheme}{FInding the numerical integration interval}
+        \textbf{Problem}: no closed-form solution for $r(\psi)$. 
+        
+        \textbf{Solution}: numerical solution.
+
+        \textbf{Problem}: no known limits to use the numerical solution.
+
+        \textbf{Solution}: 
+        % kappa = 2\beta, theta = \frac{\delta^2}{2\beta}
+        \begin{align}
+            m   &= \frac{\delta^2}{2\beta} + \left(\hat{V}(t) - \frac{\delta^2}{2\beta}\right)e^{-2\beta \Delta},\\
+            s^2 &= \frac{\hat{V}(t)\sigma^2e^{-2\beta \Delta}}{2\beta}\left(1 - e^{-2\beta \Delta}\right) + \frac{\delta^2\sigma^2}{8\beta^2}\left(1 - e^{-2\beta \Delta}\right)^2.
+        \end{align}
+        Then we analyze $\psi$ wrt $\hat{V}(t)$ and obtain a finite interval as a domain for $r(\psi)$.
     \end{frame}
