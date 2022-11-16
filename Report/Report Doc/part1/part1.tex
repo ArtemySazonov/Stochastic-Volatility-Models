@@ -11,8 +11,7 @@
     \section{A closed-form solution for the European call option}
 \chapter{A review of the Monte-Carlo methods for diffusions}
     \section{Randomness in Probability Theory}
-        A. N. Kolmogorov in <<On Logical Foundations of Probability Theory>>: 
-        
+        \paragraph{A. N. Kolmogorov in <<On Logical Foundations of Probability Theory>>: }
         \textit {In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
         (as absence of any regularity) and stochastic randomness (which is the subject of the probability theory).
         Since randomness is defined as absence of regularity, we should
@@ -20,7 +19,7 @@
 
         Check out the \href{https://youtu.be/qKVoFqp1DzA}{lecture by A. N. Shiryaev} for more details.
 
-    \section{Laws of Large Numbers and Central Limit Theorem}
+    \section{Laws of large numbers and central limit theorems}
         \begin{theorem}[Khinchin]
             Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E X_i = \mu$. Then
             \begin{equation}
@@ -35,18 +34,15 @@
         \end{theorem}
 
         \begin{theorem}[Lindeberg-L\'evy]
-            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\E[X_i] = \mu$ and $\var X_i = \sigma^2$. 
+            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\E[X_i] \hm{=} \mu$ and $\var X_i = \sigma^2$. 
             Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
             \begin{equation}
                 \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
             \end{equation}
         \end{theorem}
 
-        Law of large numbers is an informal corollary of the central limit theorem.
 
-
-
-    \section{The Statistical Foundations of the Monte-Carlo Methods}
+    \section{The statistical foundations of the Monte-Carlo methods}
         \begin{lemma}
             Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
         \end{lemma}
@@ -64,7 +60,7 @@
         That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
 
 
-    \section{General Monte-Carlo Methods for Gaussian Diffusions}
+    \section{General Monte-Carlo methods for Gaussian diffusions}
 
     \section{The Main Methods}
         \subsection{Euler-Maruyama}
@@ -123,7 +119,7 @@
                 
                 
 
-\chapter{The Three Methods of Simulation of the Heston Model}
+\chapter{Methods of simulation of the Heston stochastic volatility model}
     \section{Euler Scheme}
         Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme:
         \begin{align}
@@ -149,98 +145,97 @@
         However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series approximation.
 
     \section{Broadie-Kaya Scheme}
-    It follows from Heston model that for $t > u$
-    \begin{align}
-         S_t &= S_u e^{\left( r(t-u)-\frac{1}{2} \int_{u}^{t} v_s \, ds  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}, \label{BK:Price_int} \\
-         v_t &= v_u + \kappa\theta(t-u) - \kappa \int_{u}^{t} v_s \, ds + \sigma\int_{u}^{t} \sqrt{v_s} \, dZ_2(s), \label{BK:Vol_int}
-    \end{align}
-    Exact simulation algorithm for the Heston model:
-    \begin{enumerate}
-        \item Generate a sample from the distribution of $v_t$ given $v_u$;
-        \item Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$;
-        \item Recover $\int_{u}^t \sqrt{v_s} dZ_1(s)$ given $v_t$, $v_u$, and $\int_{t}^u v_s ds$;
-        \item Generate a sample from the distribution of $S_t$ given $\int_{u}^t \sqrt{v_s} dZ_1(s)$ , $\int_{u}^t \sqrt{v_s} dZ_2(s)$ and $\int_{u}^t v_s ds$.
-    \end{enumerate}
+        It follows from Heston model that for $t > u$
+        \begin{align}
+            S_t &= S_u e^{\left( r(t-u)-\frac{1}{2} \int_{u}^{t} v_s \, ds  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}, \label{BK:Price_int} \\
+            v_t &= v_u + \kappa\theta(t-u) - \kappa \int_{u}^{t} v_s \, ds + \sigma\int_{u}^{t} \sqrt{v_s} \, dZ_2(s), \label{BK:Vol_int}
+        \end{align}
+        Exact simulation algorithm for the Heston model:
+        \begin{enumerate}
+            \item Generate a sample from the distribution of $v_t$ given $v_u$;
+            \item Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$;
+            \item Recover $\int_{u}^t \sqrt{v_s} dZ_1(s)$ given $v_t$, $v_u$, and $\int_{t}^u v_s ds$;
+            \item Generate a sample from the distribution of $S_t$ given $\int_u^t \sqrt{v_s} dZ_1(s)$, $\int_u^t \sqrt{v_s} dZ_2(s)$, $\int_u^t v_s ds$.
+        \end{enumerate}
 
-    \subsection*{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
-        As shown in {\color{red}Cox et al. (1985) ADD CITING TO BIB FILE} the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
-        \begin{equation}
-            v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})} v_u  \right), \quad t > u, \label{BK:vol_law}
-        \end{equation}
-        where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
-        variable with $d$ degrees of freedom, and noncentrality
-        parameter $\lambda$, and
-        \begin{equation}
-            d = \frac{4\theta\kappa}{\sigma^2} \label{BK:vol_law:parameter}.
-        \end{equation}
-        Thus, we can sample from the distribution of $v_t$ exactly,
-        provided that we can sample from the noncentral chisquared distribution.
-        {\color{red}Johnson et al. (1994) ADD CITING TO BIB FILE} show that for $d > 1$, the following representation is valid:
-        \begin{equation}
-            \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
-        \end{equation}
-        Therefore, when $d > 1$, sampling from a noncentral chi-squared distribution
-        is reduced to sampling from an ordinary chi-squared and
-        an independent normal.
-        When $d < 1$ we can use the the fact that
-        \begin{equation}
-            \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2},
-        \end{equation}
-        where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$.
+        \subsection*{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
+            As shown in {\color{red}Cox et al. (1985) ADD CITING TO BIB FILE} the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
+            \begin{equation}
+                v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})} v_u  \right), \quad t > u, \label{BK:vol_law}
+            \end{equation}
+            where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
+            variable with $d$ degrees of freedom, and noncentrality
+            parameter $\lambda$, and
+            \begin{equation}
+                d = \frac{4\theta\kappa}{\sigma^2} \label{BK:vol_law:parameter}.
+            \end{equation}
+            Thus, we can sample from the distribution of $v_t$ exactly,
+            provided that we can sample from the noncentral chisquared distribution.
+            {\color{red}Johnson et al. (1994) ADD CITING TO BIB FILE} show that for $d > 1$, the following representation is valid:
+            \begin{equation}
+                \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
+            \end{equation}
+            Therefore, when $d > 1$, sampling from a noncentral chi-squared distribution
+            is reduced to sampling from an ordinary chi-squared and
+            an independent normal.
+            When $d < 1$ we can use the the fact that
+            \begin{equation}
+                \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2},
+            \end{equation}
+            where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$.
 
-    \subsection*{Step 2: Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
-        The folowing formula can be derived. {\color{red}The derivation could be found in in the original paper. DERIVE HERE}
-        \begin{multline}
-            \phi(a) = \E\left[  \exp{(ia\int_{u}^t V_s ds)} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
-            \exp{\left(\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     \right)}
-            \frac{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\gamma(a)e^{-0.5\gamma(a)(t-u)}}{\sigma^2(1-e^{-\kappa(a)(t-u)})})}{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\kappa e^{-0.5\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})})},
-        \end{multline}
-        where $\gamma(a) = \sqrt{\kappa^2 - 2\sigma i a}$ and $I_{0.5d-1}$ is a modified  Bessel function of the first kind.
+        \subsection*{Step 2: Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+            The folowing formula can be derived. {\color{red}The derivation could be found in in the original paper. DERIVE HERE}
+            \begin{multline}
+                \phi(a) = \E\left[  \exp{(ia\int_{u}^t V_s ds)} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
+                \exp{\left(\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     \right)}
+                \frac{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\gamma(a)e^{-0.5\gamma(a)(t-u)}}{\sigma^2(1-e^{-\kappa(a)(t-u)})})}{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\kappa e^{-0.5\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})})},
+            \end{multline}
+            where $\gamma(a) = \sqrt{\kappa^2 - 2\sigma i a}$ and $I_{0.5d-1}$ is a modified  Bessel function of the first kind.
 
-        Let $V(u,t)$  denote the random
-        variable that has the same distribution as the integral $\int_{u}^t V_s ds$ conditional on $v_u$ and $v_t$.    
-        Then we need to invert the characteristic function to get the cumulative distribution function
-        \begin{multline}
-            F(x) = P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] =\\= \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du 
-            = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du.
-        \end{multline}
-        To calculate the integral the trapezoidal rule is being used, {\color{red} ??????????? because the errors tend to annihilate for periodic and other oscillating integrands}
-        \begin{equation}\label{BK:Vut_Law}
-            P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^\infty \frac{\sin hjx}{j} Re[\Phi(hj)] - e_d(h),
-        \end{equation}
-        where $h$ is a grid size and $e_d(h)$ is the discretization error $e_d$.
-        It can be bounded above by using a Poisson summation formula:
-        \begin{equation}\label{BK:Vut_Law:discretization_error}
-            0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right).
-        \end{equation}
-        If we want to achieve a discretization error $\alpha$, then the
-        step size should be
-        \begin{equation}
-            h = 2\frac{2\pi}{x+ u_\alpha} \geq \frac{\pi}{u_\alpha},
-        \end{equation}
-        where $1-F(u_\alpha) = \alpha$ and $0 \leq x \leq u_\alpha$.
-        To be able to calculate $P(V(u, t) < x )$ using \eqref{BK:Vut_Law}, we
-        need to determine a point at which the summation can be
-        terminated. Let $N$ represent the last term to be calculated
-        so that the approximation becomes
-        \begin{equation}
-            F(x) = P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^N \frac{\sin hjx}{j} \Re[\Phi(hj)] - e_d(h) - e_T(N).
-        \end{equation}
-        Because $|\sin(ux)| \leq 1$, the integrand in \eqref{BK:Vut_Law:discretization_error} is bounded by
-        \begin{equation}
-            \frac{2|\Re[\Phi(u)]|}{\pi u} \leq \frac{2|\Phi(u)|}{\pi u}.
-        \end{equation}
-        To simulate the value of the integral, the Smirnov's transform method is used. We generate a uniform random variable U and then find the value of x for which 
-        \begin{equation}
-            P(V(u, t) \leq x) = U.
-        \end{equation}
+            Let $V(u,t)$  denote the random
+            variable that has the conditional distribution of the integral $\int_{u}^t V_s ds$ given $v_u$ and $v_t$.    
+            Then we need to invert the characteristic function to get the cumulative distribution function
+            \begin{multline}
+                F(x) = \P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] =\\= \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du 
+                = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du.
+            \end{multline}
+            To calculate the integral the trapezoidal rule is being used, {\color{red} ??????????? because the errors tend to annihilate for periodic and other oscillating integrands}
+            \begin{equation}\label{BK:Vut_Law}
+                \P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^\infty \frac{\sin hjx}{j} \Re[\Phi(hj)] - e_d(h),
+            \end{equation}
+            where $h$ is a grid scale and $e_d(h)$ is the discretization error $e_d$.
+            It can be bounded above by using a Poisson summation formula:
+            \begin{equation}\label{BK:Vut_Law:discretization_error}
+                0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right).
+            \end{equation}
+            If we want to achieve a discretization error $\alpha$, then the
+            step size should be
+            \begin{equation}
+                h = 2\frac{2\pi}{x+ u_\alpha} \geq \frac{\pi}{u_\alpha},
+            \end{equation}
+            where $1-F(u_\alpha) = \alpha$ and $0 \leq x \leq u_\alpha$.
+            To be able to calculate $P(V(u, t) < x )$ using \eqref{BK:Vut_Law}, we
+            need to determine a point at which the summation can be
+            terminated. Let $N$ represent the last term to be calculated
+            so that the approximation becomes
+            \begin{equation}
+                F(x) = \P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^N \frac{\sin hjx}{j} \Re[\Phi(hj)] - e_d(h) - e_T(N).
+            \end{equation}
+            Because $|\sin ux| \leq 1$, the integrand in \eqref{BK:Vut_Law:discretization_error} is bounded by
+            \begin{equation}
+                \frac{2|\Re[\Phi(u)]|}{\pi u} \leq \frac{2|\Phi(u)|}{\pi u}.
+            \end{equation}
+            To simulate the value of the integral, the Smirnov's transform method is used. We generate a uniform random variable U and then find the value of x for which 
+            \begin{equation}
+                \P(V(u, t) \leq x) = U.
+            \end{equation}
 
-    \subsection*{Step 3: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
-        The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated samples for $v_t , v_u, V(u, t)$
-        \begin{equation}
-            \int_{u}^t \sqrt{v_s} dZ_1(s) = \frac{1}{\sigma}(v_t v_u) - \kappa\theta(t-u) + V(u, t).
-        \end{equation}
-
+        \subsection*{Step 3: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
+            The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated samples for $v_t , v_u, V(u, t)$
+            \begin{equation}
+                \int_{u}^t \sqrt{v_s} dZ_1(s) = \frac{1}{\sigma}(v_t v_u) - \kappa\theta(t-u) + V(u, t).
+            \end{equation}
 
     \subsection*{Step 4: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
         Lastly, we need to bring everything together:
@@ -289,7 +284,9 @@
                 \begin{proof}
                     {\color{red}Plain equating of the theoretical and real moments.}
                 \end{proof}
-                \textbf{Remark:} The above lemma is not valid for $\psi \geq 2$.
+                \begin{remark}
+                    The above lemma is not valid for $\psi \geq 2$.
+                \end{remark}
                 Therefore, if $\hat{V}(t)$ is close to zero, then we have a problem in finding such $a = a(\Delta, \hat{V}(t), VP)$ and $b = b(\Delta, \hat{V}(t), VP)$ such that the moments of the desired conditional distribution could be properly matched.
 
             \subsubsection{Exponential Sampling Scheme}
@@ -349,7 +346,6 @@
         \textbf{Problem}: no known limits to use the numerical solution.
 
         \textbf{Solution}: 
-        % kappa = 2\beta, theta = \frac{\delta^2}{2\beta}
         \begin{align}
             m   &= \frac{\delta^2}{2\beta} + \left(\hat{V}(t) - \frac{\delta^2}{2\beta}\right)e^{-2\beta \Delta},\\
             s^2 &= \frac{\hat{V}(t)\sigma^2e^{-2\beta \Delta}}{2\beta}\left(1 - e^{-2\beta \Delta}\right) + \frac{\delta^2\sigma^2}{8\beta^2}\left(1 - e^{-2\beta \Delta}\right)^2.
