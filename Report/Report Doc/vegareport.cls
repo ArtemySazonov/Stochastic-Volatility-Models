@@ -138,17 +138,14 @@
 \let\TOC\tableofcontents
 \let\LOT\listoftables
 \let\LOF\listoffigures
-\renewcommand{\tableofcontents}{\newpage\TOC\addcontentsline{toc}{chapter}{\textTableofcontents}}
-\renewcommand{\listoffigures}  {\newpage\LOF\addcontentsline{toc}{chapter}{\textListoffigures}}
-\renewcommand{\listoftables}   {\newpage\LOT\addcontentsline{toc}{chapter}{\textListoftables}}
+\renewcommand{\tableofcontents}{\newpage\phantomsection\addcontentsline{toc}{chapter}{\textTableofcontents}\TOC}
+\renewcommand{\listoffigures}  {\newpage\phantomsection\addcontentsline{toc}{chapter}{\textListoffigures}\LOF}
+\renewcommand{\listoftables}   {\newpage\phantomsection\addcontentsline{toc}{chapter}{\textListoftables}\LOT}
 
 \renewcommand{\maketitle}
 {
     \pagestyle{empty}
-    \begin{titlepage}
-        
-
-        \newgeometry{left=2cm,right=3.125cm,bottom=1cm}
+    \begin{titlepage}\newgeometry{left=2cm,right=3.125cm,bottom=1cm}
         \begin{tikzpicture}[remember picture,overlay]
             \node [fill, rectangle, top color=color1bg,  bottom color=color1bg, anchor=north, minimum width=\paperwidth, minimum height=\paperheight,shading angle=30] (box) at (current page.north){};
             \node [anchor=north east] at (current page.north east){\includegraphics[width=6.25cm]{vega_letter_white.pdf}};
@@ -178,8 +175,8 @@
         \newpage
         \restoregeometry
         \pagestyle{empty}\pagenumbering{roman}
-        \tableofcontents\newpage
-        \listoffigures\newpage
+        \tableofcontents
+        \listoffigures
         \listoftables
         \newpage
         \pagestyle{fancy}\pagenumbering{arabic}\setcounter{page}{3}
@@ -188,7 +185,7 @@
 
 \newcommand{\introduction}{\newpage\chapter*{\textIntroduction}\addcontentsline{toc}{part}{\textIntroduction}}
 \newcommand{\conclusion}  {\newpage\part*{\textConclusion}\addcontentsline{toc}{part}{\textConclusion}}
-\newcommand{\references}  {\newpage\printbibliography\addcontentsline{toc}{part}{\textReferences}}
+\newcommand{\references}  {\newpage\phantomsection\addcontentsline{toc}{part}{\textReferences}\printbibliography}
 
 \newtheorem{definition}{\textDefinition}
 \newtheorem{theorem}{\textTheorem}
