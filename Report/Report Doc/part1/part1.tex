@@ -35,7 +35,7 @@
         \end{theorem}
 
         \begin{theorem}[Lindeberg-L\'evy]
-            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\mathbb{E}[X_i] = \mu$ and $\var\left[X_i\right] = \sigma^2$. 
+            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\E[X_i] = \mu$ and $\var X_i = \sigma^2$. 
             Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
             \begin{equation}
                 \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
@@ -66,12 +66,12 @@
 
     \section{General Monte-Carlo Methods for Gaussian Diffusions}
 
-    \section{The Main Three Methods}
+    \section{The Main Methods}
         \subsection{Euler-Maruyama}
             \subsubsection{Forward Euler Scheme for ODEs}
                 Suppose that we have an ODE of the form
                 \begin{equation}
-                    dX(t) = f(X(t), t)dt, \quad X(0) = X_0. \label{eq:ode}
+                    dX(t) = f(X(t), t)dt, \quad X(0) = X_0. \label{eq:ode1}
                 \end{equation}
                 Then it could be numerically solved by the following finite difference scheme:
                 \begin{equation}
@@ -82,7 +82,7 @@
             \subsubsection{Backward Euler Scheme for ODEs}
                 Suppose that we have an ODE of the form
                 \begin{equation}
-                    dX(t) = f(X(t), t)dt, \quad X(0) = X_0. \label{eq:ode}
+                    dX(t) = f(X(t), t)dt, \quad X(0) = X_0. \label{eq:ode2}
                 \end{equation}
                 Then it could be numerically solved by the following finite difference scheme:
                 \begin{equation}
@@ -149,6 +149,213 @@
         However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series approximation.
 
     \section{Broadie-Kaya Scheme}
+    It follows from Heston model that for $t > u$
+    \begin{align}
+         S_t &= S_u e^{\left( r(t-u)-\frac{1}{2} \int_{u}^{t} v_s \, ds  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}, \label{BK:Price_int} \\
+         v_t &= v_u + \kappa\theta(t-u) - \kappa \int_{u}^{t} v_s \, ds + \sigma\int_{u}^{t} \sqrt{v_s} \, dZ_2(s), \label{BK:Vol_int}
+    \end{align}
+    Exact simulation algorithm for the Heston model:
+    \begin{enumerate}
+        \item Generate a sample from the distribution of $v_t$ given $v_u$;
+        \item Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$;
+        \item Recover $\int_{u}^t \sqrt{v_s} dZ_1(s)$ given $v_t$, $v_u$, and $\int_{t}^u v_s ds$;
+        \item Generate a sample from the distribution of $S_t$ given $\int_{u}^t \sqrt{v_s} dZ_1(s)$ , $\int_{u}^t \sqrt{v_s} dZ_2(s)$ and $\int_{u}^t v_s ds$.
+    \end{enumerate}
+
+    \subsection*{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
+        As shown in {\color{red}Cox et al. (1985) ADD CITING TO BIB FILE} the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
+        \begin{equation}
+            v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa()t-u})} v_u  \right), t > u , \label{BK:vol_law}
+        \end{equation}
+        where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
+        variable with $d$ degrees of freedom, and noncentrality
+        parameter $\lambda$, and
+        \begin{equation}
+            d = \frac{4\theta\kappa}{\sigma^2} \label{BK:vol_law:parameter}.
+        \end{equation}
+        Thus, we can sample from the distribution of $v_t$ exactly,
+        provided that we can sample from the noncentral chisquared distribution.
+        {\color{red}Johnson et al. (1994) ADD CITING TO BIB FILE} show that for $d > 1$, the following representation is valid:
+        \begin{equation}
+            \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
+        \end{equation}
+        Therefore, when $d > 1$ sampling from a noncentral chi-squared distribution
+        is reduced to sampling from an ordinary chi-squared and
+        an independent normal.
+        When $d < 1$ we can use the the fact that
+        \begin{equation}
+            \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2},
+        \end{equation}
+        where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$.
+
+    \subsection*{Step 2: Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
+        The folowing formula can be derived. {\color{red}The derivation could be found in in the original paper. DERIVE HERE}
+        \begin{multline}
+            \phi(a) = \E\left[  \exp{(ia\int_{u}^t V_s ds)} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
+            \exp{\left(\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     \right)}
+            \frac{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\gamma(a)e^{-0.5\gamma(a)(t-u)}}{\sigma^2(1-e^{-\kappa(a)(t-u)})})}{I_{0.5d-1}(\sqrt{v_uv_t}\frac{4\kappa e^{-0.5\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})})},
+        \end{multline}
+        where $\gamma(a) = \sqrt{\kappa^2 - 2\sigma i a}$ and $I_{0.5d-1}$ is a modified  Bessel function of the first kind.
+
+        Let $V(u,t)$  denote the random
+        variable that has the same distribution as the integral $\int_{u}^t V_s ds$ conditional on $v_u$ and $v_t$.    
+        Then we need to invert the characteristic function to get the cumulative distribution function
+        \begin{multline}
+            F(x) = P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] =\\= \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du 
+            = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du.
+        \end{multline}
+        To calculate the integral the trapezoidal rule is being used, because the errors tend to annihilate for periodic and other oscillating integrands
+        \begin{equation}\label{BK:Vut_Law}
+            P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^\infty \frac{\sin hjx}{j} Re[\Phi(hj)] - e_d(h),
+        \end{equation}
+        where $h$ is a grid size and $e_d(h)$ is the discretization error $e_d$.
+        It can be bounded above by using a Poisson summation formula 
+        \begin{equation}\label{BK:Vut_Law:discretization_error}
+            0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right)
+        \end{equation}
+        If we want to achieve a discretization error $\alpha$, then the
+        step size should be
+        \begin{equation}
+            h = 2\frac{2\pi}{x+ u_\alpha} \geq \frac{\pi}{u_\alpha},
+        \end{equation}
+        where $1-F(u_\alpha) = \alpha$ and $0 \leq x \leq u_\alpha$.
+        To be able to calculate $P(V(u, t) < x )$ using \eqref{BK:Vut_Law}, we
+        need to determine a point at which the summation can be
+        terminated. Let $N$ represent the last term to be calculated
+        so that the approximation becomes
+        \begin{equation}
+            F(x) = P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^N \frac{\sin hjx}{j} \Re[\Phi(hj)] - e_d(h) - e_T(N).
+        \end{equation}
+        Because $|\sin(ux)| \leq 1$, the integrand in \eqref{BK:Vut_Law:discretization_error} is bounded by
+        \begin{equation}
+            \frac{2|\Re[\Phi(u)]|}{\pi u} \leq \frac{2|\Phi(u)|}{\pi u}.
+        \end{equation}
+        To simulate the value of the integral, the Smirnov's transform method is used. We generate a uniform random variable U and then find the value of x for which 
+        \begin{equation}
+            P(V(u, t) \leq x) = U.
+        \end{equation}
+
+    \subsection*{Step 3: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
+        The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated samples for $v_t , v_u, V(u, t)$
+        \begin{equation}
+            \int_{u}^t \sqrt{v_s} dZ_1(s) = \frac{1}{\sigma}(v_t v_u) - \kappa\theta(t-u) + V(u, t).
+        \end{equation}
+
+
+    \subsection*{Step 4: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
+        Lastly, we need to bring everything together:
+        \begin{itemize}
+            \item $\int_{u}^t \sqrt{v_s} dZ_1(s)$ and $\int_{u}^t \sqrt{v_s} dZ_2(s)$ are already calculated;
+            \item $V(u, t) = \int_{u}^t v_s ds $ is also calculated.
+        \end{itemize}
+        \begin{equation}
+            S_t = S_u \exp{\left( r(t-u)-\frac{1}{2} V(u, t)  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}
+        \end{equation}
 
     \section{Andersen Scheme}
+        Motivation for these schemes is the following two facts:
+        \begin{itemize}
+            \item Euler scheme is not very accurate, but fast and easy to implement;
+            \item Broadie-Kaya scheme is more accurate, but significantly slower and way more complicated.
+        \end{itemize}
+        \subsection{Quadratic-Exponential Discretization Scheme}
+            We denote 
+            \begin{align}
+                m    &= \E\left[\left.\hat{V}(t+\Delta)\right| \hat{V}(t)\right], \label{Andersen:mean}\\
+                s^2  &= \E\left[\left.\left(\hat{V}(t+\Delta) - m\right)^2\right| \hat{V}(t)\right], \\
+                \psi &= \frac{s^2}{m^2}.\label{Andersen:CV}
+            \end{align}
+            Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the first step of Broadie and Kaya's method.
+            He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually difers when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
+            The scheme is constructed from the following two subschemes:
+            \begin{enumerate}
+                \item Quadratic sampling scheme ($\psi \leq 2$);
+                \item Exponential sampling scheme ($\psi \geq 1$).
+            \end{enumerate}
+            Fortunately, these two intervals cover the whole positive real line. Furthermore, these two schemes could be applied at the same time when $\psi\in[1, 2]$. This implies that there exists a critical value $\psi_{\text{crit}}\in[1, 2]$, which could be an indicator of which scheme is more applicable at the given value of $\psi$. Let us show you this.
+            \subsubsection{Quadratic Sampling Scheme}
+                For large enough $\hat{V}(t)$ (in the $CV$-sense) we can approximate the distribution of $\hat{V}(t+\Delta)$ by the scaled non-central chi-squared distribution with $1$ degree of freedom:
+                \begin{align}
+                    \law\left(\left.\hat{V}(t+\Delta) \right| \hat V(t)\right) =  a(\Delta, \hat{V}(t), VP) \chi'^2_1(b(\Delta, \hat{V}(t), VP)),
+                \end{align}
+                where $VP$ is the vector of parameters of the CIR variance.
+                \begin{lemma}
+                    We have
+                    \begin{align}
+                        b^2 &= \frac{2}{\psi} -1 +\sqrt{\frac{2}{\psi}\left(\frac{2}{\psi}-1\right)}, \\ 
+                        a   &= \frac{m}{1+b^2}.
+                    \end{align}
+                \end{lemma}
+                \begin{proof}
+                    {\color{red}Plain equating of the theoretical and real moments.}
+                \end{proof}
+                \textbf{Remark:} The above lemma is not valid for $\psi \geq 2$.
+                Therefore, if $\hat{V}(t)$ is close to zero, then we have a problem in finding such $a = a(\Delta, \hat{V}(t), VP)$ and $b = b(\Delta, \hat{V}(t), VP)$ such that the moments of the desired conditional distribution could be properly matched.
 
+            \subsubsection{Exponential Sampling Scheme}
+                Therefore, we approximate the desired distribution with the following method. Let $\xi$ and $\eta$ be independent random variables and  $\xi \sim Be(1-p)$, $\eta \sim Exp(\beta)$ for some $p \in (0, 1)$ and $\beta > 0$. Then we have (given $\hat{V}(t)$)
+                \begin{equation}
+                    \hat{V}(t+\Delta) = \xi\cdot\eta,
+                \end{equation}
+                what gives us the following distribution density:
+                \begin{equation}
+                    p_{\hat{V}(t+\Delta)\vert \hat{V}(t)} = p\cdot \delta(x) + (1-p) \cdot\beta e^{-\beta x},
+                \end{equation}
+                where $\delta(x)$ is a standart delta function and for some $\beta$ and $p$.
+                Sampling $\xi$ and $\eta$: Smirnov's transform. Or we can use the Smirnov transform with the cdf of the desired distribution.
+                \begin{lemma}
+                    We have
+                    \begin{equation}
+                        p     = \frac{\psi - 1}{\psi + 1}, \qquad \beta = \frac{1-p}{m} = \frac{2}{m(\psi+1)}.
+                    \end{equation}
+                \end{lemma}
+                \begin{proof}
+                    {\color{red}By direct integration of the given densities we get the following:}
+                    \begin{equation}
+                        \frac{1-p}{\beta} = m, \qquad \frac{1-p^2}{\beta^2} = s^2.
+                    \end{equation}
+                \end{proof}
+                \begin{remark}
+                    The above lemma is not valid for $\psi \leq 1$.
+                \end{remark}
+
+        \subsection{Truncated Gaussian Discretization Scheme}
+            The main idea of the method: in this scheme the idea is to sample from a moment-matched Gaussian density where all probability
+            mass below zero is inserted into a delta-function at the origin. Formalization of the idea:
+            \begin{equation}
+                \left(\left.\hat{V}(t+\Delta)\right| V(t)\right) = \left(\mu + \sigma Z\right)^+,
+            \end{equation}
+            where $Z$ is a standard normal random variable and $\mu$ and $\sigma$ are the 'mean' and the 'standard deviation' of the desired distribution.
+            We find $\mu$ and $\sigma$ from the moment-matching techniques (see the previous method,  equations \eqref{Andersen:mean} -- \eqref{Andersen:CV}).
+
+            \begin{lemma}
+                Let $\phi(x)$ be a standart Gaussian density and define a function $r:\mathbb{R} \to \mathbb{R}$ by the following equation:
+                \begin{equation}
+                    r(x)\phi(r(x))+\Phi(r(x))(1+r(x)^2)= (1+x)\left(\phi(r(x)) + r(x)\Phi(r(x))\right)^2.
+                \end{equation}
+                Then the moment-matching parameters are
+                \begin{align}
+                    \mu &= \frac{m}{\frac{\phi(r(\psi))}{r(\psi)} + \Phi(r(\psi))},\\ 
+                    \sigma &= \frac{m}{\phi(r(\psi)) + r(\psi)\Phi(r(\psi))}.
+                \end{align}
+            \end{lemma}
+            \begin{proof}
+                {\color{red}PROOF HERE}
+            \end{proof}
+            \textbf{Problem}: no closed-form solution for $r(\psi)$. 
+        
+        \textbf{Solution}: numerical solution.
+
+        \textbf{Problem}: no known limits to use the numerical solution.
+
+        \textbf{Solution}: 
+        % kappa = 2\beta, theta = \frac{\delta^2}{2\beta}
+        \begin{align}
+            m   &= \frac{\delta^2}{2\beta} + \left(\hat{V}(t) - \frac{\delta^2}{2\beta}\right)e^{-2\beta \Delta},\\
+            s^2 &= \frac{\hat{V}(t)\sigma^2e^{-2\beta \Delta}}{2\beta}\left(1 - e^{-2\beta \Delta}\right) + \frac{\delta^2\sigma^2}{8\beta^2}\left(1 - e^{-2\beta \Delta}\right)^2.
+        \end{align}
+        Then we analyze $\psi$ wrt $\hat{V}(t)$ and obtain a finite interval as a domain for $r(\psi)$.
+        \begin{proof}
+            {\color{red}PROOF HERE. Redo as a lemma}
+            
+        \end{proof}

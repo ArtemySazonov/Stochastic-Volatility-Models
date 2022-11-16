@@ -102,6 +102,7 @@
 \newcommand{\textCorollary}      {Corollary}
 \newcommand{\textExample}        {Example}
 \newcommand{\textProposition}    {Proposition}
+\newcommand{\textRemark}         {Remark}
 
 
 \ProcessKeyvalOptions*
@@ -119,6 +120,7 @@
     \renewcommand{\textCorollary}      {Следствие}
     \renewcommand{\textExample}        {Пример}
     \renewcommand{\textProposition}    {Предложение}
+    \renewcommand{\textRemark}         {Замечание}
 \fi
 
 \ProcessKeyvalOptions*
@@ -194,6 +196,7 @@
 \newtheorem{lemma}[theorem]{\textLemma}
 \newtheorem{example}{\textExample}
 \newtheorem{proposition}{\textProposition}
+\newtheorem*{remark}{\textRemark}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,6 +208,8 @@
 \DeclareMathOperator*{\sgn}{sgn}
 \DeclareMathOperator*{\var}{var}   
 \DeclareMathOperator*{\cov}{cov}
+\DeclareMathOperator*{\law}{Law}
+
 
 \newcommand{\1}{\mathbbm{1}} 
 \newcommand{\R}{\mathbb{R}}
@@ -214,22 +219,3 @@
 
 \newcommand{\independent}{\perp\!\!\!\!\perp}
 
-\newcommand\cA{{\cal A}}
-\newcommand\cE{{\cal E}}
-\newcommand\cC{{\cal C}}
-\newcommand\cF{{\cal F}}
-\newcommand\cG{{\cal G}}
-\newcommand\cK{{\cal K}}
-\newcommand\cL{{\cal L}}
-\newcommand\cB{{\cal B}}
-\newcommand\cN{{\cal N}}
-\newcommand\cM{{\cal M}}
-\newcommand\cX{{\cal X}}
-\newcommand\cD{{\cal D}}
-\newcommand\cR{{\cal R}}
-\newcommand\cP{{\cal P}}
-\newcommand\cQ{{\cal Q}}
-\newcommand\cS{{\cal S}}
-\newcommand\cT{{\cal T}}
-\newcommand\cV{{\cal V}}
-\newcommand\cZ{{\cal Z}}
