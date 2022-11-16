@@ -165,7 +165,7 @@
     \subsection*{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
         As shown in {\color{red}Cox et al. (1985) ADD CITING TO BIB FILE} the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
         \begin{equation}
-            v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa()t-u})} v_u  \right), t > u , \label{BK:vol_law}
+            v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})} v_u  \right), \quad t > u, \label{BK:vol_law}
         \end{equation}
         where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
         variable with $d$ degrees of freedom, and noncentrality
@@ -179,7 +179,7 @@
         \begin{equation}
             \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
         \end{equation}
-        Therefore, when $d > 1$ sampling from a noncentral chi-squared distribution
+        Therefore, when $d > 1$, sampling from a noncentral chi-squared distribution
         is reduced to sampling from an ordinary chi-squared and
         an independent normal.
         When $d < 1$ we can use the the fact that
@@ -204,14 +204,14 @@
             F(x) = P(V(u, t) \leq x) = E\left[ e^{iaV(u,t)} \Big| v_u, v_t\right] =\\= \frac{1}{\pi} \int_{-\infty}^\infty \frac{\sin ux}{u} \Phi(u) du 
             = \frac{2}{\pi} \int_{0}^\infty \frac{\sin ux}{u} \Phi(u) du.
         \end{multline}
-        To calculate the integral the trapezoidal rule is being used, because the errors tend to annihilate for periodic and other oscillating integrands
+        To calculate the integral the trapezoidal rule is being used, {\color{red} ??????????? because the errors tend to annihilate for periodic and other oscillating integrands}
         \begin{equation}\label{BK:Vut_Law}
             P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^\infty \frac{\sin hjx}{j} Re[\Phi(hj)] - e_d(h),
         \end{equation}
         where $h$ is a grid size and $e_d(h)$ is the discretization error $e_d$.
-        It can be bounded above by using a Poisson summation formula 
+        It can be bounded above by using a Poisson summation formula:
         \begin{equation}\label{BK:Vut_Law:discretization_error}
-            0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right)
+            0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right).
         \end{equation}
         If we want to achieve a discretization error $\alpha$, then the
         step size should be
