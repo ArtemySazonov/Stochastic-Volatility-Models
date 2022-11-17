@@ -114,6 +114,9 @@
                 \begin{theorem}
                     Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
                 \end{theorem}
+                \begin{proof}
+                    {\color{red}TODO. WRITE TECHNICAL ASSUMPTIONS}
+                \end{proof}
             
                 Since our goal is to approximate $\E\left[h(X)\right]$ with a given accuracy and the least possible number of simulations, we need to compare the weak convergence rate between the methods.
                 
@@ -126,7 +129,7 @@
             S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
             v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + \sigma \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
         \end{align}
-        where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a mesh grid.
+        where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are the $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a mesh grid.
         But we have a problem: during simulation of the Heston model using Euler method $S_{t_n}$ and $v_{t_n}$ could be negative. How do we deal with this inconvenience?
         Let us introduce the log-prices
         \begin{equation}
@@ -141,8 +144,7 @@
         \begin{equation}
             S_{n} = S_0 e^{X_{n}}.
         \end{equation}
-        
-        However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series approximation.
+        However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series expansion.
 
     \section{Broadie-Kaya Scheme}
         It follows from Heston model that for $t > u$
@@ -237,15 +239,15 @@
                 \int_{u}^t \sqrt{v_s} dZ_1(s) = \frac{1}{\sigma}(v_t v_u) - \kappa\theta(t-u) + V(u, t).
             \end{equation}
 
-    \subsection*{Step 4: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
-        Lastly, we need to bring everything together:
-        \begin{itemize}
-            \item $\int_{u}^t \sqrt{v_s} dZ_1(s)$ and $\int_{u}^t \sqrt{v_s} dZ_2(s)$ are already calculated;
-            \item $V(u, t) = \int_{u}^t v_s ds $ is also calculated.
-        \end{itemize}
-        \begin{equation}
-            S_t = S_u \exp{\left( r(t-u)-\frac{1}{2} V(u, t)  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}
-        \end{equation}
+        \subsection*{Step 4: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
+            Lastly, we need to bring everything together:
+            \begin{itemize}
+                \item $\int_{u}^t \sqrt{v_s} dZ_1(s)$ and $\int_{u}^t \sqrt{v_s} dZ_2(s)$ are already calculated;
+                \item $V(u, t) = \int_{u}^t v_s ds $ is also calculated.
+            \end{itemize}
+            \begin{equation}
+                S_t = S_u \exp{\left( r(t-u)-\frac{1}{2} V(u, t)  + \rho\int_{u}^{t} \sqrt{v_s} \, dZ_1(s) + (1-\rho)\int_{u}^{t} \sqrt{v_s} \, dZ_2(s)  \right)}
+            \end{equation}
 
     \section{Andersen Scheme}
         Motivation for these schemes is the following two facts:

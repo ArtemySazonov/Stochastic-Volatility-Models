@@ -171,20 +171,20 @@
             \noindent{\@author}
             \end{Large}
         }
-        \end{titlepage}
+        \end{titlepage}\pagestyle{fancy}
         \newpage
         \restoregeometry
-        \pagestyle{empty}\pagenumbering{roman}
+        \pagenumbering{roman}
         \tableofcontents
         \listoffigures
         \listoftables
         \newpage
-        \pagestyle{fancy}\pagenumbering{arabic}\setcounter{page}{3}
+        \pagenumbering{arabic}\setcounter{page}{3}
 }
 
 
 \newcommand{\introduction}{\newpage\chapter*{\textIntroduction}\addcontentsline{toc}{part}{\textIntroduction}}
-\newcommand{\conclusion}  {\newpage\part*{\textConclusion}\addcontentsline{toc}{part}{\textConclusion}}
+\newcommand{\conclusion}  {\newpage\chapter*{\textConclusion}\addcontentsline{toc}{part}{\textConclusion}}
 \newcommand{\references}  {\newpage\phantomsection\addcontentsline{toc}{part}{\textReferences}\printbibliography}
 
 \newtheorem{definition}{\textDefinition}
@@ -206,7 +206,6 @@
 \DeclareMathOperator*{\var}{var}   
 \DeclareMathOperator*{\cov}{cov}
 \DeclareMathOperator*{\law}{Law}
-
 
 \newcommand{\1}{\mathbbm{1}} 
 \newcommand{\R}{\mathbb{R}}
