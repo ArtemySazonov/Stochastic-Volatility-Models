@@ -13,3 +13,5 @@
 *.toc
 *.ini
 .DS_Store
+*.lot
+*.lof
