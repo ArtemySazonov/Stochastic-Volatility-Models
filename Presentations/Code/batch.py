@@ -1,7 +1,8 @@
 import scipy.stats
 import numpy as np
 
-def get_len_conf_interval(data: np.ndarray, confidence_level: float = 0.05):
+def get_len_conf_interval(data: np.ndarray, 
+                          confidence_level: float = 0.05):
     """Get the confidence interval for a given confidence level.
     Args:
         data: The data to compute the confidence interval for.
@@ -15,7 +16,9 @@ def get_len_conf_interval(data: np.ndarray, confidence_level: float = 0.05):
     l = scipy.stats.norm.ppf(confidence_level / 2) * np.sqrt(np.var(data) / len(data))
     return [mean - l, mean + l]
 
-def get_number_of_simulations(data: np.ndarray, confidence_level: float = 0.05, absol_error: float = 1e-2):
+def get_number_of_simulations(data: np.ndarray, 
+                              confidence_level: float = 0.05, 
+                              absol_error: float = 1e-2):
     """Get the length of the confidence interval for a given confidence level.
     Args:
         data: The undersampled data to compute the sample variance.
@@ -26,10 +29,13 @@ def get_number_of_simulations(data: np.ndarray, confidence_level: float = 0.05, 
     """
     return int((2*scipy.stats.norm.ppf(confidence_level / 2))**2 * np.var(data) / absol_error)
 
-def get_number_of_batches(data: np.ndarray, confidence_level: float = 0.05, absol_error: float = 5e-3, batch_size: int = 10000):
+def get_number_of_batches(data: np.ndarray, 
+                          confidence_level: float = 0.05, 
+                          absol_error: float = 5e-3, 
+                          batch_size: int = 10000):
     """Get the number of batches needed to achieve a given relative error using the MC simulations.
     Args:
-        absol_error: The relative error to achieve. Defaults to 0.005 (corresponds to 0.5 cents).
+        absol_error: The relative error to achieve. Defaults to 0.005 (cor˝responds to 0.5 cents).
         batch_size: The batch size to use. Defaults to 10000.
     
     Returns:

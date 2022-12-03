@@ -58,8 +58,7 @@
         \end{equation}
         That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
 
-
-    \section{General Monte-Carlo methods for Gaussian diffusions}
+    \section{Monte-Carlo methods for Gaussian diffusions}
         \subsection{Euler-Maruyama Scheme}
             \subsubsection{Forward Euler Scheme for ODEs}
                 Suppose that we have an ODE of the form
@@ -181,8 +180,7 @@
                 \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
             \end{equation}
             Therefore, when $d > 1$, sampling from a noncentral chi-squared distribution
-            is reduced to sampling from an ordinary chi-squared and
-            an independent normal.
+            is reduced to sampling from an ordinary chi-squared and an independent normal.
             When $d < 1$ we can use the the fact that
             \begin{equation}
                 \chi_d'^{2}(\lambda) \sim \chi_{d + 2N}^{2},
