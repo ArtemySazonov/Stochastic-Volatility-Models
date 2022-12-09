@@ -17,7 +17,7 @@ class MarketState:
     interest_rate: Union[float, np.ndarray]
 
 
-def get_len_conf_interval(data: np.ndarray, 
+def get_len_conf_interval(data:             np.ndarray, 
                           confidence_level: float = 0.05):
     """Get the confidence interval for a given confidence level.
     Args:
@@ -32,9 +32,9 @@ def get_len_conf_interval(data: np.ndarray,
     l = scipy.stats.norm.ppf(confidence_level / 2) * np.sqrt(np.var(data) / len(data))
     return [mean - l, mean + l]
 
-def get_number_of_simulations(data: np.ndarray, 
+def get_number_of_simulations(data:             np.ndarray, 
                               confidence_level: float = 0.05, 
-                              absol_error: float = 1e-2):
+                              absol_error:      float = 1e-2):
     """Get the length of the confidence interval for a given confidence level.
     Args:
         data:             The undersampled data to compute the sample variance.
@@ -45,10 +45,10 @@ def get_number_of_simulations(data: np.ndarray,
     """
     return int((2*scipy.stats.norm.ppf(confidence_level / 2))**2 * np.var(data) / absol_error)
 
-def get_number_of_batches(data: np.ndarray, 
+def get_number_of_batches(data:             np.ndarray, 
                           confidence_level: float = 0.05, 
-                          absol_error: float = 5e-3, 
-                          batch_size: int = 10000):
+                          absol_error:      float = 5e-3, 
+                          batch_size:       int = 10000):
     """Get the number of batches needed to achieve a given absolute error using the MC simulations.
     Args:
         absol_error: The absolute error to achieve. Defaults to 0.005 (corresponds to 0.5 cents).
@@ -59,15 +59,16 @@ def get_number_of_batches(data: np.ndarray,
     """
     return int(get_number_of_simulations(data, confidence_level, absol_error) / batch_size)+1
 
-def controlled_simulation(market_state: MarketState,
-                          params: HestonParameters,
-                          T: float,
-                          dt: float,
-                          simulate: Callable[[MarketState, HestonParameters, float, float, int], np.ndarray],
-                          absolute_error: float = 0.01,
+def controlled_simulation(market_state:     MarketState,
+                          params:           HestonParameters,
+                          T:                float,
+                          dt:               float,
+                          simulate:         Callable[[MarketState, HestonParameters, float, float, int], np.ndarray],
+                          payoff:           Callable[[np.ndarray], np.ndarray],
+                          absolute_error:   float = 0.01,
                           confidence_level: float = 0.05,
-                          batch_size: int = 10000,
-                          undersample_size: int = 1000):
+                          batch_size:       int   = 10000,
+                          undersample_size: int   = 1000):
     """Simulate the Heston model using a controlled simulation.
     Args:
         market_state: The market state.
@@ -75,6 +76,7 @@ def controlled_simulation(market_state: MarketState,
         T:                The time horizon length, measured in years.
         dt:               The time step, measured in years.
         simulate:         The function to use to simulate the Heston model.
+        payoff:           The payoff function.
         absolute_error:   The absolute error to achieve. Defaults to 0.01.
         confidence_level: The confidence level to use. Defaults to 0.05.
         batch_size:       The batch size to use. Defaults to 10000.
@@ -84,8 +86,7 @@ def controlled_simulation(market_state: MarketState,
         The simulated data.
     """
 
-    undersample = simulate(market_state, params, dt, T, undersample_size)[:, -1]
-    batches = get_number_of_batches(undersample, confidence_level, absolute_error, batch_size)
+    batches = get_number_of_batches(payoff(simulate(market_state, params, dt, T, undersample_size)), confidence_level, absolute_error, batch_size)
     data = np.ndarray([[]])
     for i in range(batches):
         data = np.concatenate((data, simulate(params, batch_size)), axis=0)
