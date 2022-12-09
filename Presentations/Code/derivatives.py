@@ -14,15 +14,15 @@ def european_call(paths: np.ndarray,
 
 def european_put(paths: np.ndarray,
                  strike: float):
-        """Compute the payoff of a European put option.
-        Args:
-            paths:  The simulated paths.
-            strike: The strike price.
-        
-        Returns:
-            The payoff of the European put option.
-        """
-        return np.maximum(strike - paths[:, -1], 0)
+    """Compute the payoff of a European put option.
+    Args:
+        paths:  The simulated paths.
+        strike: The strike price.
+    
+    Returns:
+        The payoff of the European put option.
+    """
+    return np.maximum(strike - paths[:, -1], 0)
 
 def asian_call(paths: np.ndarray, 
                strike: float):
