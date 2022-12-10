@@ -1,0 +1,117 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{vega}
+
+\addbibresource{assets/pricing_lib.bib}
+
+\DeclareMathOperator*{\plim}{\ensuremath{\operatorname{\P-lim}}}
+\DeclareMathOperator*{\cor}{\ensuremath{\operatorname{cor}}}
+
+
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cN}{\mathcal{N}}
+
+\subtitle{Student Research Group 'Stochastic Volatility Models', Project 'Heston--2'}
+\title{Monte-Carlo Simulation: Speed and Error Control}
+\author{Artemy Sazonov, Danil Legenky, Kirill Korban}
+\institute{Lomonosov Moscow State Univesity, Faculty of Mechanics and Mathematics}
+\date{December 10, 2022}
+
+\begin{document}
+    \maketitle
+
+    \section{Monte-Carlo Error Control}
+        \begin{frame}{Central Limit Theorem}
+            \begin{theorem}[Lindeberg-L\'evy]
+                Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\mathbb{E}[X_i] = \mu$ and $\var\left[X_i\right] = \sigma^2$. 
+                Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
+                \begin{equation}
+                    \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
+                \end{equation}
+            \end{theorem}
+        \end{frame}
+        \begin{frame}{Monte Carlo Simulation}{Statistical Estimation}
+            \begin{lemma}
+                Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
+            \end{lemma}
+            Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+            \begin{equation}
+                \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
+            \end{equation}
+        \end{frame}
+
+        \begin{frame}{Monte Carlo Simulation}{Local Truncation Error}
+            Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
+            \begin{equation}
+                \mu \in \left(\hat{\mu} - z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}, \hat{\mu} + z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}\right).
+            \end{equation}
+            That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
+        \end{frame}
+
+        \begin{frame}{Euler-Maruyama Discretization Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
+            \begin{definition}
+                Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
+                Then a scheme is said to have a strong convergence of order $p$ if 
+                \begin{equation}
+                    \E\left[\left|\hat X^n(T) - X(T)\right|\right] \leq Ch^p, \quad n \to \infty.
+                \end{equation}
+                A scheme is said to have a weak convergence of order $p$ if for any polynomial $f: \R \to \R$ we have
+                \begin{equation}
+                    \left|\E\left[f(\hat X^n(T))\right] - \E\left[f(X(T))\right]\right| \leq Ch^p, \quad n \to \infty.
+                \end{equation}
+            \end{definition}
+        \end{frame}
+
+        \begin{frame}{Euler-Maruyama Discretization Scheme for SDEs}{Strong and weak convergence as a global truncation error analogue}
+            \begin{theorem}
+                Under some technical assumptions the Euler-Maruyama Discretization scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
+            \end{theorem}
+        
+            \begin{nb}
+                Since our goal is to approximate $\E\left[h(X)\right]$ with a given accuracy and the least possible number of simulations, we need to compare the weak convergence rate between the methods.
+                But this will work only for the derivatives of the European type, since we cannot guarantee the convergence of the simulations for the times $t < T$.
+            \end{nb}
+        \end{frame}
+
+    \section{Monte-Carlo Speed Control}
+        \begin{frame}{Control Variate Method}{Motivation}
+            \begin{itemize}
+                \item Let us consider the following random variables: $X$ and $Y$.
+                \item Let us suppose, that we somehow know $\E\left[X\right] = \mu_X$ and $\cor\left[X, Y\right] = \rho$.
+                \item Our goal is to build a consistent estimator of $\E\left[Y\right] = \mu_Y$.
+                \item Possible estimator is $\hat\mu_Y = \bar Y$. It is unbiased and consistent.
+                \item Can we improve the speed of convergence of the estimator?
+            \end{itemize}
+        \end{frame}
+
+        \begin{frame}{Control Variate Method}{Solution to the problem}
+            Let us consider the following estimator:
+            \begin{equation}
+                \hat\mu_Y^b = \bar Y + b \left(\bar X - \mu_X\right).
+            \end{equation}
+            We can see that the estimator is consistent and unbiased. Let us minimise the variance of it using the following optimization problem:
+            \begin{equation}
+                \var\hat\mu_Y^b \to \min_{b \in \R}.
+            \end{equation}
+            The solution is to use $b^* = \sqrt{\frac{\var Y}{\var X}}\rho$.
+        \end{frame}
+
+        \begin{frame}{Other useful methods}{}
+            \begin{itemize}
+                \item Antithetic variates: $\frac{Y_1 + Y_2}{2}$, where $Y_1$ and $Y_2$ are the correlated series of iid random variables.
+                \item Importance sampling: could be used to estimate the OTM options.
+            \end{itemize}
+        \end{frame}
+
+    
+    \section{Conclusion}
+        \begin{frame}{To-dos}
+            \begin{enumerate}
+                \item How do we approximate the log-prices?
+                \item Martingale correction in the Andersen schemes
+                \item Numerical stability of implied volatility calculations
+            \end{enumerate}
+        \end{frame}
+
+\end{document}
