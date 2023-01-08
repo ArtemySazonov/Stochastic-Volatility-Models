@@ -11,7 +11,7 @@
                 \State desired precision = 0.01 with confidence level 95\%
                 \State prices = $\left[ \ \right]$
                 \While{{len(prices\_confidence\_interval) > desired precision} \textbf{and} iter < MAX\_ITER}
-                    \State paths = simulate()
+                    \State paths = simulate(batch\_size)
                     \State prices $\gets$ payoff(paths)
                     \State prices\_confidence\_interval = confidence\_interval(prices)
                 \EndWhile
