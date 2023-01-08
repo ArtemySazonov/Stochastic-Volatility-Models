@@ -1,9 +1,23 @@
 \chapter{Implementation of the Methods}
-    \section{General Problems and mc\_price Function}
-        Basically, the error of discretization consists of two parts: the discretization error itself (the one coming from the transition from an stochastic differential equation to the stochastic difference equation) and the Monte-Carlo error (see Section \ref{Monte-Carlo:statistical}).
-        We controlled the errors with the following method:
-
-        \cite{Glasserman2013}
+    \section{General Problems and \texttt{mc\_price} Function}
+        The error of discretization consists of two parts: the discretization error itself 
+        (the one coming from the transition from an stochastic differential equation to the 
+        stochastic difference equation) and the Monte-Carlo error (see Section \ref{Monte-Carlo:statistical}).
+        We controlled the Monte-Carlo error with the following method:
+        \begin{algorithm}
+            \caption{Outer loop of the Monte-Carlo method (\texttt{mc\_price})}
+            \label{alg:outer_loop}
+            \begin{algorithmic}
+                \State desired precision = 0.01 with confidence level 95\%
+                \State prices = $\left[ \ \right]$
+                \While{{len(prices\_confidence\_interval) > desired precision} \textbf{and} iter < MAX\_ITER}
+                    \State paths = simulate()
+                    \State prices $\gets$ payoff(paths)
+                    \State prices\_confidence\_interval = confidence\_interval(prices)
+                \EndWhile
+                \State return mean(prices)
+            \end{algorithmic}
+        \end{algorithm}
 
 
 
@@ -15,7 +29,7 @@
 
 
 \chapter{Comparison of the Methods}
-    We shall compare the methods for the European call option prices due to that we have a closed form solution for it.
+    We shall compare the described methods for the European call option prices due to the fact that we have a closed-form solution for it.
     \section{Performance}
 
     \section{Accuracy}
