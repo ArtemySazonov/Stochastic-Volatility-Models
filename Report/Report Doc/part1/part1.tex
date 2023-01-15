@@ -1,5 +1,5 @@
 \chapter{A review of the original Heston model}
-    \textbf{Sources}:\cite{Gatheral2012}
+    \textbf{Sources}: \cite{Gatheral2012}
 
     In \citeyear{Heston1993}, Steven Heston introduced a stochastic volatility model in \cite{Heston1993}. 
     Here the variance of an asset follows a square-root process. We shall use the notation from \cite{Zhitlukhin2022}.
@@ -36,7 +36,7 @@
         \end{theorem}
 
         \begin{theorem}[Lindeberg-L\'evy]
-            Let $X_1, \dots, X_n$ be a sequence of i.i.d. random variables with $\E[X_i] \hm{=} \mu$ and $\var X_i = \sigma^2$. 
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E[X_i] \hm{=} \mu$ and $\var X_i = \sigma^2$. 
             Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
             \begin{equation}
                 \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
@@ -202,11 +202,6 @@
         However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series expansion.
 
     \section{Andersen Scheme}
-        Motivation for these schemes is the following two facts:
-        \begin{itemize}
-            \item Euler scheme is not very accurate, but fast and easy to implement;
-            \item Broadie-Kaya scheme is more accurate, but significantly slower and way more complicated.
-        \end{itemize}
         \subsection{Quadratic-Exponential Scheme}
             We denote 
             \begin{align}
@@ -305,7 +300,6 @@
         \end{lemma}
         \begin{proof}
             {\color{red}PROOF HERE.}
-            
         \end{proof}
 
         \section{Broadie-Kaya Scheme}
@@ -323,9 +317,9 @@
         \end{enumerate}
 
         \subsection*{Step 1: Generate a sample from the distribution of $v_t$ given $v_u$}
-            As shown in \cite{CoxRoss1985} the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
+            As shown in \cite{CoxRoss1985}, the distribution of $v_t$ given $v_u$ for some $u < t$ is, up to a scale factor, a noncentral chi-squared distribution. The transition law of $v_t$ can be expressed as:
             \begin{equation}
-                v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})} v_u  \right), \quad t > u, \label{BK:vol_law}
+                v_t = \frac{\sigma^2(1-e^{-\kappa(t-u)})}{4\kappa}\chi_d'^{2}\left(\frac{4\kappa e^{-\kappa(t-u)}}{\sigma^2(1-e^{-\kappa(t-u)})} v_u  \right),  \label{BK:vol_law}
             \end{equation}
             where $\chi_d'^{2}(\lambda)$ denotes the noncentral chi-squared random
             variable with $d$ degrees of freedom, and noncentrality
@@ -367,7 +361,7 @@
             \begin{equation}\label{BK:Vut_Law}
                 \P(V(u, t) \leq X) = \frac{hx}{\pi} + \frac{2}{\pi} \sum_{j=1}^\infty \frac{\sin hjx}{j} \Re[\Phi(hj)] - e_d(h),
             \end{equation}
-            where $h$ is a grid scale and $e_d(h)$ is the discretization error $e_d$.
+            where $h$ is a equidistant grid scale and $e_d(h)$ is the discretization error $e_d$.
             It can be bounded above by using a Poisson summation formula:
             \begin{equation}\label{BK:Vut_Law:discretization_error}
                 0 \leq e_d(h) = \sum_{k=1}^\infty\left[ F\left(\frac{2k\pi}{h} + x\right) - F\left(\frac{2k\pi}{h} - x\right)\right] \leq 1 - F\left(\frac{2\pi}{h} - x\right).

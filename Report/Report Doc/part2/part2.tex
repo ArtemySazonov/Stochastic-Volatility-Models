@@ -8,7 +8,7 @@
             \caption{Outer loop of the Monte-Carlo method (\texttt{mc\_price})}
             \label{alg:outer_loop}
             \begin{algorithmic}
-                \State desired precision = 0.01 with confidence level 95\%
+                \State {\bf Inputs}: \texttt{payoff}, \texttt{simulate}, market parameters, Heston parameters.
                 \State prices = $\left[ \ \right]$
                 \While{{len(prices\_confidence\_interval) > desired precision} \textbf{and} iter < MAX\_ITER}
                     \State paths = simulate(batch\_size)
@@ -19,13 +19,66 @@
             \end{algorithmic}
         \end{algorithm}
 
+    \section{Discretisation Schemes}
 
+        \begin{algorithm}[htbp]
+            \caption{Euler-Maruyama scheme (\texttt{simulate\_heston\_euler})}
+            \label{alg:euler}
+            \begin{algorithmic}
+                \State {\bf Inputs}: $S_0$, $V_0^*$, $r$, $\kappa$, $\theta$, $\sigma$, $\rho$, $T$, $N$
+                \State Set $X_0 = \log S_0$
+                \State Set $V_0 = V_0^*$
+                \State Generate a 2-dimensional Gaussian noise $Z_i = \left[\begin{aligned}
+                    Z_i^1\\
+                    Z_i^2               
+                \end{aligned}\right] \sim \cN\left(0,\left[\begin{array}{cc}
+                    1 & 0\\
+                    0 & 1
+                \end{array}\right]\right)$
+                \For{$i = 1$ to $N$}
+                    \State $X_{i+1}  = X_i + (\mu - 0.5 V_i^+)h_i + \sqrt{V_i^+} X_i \sqrt{h_i} Z_i^1$
+                    \State $ V_{i+1}  = V_i + \left(\delta^2 - 2\beta V_i^+\right) h_i + \sigma \sqrt{V_i^+} \left(\rho Z_i^1 + \sqrt{1-\rho^2}Z_i^2\right)$
+                \EndFor
+                \State return $S_N = \exp X_N$
+            \end{algorithmic}
+        \end{algorithm}
 
-    \section{Euler Scheme}
+        \begin{algorithm}[htbp]
+            \caption{Quadratic-Exponential scheme (\texttt{simulate\_heston\_andersen\_qe})}
+            \label{alg:andersen_qe}
+            \begin{algorithmic}
+                \State {\bf Inputs}: 
+                \State Set $X_0 = \log S_0$
+                \State Set $V_0 = V_0^*$
+                \State Set some $\psi_c \in [1, 2]$
+                \For{$i = 1$ to $N$}
+                    \State Compute $m$ and $s^2$ given $V_{i-1}$.
+                    \State Compute the coefficient of variation $\psi = \frac{s^2}{m^2}$
+                    \State Generate a random number $U_V \sim U(0,1)$
+                    \If {$\psi \leq \psi_c$}
+                        \State Compute $a$ and $b$ (eq. \eqref{eq:quadratic:a} -- \eqref{eq:quadratic:b})
+                        \State Compute $Z_V \sim \cN(0,1)$ using the Smirnov transform applied to $U_V$
+                        \State Compute $V_{i+1} = a\left(b+Z_V\right)^2$
+                    \Else
+                        \State
+                    \EndIf
+                \EndFor
+            \end{algorithmic}
+        \end{algorithm}
 
-    \section{Andersen Scheme}
+        \begin{algorithm}[htbp]
+            \caption{Truncated Gaussian scheme (\texttt{simulate\_heston\_andersen\_tg})}
+            \label{alg:andersen_tg}
+            \begin{algorithmic}
+                \State {\bf Inputs}: 
+            \end{algorithmic}
+        \end{algorithm}
 
-    \section{Broadie-Kaya Scheme}
+        %\begin{algorithm}[htbp]\caption{Exact scheme (\texttt{simulate\_heston\_exact})}\label{alg:exact}
+            %\begin{algorithmic}
+            %    \State {\bf Inputs}: 
+            %\end{algorithmic}
+        %\end{algorithm}
 
 
 \chapter{Comparison of the Methods}

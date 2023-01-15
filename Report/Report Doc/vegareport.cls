@@ -78,7 +78,7 @@
 	linkcolor=blue,
 	filecolor=magenta,      
 	urlcolor=cyan,
-	citecolor=black
+	citecolor=gray,
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
