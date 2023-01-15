@@ -1,5 +1,8 @@
 \chapter{A review of the original Heston model}
-    \textbf{Sources}: \cite{Heston1993}, \cite{Gatheral2012}, \cite{Zhitlukhin2022}
+    \textbf{Sources}:\cite{Gatheral2012}
+
+    In \citeyear{Heston1993}, Steven Heston introduced a stochastic volatility model in \cite{Heston1993}. 
+    Here the variance of an asset follows a square-root process. We shall use the notation from \cite{Zhitlukhin2022}.
     \section{Basic facts}
         Assume that the spot asset's price $S$ at time $t$ follows the diffusion \eqref{Heston:price} -- \eqref{Heston:variance}:
         \begin{align}
@@ -11,13 +14,13 @@
     \section{A closed-form solution for the European call option}
 \chapter{A review of the Monte-Carlo methods for diffusions}
     \textbf{Sources}: \cite{Kolmogorov1983}, \cite{Zhitlukhin2022}, \cite{KobelkovKitapbayev2022}, \cite{Kloeden1992}
-    \section{Randomness in Probability Theory}
-        \paragraph{A. N. Kolmogorov in <<On Logical Foundations of Probability Theory>>: }
-        \textit {In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
+        \paragraph*{A. N. Kolmogorov in <<On Logical Foundations of Probability Theory>>}
+        \begin{quote}
+            In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
         (as absence of any regularity) and stochastic randomness (which is the subject of the probability theory).
         Since randomness is defined as absence of regularity, we should
-        primarily specify the concept of regularity. The natural means of such a specification is the theory of algorithms and recursive functions...}
-
+        primarily specify the concept of regularity. The natural means of such a specification is the theory of algorithms and recursive functions...
+        \end{quote}
     \section{Laws of large numbers and central limit theorems}
         \begin{theorem}[Khinchin]
             Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E X_i = \mu$. Then
@@ -45,20 +48,21 @@
         \begin{lemma}
             Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
         \end{lemma}
-        Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+        \noindent Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
         \begin{equation}
             \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
         \end{equation}
         \begin{definition}
             Monte Carlo simulation is a set of techniques that use pseudorandom number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
         \end{definition}
-        Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
+        \noindent Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
         \begin{equation}
             \mu \in \left(\hat{\mu} - z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}, \hat{\mu} + z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}\right).
         \end{equation}
-        That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
+        \noindent That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
 
     \section{Variance reduction methods for the Monte-Carlo simulations}
+        This section is mainly inspired by \cite{KobelkovKitapbayev2022,BoyleGlasserman1997}.
         Suppose we need to estimate a parameter $\theta = \E\left[Y\right]$. 
         From the statistics course we know that $\bar Y$ is a consistent unbiased estimator of $\theta$.  
         \subsection{Control Variates}
@@ -105,6 +109,7 @@
 
         \subsection{Importance Sampling}
         OTM options tend not to expire almost always or almost never. Thus, we need some ways to reduce the number of simulations for this kind of derivatives.
+        \cite{Zhao2013}.
 
     \section{Monte-Carlo methods for Gaussian diffusions}
     
@@ -202,7 +207,7 @@
             \item Euler scheme is not very accurate, but fast and easy to implement;
             \item Broadie-Kaya scheme is more accurate, but significantly slower and way more complicated.
         \end{itemize}
-        \subsection{Quadratic-Exponential Discretization Scheme}
+        \subsection{Quadratic-Exponential Scheme}
             We denote 
             \begin{align}
                 m    &= \E\left[\left.\hat{V}(t+\Delta)\right| \hat{V}(t)\right], \label{Andersen:mean}\\
@@ -226,8 +231,8 @@
                 \begin{lemma}
                     We have
                     \begin{align}
-                        b^2 &= \frac{2}{\psi} -1 +\sqrt{\frac{2}{\psi}\left(\frac{2}{\psi}-1\right)}, \\ 
-                        a   &= \frac{m}{1+b^2}.
+                        b^2 &= \frac{2}{\psi} -1 +\sqrt{\frac{2}{\psi}\left(\frac{2}{\psi}-1\right)}, \label{eq:quadratic:a}\\ 
+                        a   &= \frac{m}{1+b^2}. \label{eq:quadratic:b}
                     \end{align}
                 \end{lemma}
                 \begin{proof}
@@ -266,7 +271,7 @@
                     The above lemma is not valid for $\psi \leq 1$.
                 \end{remark}
 
-        \subsection{Truncated Gaussian Discretization Scheme}
+        \subsection{Truncated Gaussian Scheme}
             The main idea of the method: in this scheme the idea is to sample from a moment-matched Gaussian density where all probability
             mass below zero is inserted into a delta-function at the origin. Formalization of the idea:
             \begin{equation}
@@ -289,20 +294,17 @@
             \begin{proof}
                 {\color{red}PROOF HERE}
             \end{proof}
-            \textbf{Problem}: no closed-form solution for $r(\psi)$. 
-        
-        \textbf{Solution}: numerical solution.
 
-        \textbf{Problem}: no known limits to use the numerical solution.
-
-        \textbf{Solution}: 
-        \begin{align}
-            m   &= \frac{\delta^2}{2\beta} + \left(\hat{V}(t) - \frac{\delta^2}{2\beta}\right)e^{-2\beta \Delta},\\
-            s^2 &= \frac{\hat{V}(t)\sigma^2e^{-2\beta \Delta}}{2\beta}\left(1 - e^{-2\beta \Delta}\right) + \frac{\delta^2\sigma^2}{8\beta^2}\left(1 - e^{-2\beta \Delta}\right)^2.
-        \end{align}
-        Then we analyze $\psi$ wrt $\hat{V}(t)$ and obtain a finite interval as a domain for $r(\psi)$.
+        \begin{lemma}
+            Let $\hat{V}(t)$ be a known point of the path of a given in \eqref{d} process. Then we have
+            \begin{align}
+                m   &= \frac{\delta^2}{2\beta} + \left(\hat{V}(t) - \frac{\delta^2}{2\beta}\right)e^{-2\beta \Delta},\\
+                s^2 &= \frac{\hat{V}(t)\sigma^2e^{-2\beta \Delta}}{2\beta}\left(1 - e^{-2\beta \Delta}\right) + \frac{\delta^2\sigma^2}{8\beta^2}\left(1 - e^{-2\beta \Delta}\right)^2.
+            \end{align}
+            Moreover, $\psi = \frac{s^2}{m^2}$ depends on $\hat{V}(t)$ explicitly which yields the bounded domain of $r(\psi)$.
+        \end{lemma}
         \begin{proof}
-            {\color{red}PROOF HERE. Redo as a lemma}
+            {\color{red}PROOF HERE.}
             
         \end{proof}
 
