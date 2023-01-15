@@ -11,16 +11,13 @@ prices of the options. However, the local volatility models give us the wrong dy
 which is crucial to valuate the price of different derivatives.
 
 In \citeyear{Heston1993}, Steven Heston introduced a new diffusion-based model \cite{Heston1993}, but he made a 
-vital assumption: the variance process is not a constant, not a determenistic function of time and 
+vital assumption: the variance process is not a constant, not a deterministic function of time and 
 stock price, but follows a diffusion process, called the square-root process. The 
 stochastic volatility models cannot be perfectly calibrated to fit the volatility smile, but
-they give us a realistic dynamics of the implied volatility surface.
+they give us realistic dynamics of the implied volatility surface.
 
 In this paper we revise the Heston model and its most popular simulation methods. We remind
-the reader of some basic facts abou the Monte-Carlo methods in finance. We also study the 
-empirical speed of convergence of the simulation methods and the accuracy of the option 
-greeks. Futhermore, we implement a multi-threaded versions of the desired simulation teqniques 
-and optimize them for the best possible performance in \texttt{Python}.
-
-We provide the reader with the code for the simulation methods and the greeks computation for the 
-results to be reproductible.
+the reader of some basic facts about the Monte-Carlo methods in finance. We also study the 
+empirical speed of convergence of the simulation methods and the accuracy of the various option 
+greeks estimators. Futhermore, we implement a multi-threaded versions of the desired simulation techniques 
+and optimize them for the best possible performance in Python with parallel vector processing.

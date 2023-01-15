@@ -16,28 +16,32 @@
     \textbf{Sources}: \cite{Kolmogorov1983}, \cite{Zhitlukhin2022}, \cite{KobelkovKitapbayev2022}, \cite{Kloeden1992}
         \paragraph*{A. N. Kolmogorov in <<On Logical Foundations of Probability Theory>>}
         \begin{quote}
-            In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
+        In everyday language we call random these phenomena where we cannot find a regularity allowing us to predict precisely their results. Generally speaking there is no ground to believe that a random phenomenon should possess any definite probability. Therefore, we should have distinguished between randomness proper
         (as absence of any regularity) and stochastic randomness (which is the subject of the probability theory).
         Since randomness is defined as absence of regularity, we should
         primarily specify the concept of regularity. The natural means of such a specification is the theory of algorithms and recursive functions...
         \end{quote}
     \section{Laws of large numbers and central limit theorems}
         \begin{theorem}[Khinchin]
-            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E X_i = \mu$. Then
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed 
+            random variables with $\E X_i = \mu$. Then
             \begin{equation}
                 \plim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i = \mu.
             \end{equation}
         \end{theorem}
         \begin{theorem}[Kolmogorov]
-            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables. Then $\exists \E X_i = \mu$, if and only if
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed 
+            random variables. Then $\exists \E X_i = \mu$, if and only if
             \begin{equation}
                 \lim_{n \to \infty} \frac{1}{n} \sum_{i=1}^n X_i \overset{\text{a.s.}}{=} \mu.
             \end{equation}
         \end{theorem}
 
         \begin{theorem}[Lindeberg-L\'evy]
-            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random variables with $\E[X_i] \hm{=} \mu$ and $\var X_i = \sigma^2$. 
-            Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
+            Let $X_1, X_2, \dots, X_n$ be a sequence of independent and identically distributed random 
+            variables with $\E[X_i] \hm{=} \mu$ and $\var X_i = \sigma^2$. 
+            Then as $n$ approaches infinity, the random variables $\sqrt{n}(\bar{X}_n - \mu)$ converge 
+            in law to a normal distribution $\cN(0, \sigma^2)$, i.e.
             \begin{equation}
                 \sqrt{n}\left(\bar{X}_n - \mu\right) \xrightarrow{d} \cN\left(0,\sigma^2\right).
             \end{equation}
@@ -46,16 +50,20 @@
 
     \section{The statistical foundations of the Monte-Carlo methods}\label{Monte-Carlo:statistical}
         \begin{lemma}
-            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
+            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random 
+            variables, and $h: \mathbb{R} \to \mathbb{R}$ be a Borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ 
+            is a series of independent and identically distributed random variables.
         \end{lemma}
         \noindent Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
         \begin{equation}
             \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
         \end{equation}
         \begin{definition}
-            Monte Carlo simulation is a set of techniques that use pseudorandom number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
+            Monte Carlo simulation is a set of techniques that use pseudorandom number generators to 
+            solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
         \end{definition}
-        \noindent Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
+        \noindent Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the 
+        confidence level $\alpha$:
         \begin{equation}
             \mu \in \left(\hat{\mu} - z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}, \hat{\mu} + z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}\right).
         \end{equation}
@@ -66,12 +74,14 @@
         Suppose we need to estimate a parameter $\theta = \E\left[Y\right]$. 
         From the statistics course we know that $\bar Y$ is a consistent unbiased estimator of $\theta$.  
         \subsection{Control Variates}
-            Suppose that we have another random variable $Z$ that is correlated with $Y$ and $\E\left[Z\right] = \mu$ is known. Then we could introduce the following estimator:
+            Suppose that we have another random variable $Z$ that is correlated with $Y$ and 
+            $\E\left[Z\right] = \mu$ is known. Then we could introduce the following estimator:
             \begin{equation}
                 \hat\theta^b = \bar Y + b(\bar Z - \mu),
             \end{equation}
-            where $b$ is a constant. Obviously, $\hat\theta^b$ is a consistent unbiased estimator of $\theta$. How do we choose $b$? We need to minimize the variance of $\hat\theta^b$. A simple unconstrained optimization problem:
-
+            where $b$ is a constant. Obviously, $\hat\theta^b$ is a consistent unbiased estimator of 
+            $\theta$. How do we choose $b$? We need to minimize the variance of $\hat\theta^b$. A simple 
+            unconstrained optimization problem:
             \begin{equation*}
                 \var \hat\theta^b = \var \bar Y + b^2 \var \bar Z - 2b \cov [\bar Y, \bar Z] \to \min_b.
             \end{equation*}
@@ -91,7 +101,8 @@
             \end{equation*}
             Furthermore, all good properties of an estimator are preserved due to the convergence inheritance theorem.
 
-            Conclusion: with a $b$ chosen near the optimal value \eqref{eq:control_variates:bopt}, the variance reduction effect is strictly determined by the correlation coefficient $\rho$.
+            Conclusion: with a $b$ chosen near the optimal value \eqref{eq:control_variates:bopt}, the variance 
+            reduction effect is strictly determined by the correlation coefficient $\rho$.
 
         \subsection{Antithetic Variates}
             Suppose that we have two correlated identically distributed samples $Y^1$ and $Y^2$: $\cov[Y_i^1, Y_j^2] = \delta_{ij}\cov[Y_i^1, Y_i^2]$.
@@ -104,11 +115,15 @@
                 \var \hat\theta_{\operatorname{AV}} = \frac{1}{4} \var[\bar Y^1 + \bar Y^2] = \frac{1}{4} \var[\bar Y^1] + \frac{1}{4} \var[\bar Y^2] + \frac{1}{2} \cov[\bar Y^1, \bar Y^2] .
             \end{equation*}
             Thus, the variance reduction effect takes place when $\rho < 0$.
-            If the random variable is generated by the Smirnov's transform $Y^1 = g(U)$, then its antithetic variable is $Y^2 = g(1-U)$, where $U$ is a uniform over $[0, 1]$ random variable. 
-            The same could be generalized to the case of $Y = f(Z)$. If $Z$ is symmetric, then we define $Y^1 = f(Z)$ and $Y^2 = f(-Z)$.
+            If the random variable is generated by the Smirnov's transform $Y^1 = g(U)$, then its antithetic 
+            variable is $Y^2 = g(1-U)$, where $U$ is a uniform over $[0, 1]$ random variable. 
+            The same could be generalized to the case of $Y = f(Z)$. If $Z$ is symmetric, then we define 
+            $Y^1 = f(Z)$ and $Y^2 = f(-Z)$.
 
         \subsection{Importance Sampling}
-        OTM options tend not to expire almost always or almost never. Thus, we need some ways to reduce the number of simulations for this kind of derivatives.
+        OTM options tend not to expire almost always or almost never. Thus, we need some ways to reduce the 
+        number of simulations for this kind of derivatives.
+
         \cite{Zhao2013}.
 
     \section{Monte-Carlo methods for Gaussian diffusions}
@@ -150,7 +165,8 @@
                 that $(t_i)_{i = 0, 1, \dots}$ is a uniform grid with $t_i = ih$.
 
                 \begin{definition}
-                    Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
+                    Let $\hat X^n(t)$ be a piecewise mesh approximation of an SDE solution $X(t)$ (we assume that 
+                    there exists a unique strong solution). 
                     Then a scheme is said to have a strong convergence of order $p$ if 
                     \begin{equation}
                         \E\left[\left|\hat X^n(T) - X(T)\right|\right] \leq Ch^p, \quad n \to \infty.
@@ -162,14 +178,18 @@
                 \end{definition}
 
                 \begin{theorem}
-                    Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence of order $1/2$ and a weak convergence of order $1$.
+                    Under some technical assumptions the Euler-Maruyama scheme \eqref{Euler:SDE} has a strong convergence 
+                    of order $1/2$ and a weak convergence of order $1$.
                 \end{theorem}
                 \begin{proof}
                     {\color{red}TODO. WRITE TECHNICAL ASSUMPTIONS}
                 \end{proof}
             
                 \begin{remark}
-                    Weak convergence of the scheme guarantees that the approximation of the expectation is correct only at a given time, not in the whole time interval. I.e. a European call price may converge with a weak convergence rate $1$, but the price of an Asian call option may not converge with a given weak convergence rate.
+                    Weak convergence of the scheme guarantees that the approximation of the expectation is correct only 
+                    at a given time, not in the whole time interval. I.e. a European call price may converge with a weak 
+                    convergence rate $1$, but the price of an Asian call option may not converge with a given weak 
+                    convergence rate.
                 \end{remark}
 
             \subsection{Milstein Scheme}
@@ -179,14 +199,16 @@
 
 \chapter{Methods of simulation of the Heston stochastic volatility model}
     \section{Euler Scheme}
-        Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme:
+        Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically 
+        solved by the following finite difference scheme:
         \begin{align}
             S_{n+1} & = S_n + \mu S_n h_n + \sqrt{v_n} S_n \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price}\\
             v_{n+1} & = v_n + \left(\delta^2 - 2\beta v_n\right) h_n + \sigma \sqrt{v_n} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance}
         \end{align}
-        where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are the $\rho$-correlated samples of standard normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a mesh grid.
-        But we have a problem: during simulation of the Heston model using Euler method $S_{t_n}$ and $v_{t_n}$ could be negative. How do we deal with this inconvenience?
-        Let us introduce the log-prices
+        where $(Z_{1,n})_{n=1, 2, \dots}$ and $(Z_{2,n})_{n=1, 2, \dots}$ are the $\rho$-correlated samples of standard 
+        normal random variables, and $t_n = \sum_{k=1}^n h_n$ is a mesh grid.
+        But we have a problem: during simulation of the Heston model using Euler method $S_{t_n}$ and $v_{t_n}$ could be 
+        negative. How do we deal with this inconvenience? Let us introduce the log-prices
         \begin{equation}
             X(t) := \log\frac{S(t)}{S(0)}.
         \end{equation}
@@ -209,14 +231,19 @@
                 s^2  &= \E\left[\left.\left(\hat{V}(t+\Delta) - m\right)^2\right| \hat{V}(t)\right], \\
                 \psi &= \frac{s^2}{m^2}.\label{Andersen:CV}
             \end{align}
-            Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the first step of Broadie and Kaya's method.
-            He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually difers when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
-            The scheme is constructed from the following two subschemes:
+            Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the 
+            first step of Broadie and Kaya's method.
+            He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually differs 
+            when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
+            The scheme is constructed from the following two schemes:
             \begin{enumerate}
                 \item Quadratic sampling scheme ($\psi \leq 2$);
                 \item Exponential sampling scheme ($\psi \geq 1$).
             \end{enumerate}
-            Fortunately, these two intervals cover the whole positive real line. Furthermore, these two schemes could be applied at the same time when $\psi\in[1, 2]$. This implies that there exists a critical value $\psi_{\text{crit}}\in[1, 2]$, which could be an indicator of which scheme is more applicable at the given value of $\psi$. Let us show you this.
+            Fortunately, these two intervals cover the whole positive real line. Furthermore, these two schemes could 
+            be applied at the same time when $\psi\in[1, 2]$. This implies that there exists a critical value 
+            $\psi_{\text{crit}}\in[1, 2]$, which could be an indicator of which scheme is more applicable at the 
+            given value of $\psi$. Let us show you this.
             \subsubsection{Quadratic Sampling Scheme}
                 For large enough $\hat{V}(t)$ (in the $CV$-sense) we can approximate the distribution of $\hat{V}(t+\Delta)$ by the scaled non-central chi-squared distribution with $1$ degree of freedom:
                 \begin{align}
@@ -240,7 +267,9 @@
                 Therefore, if $\hat{V}(t)$ is close to zero, then we have a problem in finding such $a = a(\Delta, \hat{V}(t), VP)$ and $b = b(\Delta, \hat{V}(t), VP)$ such that the moments of the desired conditional distribution could be properly matched.
 
             \subsubsection{Exponential Sampling Scheme}
-                Therefore, we approximate the desired distribution with the following method. Let $\xi$ and $\eta$ be independent random variables and  $\xi \sim Be(1-p)$, $\eta \sim Exp(\beta)$ for some $p \in (0, 1)$ and $\beta > 0$. Then we have (given $\hat{V}(t)$)
+                Therefore, we approximate the desired distribution with the following method. Let $\xi$ and $\eta$ be 
+                independent random variables and  $\xi \sim Be(1-p)$, $\eta \sim Exp(\beta)$ for some $p \in (0, 1)$ 
+                and $\beta > 0$. Then we have (given $\hat{V}(t)$)
                 \begin{equation}
                     \hat{V}(t+\Delta) = \xi\cdot\eta,
                 \end{equation}
@@ -248,8 +277,9 @@
                 \begin{equation}
                     p_{\hat{V}(t+\Delta)\vert \hat{V}(t)} = p\cdot \delta(x) + (1-p) \cdot\beta e^{-\beta x},
                 \end{equation}
-                where $\delta(x)$ is a standart delta function and for some $\beta$ and $p$.
-                Sampling $\xi$ and $\eta$: Smirnov's transform. Or we can use the Smirnov transform with the cdf of the desired distribution.
+                where $\delta(x)$ is a standard delta function and for some $\beta$ and $p$.
+                Sampling $\xi$ and $\eta$: Smirnov's transform. Or we can use the Smirnov transform with the cdf of 
+                the desired distribution.
                 \begin{lemma}
                     We have
                     \begin{equation}
@@ -267,16 +297,19 @@
                 \end{remark}
 
         \subsection{Truncated Gaussian Scheme}
-            The main idea of the method: in this scheme the idea is to sample from a moment-matched Gaussian density where all probability
-            mass below zero is inserted into a delta-function at the origin. Formalization of the idea:
+            The main idea of the method: in this scheme the idea is to sample from a moment-matched Gaussian density 
+            where all probability mass below zero is inserted into a delta-function at the origin. Formalization of the idea:
             \begin{equation}
                 \left(\left.\hat{V}(t+\Delta)\right| V(t)\right) = \left(\mu + \sigma Z\right)^+,
             \end{equation}
-            where $Z$ is a standard normal random variable and $\mu$ and $\sigma$ are the 'mean' and the 'standard deviation' of the desired distribution.
-            We find $\mu$ and $\sigma$ from the moment-matching techniques (see the previous method,  equations \eqref{Andersen:mean} -- \eqref{Andersen:CV}).
+            where $Z$ is a standard normal random variable and $\mu$ and $\sigma$ are the 'mean' and the 'standard 
+            deviation' of the desired distribution.
+            We find $\mu$ and $\sigma$ from the moment-matching techniques (see the previous method,  
+            equations \eqref{Andersen:mean} -- \eqref{Andersen:CV}).
 
             \begin{lemma}
-                Let $\phi(x)$ be a standart Gaussian density and define a function $r:\mathbb{R} \to \mathbb{R}$ by the following equation:
+                Let $\phi(x)$ be a standard Gaussian density and define a function $r:\mathbb{R} \to \mathbb{R}$ by 
+                the following equation:
                 \begin{equation}
                     r(x)\phi(r(x))+\Phi(r(x))(1+r(x)^2)= (1+x)\left(\phi(r(x)) + r(x)\Phi(r(x))\right)^2.
                 \end{equation}
@@ -328,7 +361,7 @@
                 d = \frac{4\theta\kappa}{\sigma^2} \label{BK:vol_law:parameter}.
             \end{equation}
             Thus, we can sample from the distribution of $v_t$ exactly,
-            provided that we can sample from the noncentral chisquared distribution.
+            provided that we can sample from the noncentral chi-squared distribution.
             \cite{Johnson1994} show that for $d > 1$, the following representation is valid:
             \begin{equation}
                 \chi_d'^{2}(\lambda) = \chi_1'^{2}(\lambda) + \chi_{d-1}'^{2} = N(\lambda, 1)^2 + \chi_{d-1}^{2}.
@@ -342,7 +375,8 @@
             where $N$ is a Poisson random variable with mean $\frac{\lambda}{2}$.
 
         \subsection*{Step 2: Generate a sample from the distribution of $\int_{u}^t V_s ds$ given $v_t$ and $v_u$}
-            The folowing formula can be derived. {\color{red}The derivation could be found in in the original paper. DERIVE HERE}
+            The following formula can be derived. {\color{red}The derivation could be found in in the original paper. 
+            DERIVE HERE}
             \begin{multline}
                 \phi(a) = \E\left[  \exp{(ia\int_{u}^t V_s ds)} \Bigg| v_u, v_t\right] = \frac{\gamma(a)e^{-(1/2)(\gamma(a) - \kappa)(t - u)}}{\kappa(1-e^{-\gamma(a)(t-u)})} \\
                 \exp{\left(\frac{v_u + v_t}{\sigma^2} \left[  \frac{\kappa(1+e^{-\kappa(t-u)})}{1-e^{-\kappa(1-u)}}                 \right]     \right)}
@@ -383,13 +417,15 @@
             \begin{equation}
                 \frac{2|\Re[\Phi(u)]|}{\pi u} \leq \frac{2|\Phi(u)|}{\pi u}.
             \end{equation}
-            To simulate the value of the integral, the Smirnov's transform method is used. We generate a uniform random variable U and then find the value of x for which 
+            To simulate the value of the integral, the Smirnov's transform method is used. We generate a uniform 
+            random variable U and then find the value of x for which 
             \begin{equation}
                 \P(V(u, t) \leq x) = U.
             \end{equation}
 
         \subsection*{Step 3: Generate a sample from the distribution of $V(u, t)$ given $v_u$ and $v_t$}
-            The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated samples for $v_t , v_u, V(u, t)$
+            The following formula can be used to calculate $\int_{u}^t \sqrt{v_s} dZ_1(s)$, as we already generated 
+            samples for $v_t , v_u, V(u, t)$
             \begin{equation}
                 \int_{u}^t \sqrt{v_s} dZ_1(s) = \frac{1}{\sigma}(v_t v_u) - \kappa\theta(t-u) + V(u, t).
             \end{equation}
