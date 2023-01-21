@@ -17,22 +17,6 @@ from scipy.stats import norm
 warnings.filterwarnings("ignore")
 
 @dataclass
-class StockOption:
-    strike_price:    Union[float, np.ndarray]
-    expiration_time: Union[float, np.ndarray]  # in years
-    is_call:         bool
-
-@dataclass
-class CallStockOption(StockOption):
-    def __init__(self, strike_price, expiration_time):
-        super().__init__(strike_price, expiration_time, True)
-
-@dataclass
-class PutStockOption(StockOption):
-    def __init__(self, strike_price, expiration_time):
-        super().__init__(strike_price, expiration_time, False)
-
-@dataclass
 class HestonParameters:
     kappa:  Union[float, np.ndarray]
     gamma:  Union[float, np.ndarray]
@@ -68,6 +52,7 @@ def mc_price(payoff:                 Callable,
              batch_size:             int      = 10_000,
              MAX_ITER:               int      = 100_000,
              control_variate_payoff: Callable = None,
+             control_variate_iter:   int      = 1_000,
              debug:                  bool     = False,
              **kwargs):
     """A function that performs a Monte-Carlo based pricing of a 
@@ -105,26 +90,43 @@ def mc_price(payoff:                 Callable,
     derivative_price_array = np.array([], dtype=np.float64)
     sigma_n  = 0.
     batch_new = np.zeros(batch_size, dtype=np.float64)
-    current_Pt_sum = 0.
+    current_Pt_sum = 0.        
 
     # np.sqrt(np.var(data) / len(data))
+    if control_variate_payoff is None:
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = payoff(simulate(**args)['price'])
+            # derivative_price_array = np.append(derivative_price_array, batch_new)
+            iter_count+=1
 
-    while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-        batch_new = payoff(simulate(**args)['price'])
-        # derivative_price_array = np.append(derivative_price_array, batch_new)
-        iter_count+=1
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-        sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
-        current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
+            n+=batch_size
+            length_conf_interval = C * np.sqrt(sigma_n / n)
 
+            if debug:
+                print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
+    else:
+        S = simulate(control_variate_iter)
+        c = np.cov(payoff(S), control_variate_payoff(S))
+        theta = c[0, 1] / c[1, 1]
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = payoff(simulate(**args)['price']) - theta * control_variate_payoff(simulate(**args)['price'])
+            # derivative_price_array = np.append(derivative_price_array, batch_new)
+            iter_count+=1
 
-        n+=batch_size
-        length_conf_interval = C * np.sqrt(sigma_n / n)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-        if debug:
-            print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
+            n+=batch_size
+            length_conf_interval = C * np.sqrt(sigma_n / n)
 
-    print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\n")
+            if debug:
+                print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
+
+    if debug:
+        print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\nAbsolute error:         {length_conf_interval}\nConfidence level:       {confidence_level}\n")
 
     return current_Pt_sum/n
 
