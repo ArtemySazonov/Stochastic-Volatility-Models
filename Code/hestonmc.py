@@ -103,21 +103,30 @@ def mc_price(payoff:                 Callable,
     n                      = 0
     C                      = -2*sps.norm.ppf(confidence_level*0.5)
     derivative_price_array = np.array([], dtype=np.float64)
+    sigma_n  = 0.
+    batch_new = np.zeros(batch_size, dtype=np.float64)
+    current_Pt_sum = 0.
 
     # np.sqrt(np.var(data) / len(data))
 
     while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-        derivative_price_array = np.append(derivative_price_array, payoff(simulate(**args)['price']))
+        batch_new = payoff(simulate(**args)['price'])
+        # derivative_price_array = np.append(derivative_price_array, batch_new)
         iter_count+=1
+
+        sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+        current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
+
+
         n+=batch_size
-        length_conf_interval = C * np.sqrt(np.var(derivative_price_array) / derivative_price_array.size)
+        length_conf_interval = C * np.sqrt(sigma_n / n)
 
         if debug:
-            print(f"Current price: {np.mean(derivative_price_array):.4f} +/- {get_len_conf_interval(derivative_price_array):.4f}")
+            print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
 
     print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\n")
 
-    return np.mean(derivative_price_array)
+    return current_Pt_sum/n
 
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
