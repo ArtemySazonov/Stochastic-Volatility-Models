@@ -1,0 +1,15 @@
+\begin{frame}{E+M Idea}
+    \begin{itemize}
+        \item The idea behind the scheme is to use the exact scheme for the underlying asset process and the Euler scheme for the volatility process.
+        \item The motivation for this is the fact that the frequency of negative values of the variance process decreases for the Milstein scheme compared to Euler.
+        \item Why do we use the B\&K approach? It can be used for discretizations on a larger
+        number of time instants when not trying to sample the integral, but using an approximation instead.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{E+M Scheme}
+    \begin{align}
+        & X_{t} = X_u + r(t-u) - \frac{1}{2}\int_{u}^{t} V_s ds + \int_{u}^{t} \sqrt{V_s} dW_s, \label{EM:price}\\
+        & V_{i+1} = V_i + \kappa(\theta - V_i)h + \gamma \sqrt{V_ih}Z_2 + \frac{1}{4} \gamma^2h(Z_2^2-1). \label{EM:variance} 
+    \end{align}
+\end{frame}
