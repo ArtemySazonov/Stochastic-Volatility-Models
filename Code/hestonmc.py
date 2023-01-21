@@ -234,42 +234,36 @@ def simulate_heston_andersen_qe(state:        MarketState,
     N_T        = int(time / dt)
     
     vt         = np.zeros(n_simulations)
-    vt[:]      = v0
     log_st     = np.zeros(n_simulations)
-    log_st[:]  = np.log(s0)
-    
-    mean_St    = 0.
-    mean_vt    = 0.
-        
-    vt[:]      = v0
-    log_st[:]  = np.log(s0)
         
     V          = np.zeros([n_simulations, N_T])
-    V[:, 0]    = vt
+    V[:, 0]    = v0
 
     logS       = np.zeros([n_simulations, N_T])
-    logS[:, 0] = log_st
+    logS[:, 0] = np.log(s0)
 
     Z          = np.random.normal(size=(n_simulations, N_T))
     Z_V = np.random.normal(size=(n_simulations, N_T))
     U = np.random.uniform(size=(n_simulations, N_T))
     # ksi = np.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
     # eta = np.random.exponential(scale = 1., size=(n_simulations, N_T))
-
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
 
 
     for i in range(N_T - 1):
+
         m            = vbar+(V[:, i] - vbar)*E
-        s_2          = (V[:, i]*(gamma**2)*E/kappa)*(1.0 - E) + (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
-        Psi          = s_2/(m**2) # np.power
+        s_2          = V[:, i]*p1 + p2
+        Psi          = s_2/np.power(m,2) 
 
         cond         = np.where(Psi<=Psi_c)
         c            = 2 / Psi[cond]
-        b            = c - 1 + np.sqrt(c*(c - 1.))
-        a            = m[cond]/(1+b)
+        b            = c - 1. + np.sqrt(c*(c - 1.))
+        a            = m[cond]/(1.+b)
         b            = np.sqrt(b)
         # Z_V          = np.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*((b+Z_V[cond, i])**2)
+        V[cond, i+1] = a*(np.power(b+Z_V[cond, i] , 2))
 
         cond         = np.where(Psi>Psi_c)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
@@ -309,6 +303,7 @@ def calculate_r_for_andersen_tg(x_:    float,
 
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
+
 
 
 def simulate_heston_andersen_tg(state:        MarketState,
@@ -356,32 +351,26 @@ def simulate_heston_andersen_tg(state:        MarketState,
     N_T        = int(time / dt)
     
     vt         = np.zeros(n_simulations)
-    vt[:]      = v0
     log_st     = np.zeros(n_simulations)
-    log_st[:]  = np.log(s0)
-    
-    mean_St    = 0.
-    mean_vt    = 0.
-        
-    vt[:]      = v0
-    log_st[:]  = np.log(s0)
         
     V          = np.zeros([n_simulations, N_T])
-    V[:, 0]    = vt
+    V[:, 0]    = v0
 
     logS       = np.zeros([n_simulations, N_T])
-    logS[:, 0] = log_st
+    logS[:, 0] = np.log(s0)
 
     Z          = np.random.normal(size=(n_simulations, N_T))
     Z_V        = np.random.normal(size=(n_simulations, N_T))
     
     
     dx = np.diff(x_grid[0:2])[0]
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
     
     for i in range(N_T - 1):
         m            = vbar+(V[:, i] - vbar)*E
-        s_2          = (V[:, i]*(gamma**2)*E/kappa)*(1.0 - E) + (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
-        Psi          = s_2/(m**2) # np.power
+        s_2          = V[:, i]*p1 + p2
+        Psi          = s_2/np.power(m,2) 
         
         
         #inx = np.searchsorted(x_grid, Psi)
