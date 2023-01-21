@@ -254,7 +254,6 @@ def simulate_heston_andersen_qe(state:        MarketState,
 
 
     for i in range(N_T - 1):
-
         m            = vbar+(V[:, i] - vbar)*E
         s_2          = V[:, i]*p1 + p2
         Psi          = s_2/np.power(m,2) 
