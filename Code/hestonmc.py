@@ -73,9 +73,9 @@ def mc_price(payoff:                 Callable,
     Returns:    
         The price of the derivative.
               
-"""
+    """
 
-    arg = {'state':           market_state, #renamed to market_state from state
+    arg = {'state':           market_state,
            'heston_params':   params, 
            'time':            T , 
            'dt':              dt, 
@@ -84,12 +84,12 @@ def mc_price(payoff:                 Callable,
     args       = {**arg, **kwargs}
     iter_count = 0   
 
-    length_conf_interval   = 1.
-    n                      = 0
-    C                      = -2*sps.norm.ppf(confidence_level*0.5)
-    sigma_n  = 0.
-    batch_new = np.zeros(batch_size, dtype=np.float64)
-    current_Pt_sum = 0.        
+    length_conf_interval = 1.
+    n                    = 0
+    C                    = -2*sps.norm.ppf(confidence_level*0.5)
+    sigma_n              = 0.
+    batch_new            = np.zeros(batch_size, dtype=np.float64)
+    current_Pt_sum       = 0.        
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
