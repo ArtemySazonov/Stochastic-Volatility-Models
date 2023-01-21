@@ -87,16 +87,13 @@ def mc_price(payoff:                 Callable,
     length_conf_interval   = 1.
     n                      = 0
     C                      = -2*sps.norm.ppf(confidence_level*0.5)
-    derivative_price_array = np.array([], dtype=np.float64)
     sigma_n  = 0.
     batch_new = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum = 0.        
 
-    # np.sqrt(np.var(data) / len(data))
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             batch_new = payoff(simulate(**args)['price'])
-            # derivative_price_array = np.append(derivative_price_array, batch_new)
             iter_count+=1
 
             sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
@@ -304,8 +301,6 @@ def calculate_r_for_andersen_tg(x_:    float,
 
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
-
-
 
 def simulate_heston_andersen_tg(state:        MarketState,
                                heston_params: HestonParameters,
