@@ -367,7 +367,7 @@ def simulate_heston_andersen_tg(state:        MarketState,
     Z_V        = np.random.normal(size=(n_simulations, N_T))
     
     
-    dx = np.diff(r_x[0:2])[0]
+    dx = np.diff(x_grid[0:2])[0]
     
     for i in range(N_T - 1):
         m            = vbar+(V[:, i] - vbar)*E
