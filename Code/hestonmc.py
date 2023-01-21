@@ -274,3 +274,120 @@ def simulate_heston_andersen_qe(state:        MarketState,
     log_st = logS[:, N_T-1]
             
     return {"price": np.exp(log_st), "volatility": vt}
+
+
+def calculate_r_for_andersen_tg(x_:    float,
+                                maxiter = 2500 , 
+                                tol= 1e-5
+                               ) -> float:
+    
+    def foo(x: float):
+        
+        return x*norm.pdf(x) + norm.cdf(x)*(1+x**2) - (1+x_)*(norm.pdf(x) + x*norm.cdf(x))**2
+
+    def foo_dif(x:  float):
+
+        return norm.pdf(x) - x**2 * norm.pdf(x) + norm.pdf(x)*(1+x**2) + 2*norm.cdf(x)*x - \
+                2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(-norm.pdf(x)*x + norm.cdf(x) + x*norm.pdf(x) )
+
+    def foo_dif2(x:  float):
+        return -x*norm.pdf(x) - 2*x* norm.pdf(x) + x**3 * norm.pdf(x) -x*norm.pdf(x)*(1+x**2) + \
+                2*norm.cdf(x)*x + 2*norm.pdf(x)*x + 2*norm.cdf(x) + \
+                2*(1+x_)*(-norm.pdf(x)*x + norm.cdf(x) + x*norm.pdf(x))**2 + \
+                2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(x**2*norm.pdf(x) + norm.pdf(x) + norm.pdf(x) -x*norm.pdf(x) )
+
+
+    return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
+
+
+def simulate_heston_andersen_tg(state:        MarketState,
+                               heston_params: HestonParameters,
+                               x_grid:        np.array,
+                               f_nu_grid:     np.array,
+                               f_sigma_grid:  np.array,
+                               time:          float = 1.,
+                               dt:            float = 1e-2,
+                               n_simulations: int = 10_000,
+                               Psi_c:         float=1.5,
+                               gamma_1:       float=0.0
+                               
+                               ) -> dict: 
+    """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
+
+    Args:
+        state (MarketState): _description_
+        heston_params (HestonParameters): _description_
+        time (float, optional): _description_. Defaults to 1..
+        dt (float, optional): _description_. Defaults to 1e-2.
+        n_simulations (int, optional): _description_. Defaults to 10_000.
+        Psi_c (float, optional): _description_. Defaults to 1.5.
+        gamma_1 (float, optional): _description_. Defaults to 0.5.
+
+    Raises:
+        Error: _description_
+        Error: _description_
+
+    Returns:
+        dict: _description_
+    """     
+    gamma_2 = 1.0 - gamma_1
+    
+    r, s0 = state.interest_rate, state.stock_price
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    
+    E          = np.exp(-kappa*dt)
+    K_0        = -(rho*kappa*vbar/gamma)*dt
+    K_1        = gamma_1*dt*(rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2*dt*(rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1*dt*(1.0 - rho**2)
+    K_4        = gamma_2*dt*(1.0 - rho**2)
+    N_T        = int(time / dt)
+    
+    vt         = np.zeros(n_simulations)
+    vt[:]      = v0
+    log_st     = np.zeros(n_simulations)
+    log_st[:]  = np.log(s0)
+    
+    mean_St    = 0.
+    mean_vt    = 0.
+        
+    vt[:]      = v0
+    log_st[:]  = np.log(s0)
+        
+    V          = np.zeros([n_simulations, N_T])
+    V[:, 0]    = vt
+
+    logS       = np.zeros([n_simulations, N_T])
+    logS[:, 0] = log_st
+
+    Z          = np.random.normal(size=(n_simulations, N_T))
+    Z_V        = np.random.normal(size=(n_simulations, N_T))
+    
+    
+    dx = np.diff(r_x[0:2])[0]
+    
+    for i in range(N_T - 1):
+        m            = vbar+(V[:, i] - vbar)*E
+        s_2          = (V[:, i]*(gamma**2)*E/kappa)*(1.0 - E) + (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+        Psi          = s_2/(m**2) # np.power
+        
+        
+        #inx = np.searchsorted(x_grid, Psi)
+        
+        inx = (Psi/dx).astype(int)
+        
+        nu           = m*f_nu_grid[inx]
+        sigma        = np.sqrt(s_2)*f_sigma_grid[inx]
+        
+
+        V[:,i+1]     = np.maximum( nu + sigma*Z_V[:,i+1], 0)
+
+
+        logS[:,i+1] = logS[:,i] + r*dt+K_0 + K_1*V[:,i] + K_2*V[:,i+1] \
+                        + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
+
+    vt     = V[:, N_T-1]
+    log_st = logS[:, N_T-1]
+    
+    return {"price": np.exp(log_st), "volatility": vt}
