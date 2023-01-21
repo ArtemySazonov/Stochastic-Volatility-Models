@@ -9,6 +9,8 @@ from typing import Union, Callable, Optional
 from copy import error
 from dataclasses import dataclass
 from scipy.interpolate import RectBivariateSpline
+from scipy.optimize import newton
+from scipy.stats import norm
 
 import warnings
 from scipy.stats import norm
