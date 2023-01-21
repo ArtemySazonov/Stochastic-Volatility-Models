@@ -1,0 +1,54 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{vega}
+
+\addbibresource{assets/pricing_lib.bib}
+
+\DeclareMathOperator*{\plim}{\ensuremath{\operatorname{\P-lim}}}
+
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cN}{\mathcal{N}}
+
+\subtitle{Student Research Group 'Stochastic Volatility Models', Project 'Heston--2'}
+\title{Methods of Simulation of the Heston Model: A Review}
+\author{Artemy Sazonov, Danil Legenky, Kirill Korban}
+\institute{Lomonosov Moscow State Univesity, Faculty of Mechanics and Mathematics}
+\date{\today}
+
+\begin{document}
+    \maketitle
+
+    \begin{frame}{Heston Model Definition}
+        Assume that the spot asset at time $t$ follows the diffusion
+        \begin{align}
+            dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
+            dv(t) & = \left(\delta^2 - 2\beta v(t)\right) dt + \sigma\sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+        \end{align}
+        where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
+    \end{frame}
+
+    \section{Truncated Gaussian Scheme}
+        \input{part1/part1.tex}
+
+    \section{Exact+Milstein Scheme}
+        \input{part2/part2.tex}
+    
+    \section{Conclusion}
+        \begin{frame}{Conclusion}
+            We introduced the three most common simulation methods for dynamics of the two-factor Gaussian diffusion model:
+            \begin{enumerate}
+                \item Euler-Maruyama scheme (classical and modified); 
+                \item Broadie-Kaya scheme;
+                \item Andersen schemes (TG and QE. Only for stochastic variance).
+            \end{enumerate}
+        \end{frame}
+        \begin{frame}{To-dos}
+            \begin{enumerate}
+                \item How do we approximate the log-prices?
+                \item Martingale correction in the Andersen schemes
+                \item Numerical stability of implied volatility calculations
+            \end{enumerate}
+        \end{frame}
+
+\end{document}

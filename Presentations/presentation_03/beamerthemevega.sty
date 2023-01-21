@@ -1,0 +1,241 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Developers:
+%   - Artemy Sazonov (July 2022 - now)
+%
+%
+%
+%
+% Options: 
+%   - russian: pass if document is in Russian to change the language of the pre-defined text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newif\ifbeamer@russian
+\beamer@russianfalse
+\DeclareOptionBeamer{russian}{\beamer@russiantrue}
+
+\newif\ifbeamer@toc
+\beamer@tocfalse
+\DeclareOptionBeamer{toc}{\beamer@toctrue}
+
+\ProcessOptionsBeamer
+
+\mode<presentation>
+
+\beamertemplatenavigationsymbolsempty
+\setbeamersize{text margin left=1cm,text margin right=2cm}
+
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+\setbeamertemplate{theorems}[numbered]
+
+\setbeamertemplate{footline}
+{
+  \hbox{\begin{beamercolorbox}[wd=1\paperwidth,ht=0ex,dp=1ex,right]{framenumber}%
+      \usebeamerfont{framenumber}\insertframenumber{} / \inserttotalframenumber\hspace*{0.6cm}
+    \end{beamercolorbox}}%
+  \vskip3pt%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Packages and Options
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{cmap}
+\RequirePackage[T1,T2A]{fontenc}
+\RequirePackage[utf8]{inputenc}
+
+\RequirePackage{tikz}
+\RequirePackage{geometry}
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+
+\RequirePackage{booktabs}
+\RequirePackage{bbm}
+
+\RequirePackage{amsmath,amssymb}
+\RequirePackage{mathtext}
+\RequirePackage{amsthm}
+
+\RequirePackage[backend=biber,style=alphabetic,sorting=ynt]{biblatex}
+\RequirePackage{csquotes}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Colors, Fonts, and General Settings
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{paratype}
+\usefonttheme[onlymath]{serif}
+
+\RequirePackage{xcolor}
+
+\definecolor{color1bg}{HTML}{2C3389}
+\definecolor{color2bg}{HTML}{EFA69D}
+\definecolor{color2lightened}{HTML}{FBE9E7}
+\definecolor{color3bg}{HTML}{B16D95}
+
+\definecolor{colormainblue}{HTML}{2B3189}
+
+\newcommand{\headlinecolor}{\normalcolor}
+
+\hypersetup
+{
+	colorlinks=true,
+	linkcolor=[HTML]{B16D95},
+	filecolor=magenta,      
+	urlcolor=cyan,
+	citecolor=black
+}
+
+\setbeamercolor{palette primary}{bg=white,fg=colormainblue}
+\setbeamercolor{palette secondary}{bg=white,fg=color3bg}
+\setbeamercolor{palette tertiary}{bg=white,fg=colormainblue}
+\setbeamercolor{palette quaternary}{bg=white,fg=colormainblue}
+\setbeamercolor{structure}{fg=colormainblue}
+\setbeamercolor{section in toc}{fg=colormainblue}
+
+\setbeamercolor{subsection in head/foot}{bg=white,fg=colormainblue}
+
+\setbeamercolor{footnote}{fg=color3bg}
+\setbeamercolor{footnote mark}{fg=color3bg}
+
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+
+\setbeamercolor{footline}{fg=color3bg}
+
+\setbeamercolor{block title}{bg=color2lightened}
+\setbeamercolor{block body}{bg=color2lightened}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Language-dependent commands:
+% Default:   English
+% Available: English, Russian
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\textLectureNotes}   {Lecture Slides}
+
+\newcommand{\textTableofcontents}{Outline}
+\newcommand{\textListoffigures}  {List of Figures}
+\newcommand{\textListoftables}   {List of Tables}
+\newcommand{\textIntroduction}   {Introduction}
+\newcommand{\textConclusion}     {Conclusion}
+\newcommand{\textReferences}     {Bibliography}
+
+\newcommand{\textProposition}    {Proposition}
+
+\ifx\ifbeamer@russian
+    \renewcommand{\textLectureNotes}   {Лекционные слайды}
+
+    \renewcommand{\textTableofcontents}{Содержание}
+    \renewcommand{\textListoffigures}  {Список рисунков}
+    \renewcommand{\textListoftables}   {Список таблиц}
+    \renewcommand{\textIntroduction}   {Введение}
+    \renewcommand{\textConclusion}     {Заключение}
+    \renewcommand{\textReferences}     {Список литературы}
+
+    \renewcommand{\textProposition}    {Утверждение}
+
+    \RequirePackage[english,russian]{babel}
+    \renewcommand{\epsilon}{\varepsilon}
+    \renewcommand{\phi}{\varphi}
+\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Title Page, Frames, and End of Document
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\defindent}{0cm}
+\def\maketitle
+{
+    \frame[plain,noframenumbering]{
+        \begin{tikzpicture}[remember picture,overlay]
+            \node [fill, rectangle, top color=color1bg,  bottom color=color2bg, anchor=north, minimum width=\paperwidth, minimum height=\paperheight,shading angle=20] (box) at (current page.north){};
+            \node [anchor=north east] at (current page.north east){\includegraphics[width=2cm]{vega_letter_white.pdf}};
+        \end{tikzpicture}
+        \vspace{4.5cm}
+
+        {\color{white}
+            \hspace{\defindent}\small{\insertsubtitle}\par
+            \hspace{\defindent}\usebeamerfont{title}\textbf{\inserttitle}\par
+
+            \bigskip
+            \hspace{\defindent}\usebeamerfont{author}\small{\insertauthor}\par
+            \smallskip
+            \hspace{\defindent}\usebeamerfont{institute}\insertinstitute\par
+            \medskip
+            \hspace{\defindent}\usebeamerfont{date}\insertdate\par
+        }
+    }
+}
+
+\AtBeginSection{\begin{frame}\frametitle{\textTableofcontents}\tableofcontents[currentsection,hideallsubsections]\end{frame}}
+
+\setbeamertemplate{frametitle}{
+    \vspace*{10pt}
+    \ifbeamercolorempty[bg]{frametitle}{}{\nointerlineskip}%
+    \@tempdima=\textwidth%
+    \advance\@tempdima by\beamer@leftmargin%
+    \advance\@tempdima by\beamer@rightmargin%
+    \hspace*{14.17pt}%
+    \begin{beamercolorbox}[sep=0.5cm,left,wd=\the\@tempdima]{frametitle}
+        \usebeamerfont{frametitle}%
+        \vbox{}\vskip-1ex%
+        \if@tempswa\else\csname beamer@ftecenter\endcsname\fi%
+        \strut\textbf{\insertframetitle}\strut\par%
+        {%
+            \ifx\insertframesubtitle\@empty%
+            \else%
+            {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\insertframesubtitle\strut\par}%
+            \fi%
+        }%
+        \vskip-1ex%
+        \if@tempswa\else\vskip-.3cm\fi%
+    \end{beamercolorbox}%
+    \begin{tikzpicture}[remember picture,overlay]
+        \node [anchor=north east] at (current page.north east){\includegraphics[width=2cm]{vega_letter_color.pdf}};
+    \end{tikzpicture}
+}
+
+\setbeamertemplate{endpage}{
+    {
+        \frame[plain,noframenumbering]{
+            \begin{tikzpicture}[remember picture,overlay]
+                \node [anchor=center] at (current page.center){\includegraphics[width=5cm]{vega_letter_color.pdf}};
+            \end{tikzpicture}
+        }
+    }
+}
+\AtEndDocument{\usebeamertemplate{endpage}}
+
+\newtheorem{proposition}{\textProposition}
+\newtheorem*{nb}{NB}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Maths commands
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DeclareMathOperator*{\sgn}{sgn}
+\DeclareMathOperator*{\var}{var}   
+\DeclareMathOperator*{\cov}{cov}
+\DeclareMathOperator*{\law}{Law}
+
+\newcommand{\1}{\mathbbm{1}} 
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+
+\newcommand{\independent}{\perp\!\!\!\!\perp}
+
+\mode<all>
