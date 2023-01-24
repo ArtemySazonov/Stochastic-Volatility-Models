@@ -366,3 +366,125 @@ def simulate_heston_andersen_tg(state:         MarketState,
                         + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
     
     return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#non-working piece of code
+
+
+def cir_chi_sq_sample(heston_params: HestonParameters,
+                      dt:            float,
+                      v_i:           np.array,
+                      n_simulations: int):
+    """Samples chi_squared statistics for v_{i+1} conditional on 
+       v_i and parameters of Hestom model. 
+        
+    Args:
+        heston_params (HestonParameters): parameters of Heston model
+        dt (float): time step 
+        v_i: current volatility value
+        n_simulations (int): number of simulations.
+        
+    Returns:
+        np.array: sampled chi_squared statistics 
+    """
+    kappa, vbar, gamma = heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    barkappa=v_i*(4*kappa*np.exp(-kappa*dt))/(gamma**2 * (1 - np.exp(-kappa*dt)))
+    d=(4*kappa*vbar)/(gamma**2)
+    c=((gamma**2)/(4*kappa))*(1-np.exp(-kappa*dt))
+    
+    return  c*np.random.noncentral_chisquare(size = n_simulations, df   = d, nonc = barkappa)
+
+
+def Phi(a:             Union[float, np.ndarray], 
+        V:             Union[float, np.ndarray],
+        time:          Union[float, np.ndarray],
+        heston_params: HestonParameters
+        ) -> np.ndarray:
+    
+    
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, \
+                                        heston_params.vbar, heston_params.gamma
+    dt = time[1::]-time[:-1:]
+    
+    A=np.array(a)
+    gamma_a = np.sqrt(kappa**2 - 2*gamma**2*1j*A).reshape(1,1,len(A)).T
+    
+    E1 = np.exp(-kappa*dt)
+    E2 = np.exp(-gamma_a * dt)
+        
+    P1 = ((1.0-E1)*gamma_a/(kappa*(1.0-E2)))*np.exp(-0.5*(gamma_a - kappa)*dt)
+    
+    P2_2 = kappa * (1.0 + E1)/(1.0 - E1) - gamma_a*(1.0+E2)/(1-E2)
+    P2 = np.exp( (V[:,1::]+V[:,:-1:])/(gamma_a**2) * P2_2 )
+    
+    P3_1 = np.sqrt(V[:,1::]*V[:,:-1:])*4*gamma_a * np.exp(-0.5*gamma_a*dt) /(gamma**2 * (1.0 - E2))
+    P3_2 = np.sqrt(V[:,1::]*V[:,:-1:])*4*kappa*np.exp(-0.5*kappa*dt)/(gamma**2 * (1 - E1))
+    d=(4*kappa*vbar)/(gamma**2)
+    P3 = iv(0.5*d - 1, P3_1)/iv(0.5*d - 1, P3_2)
+    
+    return P1*P2*P3
+
+def Pr(V:             np.ndarray, 
+       time:          np.ndarray,
+       X:             Union[np.ndarray, float],
+       heston_params: HestonParameters,
+       h:             float=1e-2, 
+       eps:           float=1e-2
+       ) -> np.ndarray:
+    
+    x=np.array(X)
+    P=h*x/np.pi
+    S = 0.0
+    j = 1
+    while(True):
+        Sin=np.sin(h*j*x)/j
+        Phi_hj=Phi(h*j, V, time, heston_params)
+        S+=Sin.reshape(1,1,len(x)).T * Phi_hj[0]
+        if np.all(Phi_hj[0]<np.pi*eps*j/2.0):
+            break
+        j=j+1
+    
+    S=S*2.0/np.pi
+    return P+S
+
+def IV(V:             np.ndarray, 
+       time:          np.ndarray,
+       heston_params: HestonParameters,
+       h:             float=1e-2, 
+       eps:           float=1e-2
+       ) -> np.ndarray:
+    
+    U=np.random.uniform(size=(V.shape[0], V.shape[1] - 1))
+    
+    def f(x,i,j):
+        P=Pr(V, time, x, heston_params, h, eps)
+        return (P-U)[0][i,j]
+    
+    IVar = np.zeros((V.shape[0], V.shape[1] - 1))
+    
+    for i in range(IVar.shape[0]):
+        for j in range(IVar.shape[1]):     
+            IVar[i,j]=root_scalar(f, args=(i,j), x0=0.5, method='newton')
+    return IVar
