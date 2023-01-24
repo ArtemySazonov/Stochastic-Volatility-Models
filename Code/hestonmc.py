@@ -136,21 +136,20 @@ def simulate_heston_euler(state:           MarketState,
     """Simulation engine for the Heston model using the Euler scheme.
 
     Args:
-        state (MarketState): _description_
-        heston_params (HestonParameters): _description_
-        time (float, optional): _description_. Defaults to 1..
-        dt (float, optional): _description_. Defaults to 1e-2.
-        time_batch_size (int, optional): _description_. Defaults to 10_000.
-        n_simulations (int, optional): _description_. Defaults to 10_000.
+        state (MarketState): Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
+        time (float, optional): Contract termination time expressed as a number of years. Defaults to 1..
+        dt (float, optional): Time step. Defaults to 1e-2.
+        n_simulations (int, optional): number of simulations. Defaults to 10_000.
 
     Raises:
-        Error: _description_
+        error: Contract termination time must be positive.
 
     Returns:
-        dict: _description_
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
-    if time<=0:
-        raise error("Time must be bigger than 0")
+    if time <= 0:
+        raise error("Contract termination time must be positive.")
     
     # initialize market and model parameters
     r, s0 = state.interest_rate, state.stock_price
@@ -181,10 +180,7 @@ def simulate_heston_euler(state:           MarketState,
         V2           = gamma*np.sqrt(vmax*(dt))*(rho*Z1[:, i]+np.sqrt(1-rho**2)*Z2[:, i])
         V[:, i+1]    = V[:, i] + V1 + V2
 
-    vt     = V[:, N_T-1]
-    log_st = logS[:, N_T-1]
-        
-    return {"price": np.exp(log_st), "volatility": vt}
+    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
 
 def simulate_heston_andersen_qe(state:        MarketState,
                                heston_params: HestonParameters,
@@ -199,41 +195,39 @@ def simulate_heston_andersen_qe(state:        MarketState,
     Args:
         state (MarketState): _description_
         heston_params (HestonParameters): _description_
-        time (float, optional): _description_. Defaults to 1..
+        time (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional): _description_. Defaults to 1e-2.
         n_simulations (int, optional): _description_. Defaults to 10_000.
         Psi_c (float, optional): _description_. Defaults to 1.5.
         gamma_1 (float, optional): _description_. Defaults to 0.5.
 
     Raises:
-        Error: _description_
-        Error: _description_
+        Error: The critical value \psi_c must be in the interval [1,2]
+        Error: The parameter \gamma_1 must be in the interval [0,1]
 
     Returns:
         dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
     
     if Psi_c>2 or Psi_c<1:
-        raise error('1<=Psi_c<=2 ')
+        raise error('The critical value \psi_c must be in the interval [1,2]')
     if gamma_1 >1 or gamma_1<0:
-        raise error('0<=gamma_1<=1')
+        raise error('The parameter \gamma_1 must be in the interval [0,1]')
+    if time <= 0:
+        raise error("Contract termination time must be positive.")
         
     gamma_2 = 1.0 - gamma_1
     
     r, s0 = state.interest_rate, state.stock_price
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
-    
     E          = np.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
-    K_1        = gamma_1*dt*(rho*kappa/gamma - 0.5) - rho/gamma
-    K_2        = gamma_2*dt*(rho*kappa/gamma - 0.5) + rho/gamma
-    K_3        = gamma_1*dt*(1.0 - rho**2)
-    K_4        = gamma_2*dt*(1.0 - rho**2)
+    K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1 * dt * (1.0 - rho**2)
+    K_4        = gamma_2 * dt * (1.0 - rho**2)
     N_T        = int(time / dt)
-    
-    vt         = np.zeros(n_simulations)
-    log_st     = np.zeros(n_simulations)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
@@ -242,16 +236,18 @@ def simulate_heston_andersen_qe(state:        MarketState,
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.normal(size=(n_simulations, N_T))
-    Z_V = np.random.normal(size=(n_simulations, N_T))
-    U = np.random.uniform(size=(n_simulations, N_T))
+    Z_V        = np.random.normal(size=(n_simulations, N_T))    #do we need this?
+    U          = np.random.uniform(size=(n_simulations, N_T))   #do we need this?
     # ksi = np.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
     # eta = np.random.exponential(scale = 1., size=(n_simulations, N_T))
     p1 = (1. - E)*(gamma**2)*E/kappa
     p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3 = vbar * (1.- E)
+    rdtK0      = r*dt + K_0
 
 
     for i in range(N_T - 1):
-        m            = vbar+(V[:, i] - vbar)*E
+        m            = p3 + V[:, i]*E
         s_2          = V[:, i]*p1 + p2
         Psi          = s_2/np.power(m,2) 
 
@@ -269,35 +265,27 @@ def simulate_heston_andersen_qe(state:        MarketState,
 
         V[cond,i+1] = np.where(U[cond, i] < p, 0., np.log((1-p)/(1-U[cond, i]))/beta)
 
-
-        logS[:,i+1] = logS[:,i] + r*dt+K_0 + K_1*V[:,i] + K_2*V[:,i+1] \
+        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
-
-    vt     = V[:, N_T-1]
-    log_st = logS[:, N_T-1]
             
-    return {"price": np.exp(log_st), "volatility": vt}
+    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
 
-def calculate_r_for_andersen_tg(x_:    float,
-                                maxiter = 2500 , 
-                                tol= 1e-5
-                               ) -> float:
-    
+def calculate_r_for_andersen_tg(x_:      float,
+                                maxiter: int = 2500, 
+                                tol:     float = 1e-5
+                                ) -> float:
     def foo(x: float):
-        
         return x*norm.pdf(x) + norm.cdf(x)*(1+x**2) - (1+x_)*(norm.pdf(x) + x*norm.cdf(x))**2
 
-    def foo_dif(x:  float):
-
+    def foo_dif(x: float):
         return norm.pdf(x) - x**2 * norm.pdf(x) + norm.pdf(x)*(1+x**2) + 2*norm.cdf(x)*x - \
                 2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(-norm.pdf(x)*x + norm.cdf(x) + x*norm.pdf(x) )
 
-    def foo_dif2(x:  float):
+    def foo_dif2(x: float):
         return -x*norm.pdf(x) - 2*x* norm.pdf(x) + x**3 * norm.pdf(x) -x*norm.pdf(x)*(1+x**2) + \
                 2*norm.cdf(x)*x + 2*norm.pdf(x)*x + 2*norm.cdf(x) + \
                 2*(1+x_)*(-norm.pdf(x)*x + norm.cdf(x) + x*norm.pdf(x))**2 + \
                 2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(x**2*norm.pdf(x) + norm.pdf(x) + norm.pdf(x) -x*norm.pdf(x) )
-
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
 
@@ -324,9 +312,17 @@ def simulate_heston_andersen_tg(state:         MarketState,
         n_simulations (int, optional): number of the simulations. Defaults to 10_000.
         gamma_1 (float, optional): _description_. Defaults to 0.0.
 
+    Raises:
+        error: The parameter \gamma_1 must be in the interval [0,1].
+        error: Contract termination time must be positive.
+
     Returns:
         dict: a tuple containing the simulated stock price and the simulated stochastic variance.
     """    
+    if gamma_1 >1 or gamma_1<0:
+        raise error('The parameter \gamma_1 must be in the interval [0,1]')
+    if time <= 0:
+        raise error("Contract termination time must be positive.")
     gamma_2 = 1.0 - gamma_1
     
     r, s0 = state.interest_rate, state.stock_price
@@ -369,4 +365,4 @@ def simulate_heston_andersen_tg(state:         MarketState,
         logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
     
-    return {"price": np.exp(logS[:, N_T-1]), "volatility": V[:, N_T-1]}
+    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
