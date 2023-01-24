@@ -210,7 +210,7 @@ def simulate_heston_andersen_qe(state:        MarketState,
         Error: _description_
 
     Returns:
-        dict: _description_
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
     
     if Psi_c>2 or Psi_c<1:
@@ -278,7 +278,6 @@ def simulate_heston_andersen_qe(state:        MarketState,
             
     return {"price": np.exp(log_st), "volatility": vt}
 
-
 def calculate_r_for_andersen_tg(x_:    float,
                                 maxiter = 2500 , 
                                 tol= 1e-5
@@ -302,52 +301,44 @@ def calculate_r_for_andersen_tg(x_:    float,
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
 
-def simulate_heston_andersen_tg(state:        MarketState,
-                               heston_params: HestonParameters,
-                               x_grid:        np.array,
-                               f_nu_grid:     np.array,
-                               f_sigma_grid:  np.array,
-                               time:          float = 1.,
-                               dt:            float = 1e-2,
-                               n_simulations: int = 10_000,
-                               Psi_c:         float=1.5,
-                               gamma_1:       float=0.0
-                               
-                               ) -> dict: 
-    """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
+def simulate_heston_andersen_tg(state:         MarketState,
+                                heston_params: HestonParameters,
+                                x_grid:        np.array,
+                                f_nu_grid:     np.array,
+                                f_sigma_grid:  np.array,
+                                time:          float = 1.,
+                                dt:            float = 1e-2,
+                                n_simulations: int = 10_000,
+                                gamma_1:       float=0.0
+                                ) -> dict: 
+    """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
     Args:
-        state (MarketState): _description_
-        heston_params (HestonParameters): _description_
-        time (float, optional): _description_. Defaults to 1..
-        dt (float, optional): _description_. Defaults to 1e-2.
-        n_simulations (int, optional): _description_. Defaults to 10_000.
-        Psi_c (float, optional): _description_. Defaults to 1.5.
-        gamma_1 (float, optional): _description_. Defaults to 0.5.
-
-    Raises:
-        Error: _description_
-        Error: _description_
+        state (MarketState): Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
+        x_grid (np.array): _description_
+        f_nu_grid (np.array): _description_
+        f_sigma_grid (np.array): _description_
+        time (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional): Time step. Defaults to 1e-2.
+        n_simulations (int, optional): number of the simulations. Defaults to 10_000.
+        gamma_1 (float, optional): _description_. Defaults to 0.0.
 
     Returns:
-        dict: _description_
-    """     
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance.
+    """    
     gamma_2 = 1.0 - gamma_1
     
     r, s0 = state.interest_rate, state.stock_price
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
-    
     E          = np.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
-    K_1        = gamma_1*dt*(rho*kappa/gamma - 0.5) - rho/gamma
-    K_2        = gamma_2*dt*(rho*kappa/gamma - 0.5) + rho/gamma
-    K_3        = gamma_1*dt*(1.0 - rho**2)
-    K_4        = gamma_2*dt*(1.0 - rho**2)
+    K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1 * dt * (1.0 - rho**2)
+    K_4        = gamma_2 * dt * (1.0 - rho**2)
     N_T        = int(time / dt)
-    
-    vt         = np.zeros(n_simulations)
-    log_st     = np.zeros(n_simulations)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
@@ -358,32 +349,24 @@ def simulate_heston_andersen_tg(state:        MarketState,
     Z          = np.random.normal(size=(n_simulations, N_T))
     Z_V        = np.random.normal(size=(n_simulations, N_T))
     
-    
-    dx = np.diff(x_grid[0:2])[0]
-    p1 = (1. - E)*(gamma**2)*E/kappa
-    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    dx         = np.diff(x_grid[0:2])[0]
+    p1         = (1. - E)*(gamma**2)*E/kappa
+    p2         = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3         = (1. - E) * vbar
+    rdtK0      = r*dt + K_0
     
     for i in range(N_T - 1):
-        m            = vbar+(V[:, i] - vbar)*E
+        m            = p3 + V[:, i]*E
         s_2          = V[:, i]*p1 + p2
         Psi          = s_2/np.power(m,2) 
         
-        
-        #inx = np.searchsorted(x_grid, Psi)
-        
         inx = (Psi/dx).astype(int)
         
-        nu           = m*f_nu_grid[inx]
+        nu           = m * f_nu_grid[inx]
         sigma        = np.sqrt(s_2)*f_sigma_grid[inx]
-        
 
-        V[:,i+1]     = np.maximum( nu + sigma*Z_V[:,i+1], 0)
-
-
-        logS[:,i+1] = logS[:,i] + r*dt+K_0 + K_1*V[:,i] + K_2*V[:,i+1] \
+        V[:, i+1]    = np.maximum(nu + sigma*Z_V[:,i+1], 0)
+        logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
-
-    vt     = V[:, N_T-1]
-    log_st = logS[:, N_T-1]
     
-    return {"price": np.exp(log_st), "volatility": vt}
+    return {"price": np.exp(logS[:, N_T-1]), "volatility": V[:, N_T-1]}
