@@ -119,8 +119,8 @@ def mc_price(payoff:                 Callable,
             n+=batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
-            if debug:
-                print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
+            #if debug:
+            #    print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
 
     if debug:
         print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\nAbsolute error:         {length_conf_interval}\nConfidence level:       {confidence_level}\n")
