@@ -64,7 +64,7 @@ def mc_price(payoff:                 Callable,
         simulate (Callable):                simulation engine
         market_state (MarketState):         market state
         params (HestonParameters):          Heston parameters
-        T (float, optional):                Contract expiration time. Defaults to 1.. 
+        T (float, optional):                Contract expiration T. Defaults to 1.. 
         absolute_error (float, optional):   absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
         confidence_level (float, optional): confidence level for the price. Defaults to 0.05.
         batch_size (int, optional):         path-batch size. Defaults to 10_000.
@@ -77,7 +77,7 @@ def mc_price(payoff:                 Callable,
 
     arg = {'state':           market_state,
            'heston_params':   params, 
-           'time':            T , 
+           'T':            T , 
            'dt':              dt, 
            'n_simulations':   batch_size}
 
@@ -129,7 +129,7 @@ def mc_price(payoff:                 Callable,
 
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
-                          time:            float = 1.,
+                          T:               float = 1.,
                           dt:              float = 1e-2,
                           n_simulations:   int = 10_000
                           ) -> dict:
@@ -138,7 +138,7 @@ def simulate_heston_euler(state:           MarketState,
     Args:
         state (MarketState): Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
-        time (float, optional): Contract termination time expressed as a number of years. Defaults to 1..
+        T (float, optional): Contract termination time expressed as a number of years. Defaults to 1..
         dt (float, optional): Time step. Defaults to 1e-2.
         n_simulations (int, optional): number of simulations. Defaults to 10_000.
 
@@ -148,7 +148,7 @@ def simulate_heston_euler(state:           MarketState,
     Returns:
         dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
-    if time <= 0:
+    if T <= 0:
         raise error("Contract termination time must be positive.")
     
     # initialize market and model parameters
@@ -161,7 +161,7 @@ def simulate_heston_euler(state:           MarketState,
     vt[:]      = v0
     log_st     = np.zeros(n_simulations)
     log_st[:]  = np.log(s0)
-    N_T        = int(time / dt)
+    N_T        = int(T / dt)
     
     Z1         = np.random.normal(size=(n_simulations, N_T))
     Z2         = np.random.normal(size=(n_simulations, N_T))
@@ -184,7 +184,7 @@ def simulate_heston_euler(state:           MarketState,
 
 def simulate_heston_andersen_qe(state:        MarketState,
                                heston_params: HestonParameters,
-                               time:          float = 1.,
+                               T:             float = 1.,
                                dt:            float = 1e-2,
                                n_simulations: int = 10_000,
                                Psi_c:         float=1.5,
@@ -195,7 +195,7 @@ def simulate_heston_andersen_qe(state:        MarketState,
     Args:
         state (MarketState): _description_
         heston_params (HestonParameters): _description_
-        time (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        T (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional): _description_. Defaults to 1e-2.
         n_simulations (int, optional): _description_. Defaults to 10_000.
         Psi_c (float, optional): _description_. Defaults to 1.5.
@@ -213,7 +213,7 @@ def simulate_heston_andersen_qe(state:        MarketState,
         raise error('The critical value \psi_c must be in the interval [1,2]')
     if gamma_1 >1 or gamma_1<0:
         raise error('The parameter \gamma_1 must be in the interval [0,1]')
-    if time <= 0:
+    if T <= 0:
         raise error("Contract termination time must be positive.")
         
     gamma_2 = 1.0 - gamma_1
@@ -227,7 +227,7 @@ def simulate_heston_andersen_qe(state:        MarketState,
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
-    N_T        = int(time / dt)
+    N_T        = int(T / dt)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
@@ -294,7 +294,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
                                 x_grid:        np.array,
                                 f_nu_grid:     np.array,
                                 f_sigma_grid:  np.array,
-                                time:          float = 1.,
+                                T:             float = 1.,
                                 dt:            float = 1e-2,
                                 n_simulations: int = 10_000,
                                 gamma_1:       float=0.0
@@ -307,7 +307,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
         x_grid (np.array): _description_
         f_nu_grid (np.array): _description_
         f_sigma_grid (np.array): _description_
-        time (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        T (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional): Time step. Defaults to 1e-2.
         n_simulations (int, optional): number of the simulations. Defaults to 10_000.
         gamma_1 (float, optional): _description_. Defaults to 0.0.
@@ -321,7 +321,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
     """    
     if gamma_1 >1 or gamma_1<0:
         raise error('The parameter \gamma_1 must be in the interval [0,1]')
-    if time <= 0:
+    if T <= 0:
         raise error("Contract termination time must be positive.")
     gamma_2 = 1.0 - gamma_1
     
@@ -334,7 +334,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
-    N_T        = int(time / dt)
+    N_T        = int(T / dt)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
@@ -401,7 +401,7 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
         
     Args:
         heston_params (HestonParameters): parameters of Heston model
-        dt (float): time step 
+        dt (float): T step 
         v_i: current volatility value
         n_simulations (int): number of simulations.
         
@@ -419,14 +419,14 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
 
 def Phi(a:             Union[float, np.ndarray], 
         V:             Union[float, np.ndarray],
-        time:          Union[float, np.ndarray],
+        T:          Union[float, np.ndarray],
         heston_params: HestonParameters
         ) -> np.ndarray:
     
     
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, \
                                         heston_params.vbar, heston_params.gamma
-    dt = time[1::]-time[:-1:]
+    dt = T[1::]-T[:-1:]
     
     A=np.array(a)
     gamma_a = np.sqrt(kappa**2 - 2*gamma**2*1j*A).reshape(1,1,len(A)).T
@@ -447,7 +447,7 @@ def Phi(a:             Union[float, np.ndarray],
     return P1*P2*P3
 
 def Pr(V:             np.ndarray, 
-       time:          np.ndarray,
+       T:          np.ndarray,
        X:             Union[np.ndarray, float],
        heston_params: HestonParameters,
        h:             float=1e-2, 
@@ -460,7 +460,7 @@ def Pr(V:             np.ndarray,
     j = 1
     while(True):
         Sin=np.sin(h*j*x)/j
-        Phi_hj=Phi(h*j, V, time, heston_params)
+        Phi_hj=Phi(h*j, V, T, heston_params)
         S+=Sin.reshape(1,1,len(x)).T * Phi_hj[0]
         if np.all(Phi_hj[0]<np.pi*eps*j/2.0):
             break
@@ -470,7 +470,7 @@ def Pr(V:             np.ndarray,
     return P+S
 
 def IV(V:             np.ndarray, 
-       time:          np.ndarray,
+       T:          np.ndarray,
        heston_params: HestonParameters,
        h:             float=1e-2, 
        eps:           float=1e-2
@@ -479,7 +479,7 @@ def IV(V:             np.ndarray,
     U=np.random.uniform(size=(V.shape[0], V.shape[1] - 1))
     
     def f(x,i,j):
-        P=Pr(V, time, x, heston_params, h, eps)
+        P=Pr(V, T, x, heston_params, h, eps)
         return (P-U)[0][i,j]
     
     IVar = np.zeros((V.shape[0], V.shape[1] - 1))
