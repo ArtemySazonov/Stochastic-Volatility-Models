@@ -137,11 +137,11 @@ def simulate_heston_euler(state:           MarketState,
     """Simulation engine for the Heston model using the Euler scheme.
 
     Args:
-        state (MarketState): Market state.
+        state (MarketState):              Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
-        T (float, optional): Contract termination time expressed as a number of years. Defaults to 1..
-        dt (float, optional): Time step. Defaults to 1e-2.
-        n_simulations (int, optional): number of simulations. Defaults to 10_000.
+        T (float, optional):              Contract termination time expressed as a number of years. Defaults to 1..
+        N_T (int, optional):              Number of steps in time. Defaults to 100.
+        n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
 
     Raises:
         error: Contract termination time must be positive.
