@@ -131,8 +131,8 @@ def mc_price(payoff:                 Callable,
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
                           T:               float = 1.,
-                          N_T:             int = 100,
-                          n_simulations:   int = 10_000
+                          N_T:             int   = 100,
+                          n_simulations:   int   = 10_000
                           ) -> dict:
     """Simulation engine for the Heston model using the Euler scheme.
 
@@ -186,21 +186,21 @@ def simulate_heston_euler(state:           MarketState,
 def simulate_heston_andersen_qe(state:        MarketState,
                                heston_params: HestonParameters,
                                T:             float = 1.,
-                               N_T:           int = 100,
-                               n_simulations: int = 10_000,
+                               N_T:           int   = 100,
+                               n_simulations: int   = 10_000,
                                Psi_c:         float = 1.5,
                                gamma_1:       float = 0.0     
                                ) -> dict: 
     """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
     Args:
-        state (MarketState): _description_
-        heston_params (HestonParameters): _description_
-        T (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        state (MarketState):                 _description_
+        heston_params (HestonParameters):    _description_
+        T (float, optional):                 Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional): _description_. Defaults to 1e-2.
-        n_simulations (int, optional): _description_. Defaults to 10_000.
-        Psi_c (float, optional): _description_. Defaults to 1.5.
-        gamma_1 (float, optional): _description_. Defaults to 0.5.
+        n_simulations (int, optional):       _description_. Defaults to 10_000.
+        Psi_c (float, optional):             _description_. Defaults to 1.5.
+        gamma_1 (float, optional):           _description_. Defaults to 0.5.
 
     Raises:
         Error: The critical value \psi_c must be in the interval [1,2]
@@ -296,22 +296,22 @@ def simulate_heston_andersen_tg(state:         MarketState,
                                 f_nu_grid:     np.array,
                                 f_sigma_grid:  np.array,
                                 T:             float = 1.,
-                                N_T:           int = 100,
-                                n_simulations: int = 10_000,
+                                N_T:           int   = 100,
+                                n_simulations: int   = 10_000,
                                 gamma_1:       float = 0.0
                                 ) -> dict: 
     """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
     Args:
-        state (MarketState): Market state.
+        state (MarketState):              Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
-        x_grid (np.array): _description_
-        f_nu_grid (np.array): _description_
-        f_sigma_grid (np.array): _description_
-        T (float, optional): Contract termination time expressed as a non-integer amount of years. Defaults to 1..
-        dt (float, optional): Time step. Defaults to 1e-2.
-        n_simulations (int, optional): number of the simulations. Defaults to 10_000.
-        gamma_1 (float, optional): _description_. Defaults to 0.0.
+        x_grid (np.array):                _description_
+        f_nu_grid (np.array):             _description_
+        f_sigma_grid (np.array):          _description_
+        T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional):             Time step. Defaults to 1e-2.
+        n_simulations (int, optional):    number of the simulations. Defaults to 10_000.
+        gamma_1 (float, optional):        _description_. Defaults to 0.0.
 
     Raises:
         error: The parameter \gamma_1 must be in the interval [0,1].
@@ -398,7 +398,7 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
                       v_i:           np.array,
                       n_simulations: int):
     """Samples chi_squared statistics for v_{i+1} conditional on 
-       v_i and parameters of Hestom model. 
+       v_i and parameters of the Heston model. 
         
     Args:
         heston_params (HestonParameters): parameters of Heston model
