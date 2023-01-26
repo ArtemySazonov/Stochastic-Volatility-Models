@@ -46,7 +46,7 @@ def mc_price(payoff:                 Callable,
              market_state:           MarketState,
              params:                 HestonParameters,
              T:                      float    = 1.,
-             dt:                     float    = 1e-2,
+             N_T:                    int      = 100,
              absolute_error:         float    = 0.01,
              confidence_level:       float    = 0.05,
              batch_size:             int      = 10_000,
@@ -65,6 +65,7 @@ def mc_price(payoff:                 Callable,
         market_state (MarketState):         market state
         params (HestonParameters):          Heston parameters
         T (float, optional):                Contract expiration T. Defaults to 1.. 
+        N_T (int, optional):                Number of steps in time. Defaults to 100.
         absolute_error (float, optional):   absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
         confidence_level (float, optional): confidence level for the price. Defaults to 0.05.
         batch_size (int, optional):         path-batch size. Defaults to 10_000.
@@ -77,8 +78,8 @@ def mc_price(payoff:                 Callable,
 
     arg = {'state':           market_state,
            'heston_params':   params, 
-           'T':            T , 
-           'dt':              dt, 
+           'T':               T, 
+           'N_T':             N_T, 
            'n_simulations':   batch_size}
 
     args       = {**arg, **kwargs}
@@ -102,8 +103,8 @@ def mc_price(payoff:                 Callable,
             n+=batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
-            if debug:
-                print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
+            #if debug:
+            #    print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
     else:
         S = simulate(control_variate_iter)
         c = np.cov(payoff(S), control_variate_payoff(S))
@@ -130,7 +131,7 @@ def mc_price(payoff:                 Callable,
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
                           T:               float = 1.,
-                          dt:              float = 1e-2,
+                          N_T:             int = 100,
                           n_simulations:   int = 10_000
                           ) -> dict:
     """Simulation engine for the Heston model using the Euler scheme.
@@ -157,11 +158,11 @@ def simulate_heston_euler(state:           MarketState,
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, \
                                   heston_params.vbar, heston_params.gamma
     
+    dt         = T/float(N_T)
     vt         = np.zeros(n_simulations)
     vt[:]      = v0
     log_st     = np.zeros(n_simulations)
     log_st[:]  = np.log(s0)
-    N_T        = int(T / dt)
     
     Z1         = np.random.normal(size=(n_simulations, N_T))
     Z2         = np.random.normal(size=(n_simulations, N_T))
@@ -185,10 +186,10 @@ def simulate_heston_euler(state:           MarketState,
 def simulate_heston_andersen_qe(state:        MarketState,
                                heston_params: HestonParameters,
                                T:             float = 1.,
-                               dt:            float = 1e-2,
+                               N_T:           int = 100,
                                n_simulations: int = 10_000,
-                               Psi_c:         float=1.5,
-                               gamma_1:       float=0.0     
+                               Psi_c:         float = 1.5,
+                               gamma_1:       float = 0.0     
                                ) -> dict: 
     """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
@@ -221,13 +222,13 @@ def simulate_heston_andersen_qe(state:        MarketState,
     r, s0 = state.interest_rate, state.stock_price
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
+    dt         = T/float(N_T)
     E          = np.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
-    N_T        = int(T / dt)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
@@ -295,9 +296,9 @@ def simulate_heston_andersen_tg(state:         MarketState,
                                 f_nu_grid:     np.array,
                                 f_sigma_grid:  np.array,
                                 T:             float = 1.,
-                                dt:            float = 1e-2,
+                                N_T:           int = 100,
                                 n_simulations: int = 10_000,
-                                gamma_1:       float=0.0
+                                gamma_1:       float = 0.0
                                 ) -> dict: 
     """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
@@ -328,13 +329,13 @@ def simulate_heston_andersen_tg(state:         MarketState,
     r, s0 = state.interest_rate, state.stock_price
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
+    dt         = T/float(N_T)
     E          = np.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
-    N_T        = int(T / dt)
         
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = v0
