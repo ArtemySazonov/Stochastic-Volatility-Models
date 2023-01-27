@@ -17,7 +17,7 @@ from scipy.stats import norm
 warnings.filterwarnings("ignore")
 
 from numba import njit, jitclass, float64, int64, prange
-
+ # type: ignore
 @jitclass([("kappa", float64),
            ("gamma", float64),
            ("rho", float64), 
@@ -284,7 +284,7 @@ def simulate_heston_andersen_qe(state:        MarketState,
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
                                 tol:     float = 1e-5
-                                ) -> float:
+                                ):
     def foo(x: float):
         return x*norm.pdf(x) + norm.cdf(x)*(1+x**2) - (1+x_)*(norm.pdf(x) + x*norm.cdf(x))**2
 
@@ -302,9 +302,9 @@ def calculate_r_for_andersen_tg(x_:      float,
 
 def simulate_heston_andersen_tg(state:         MarketState,
                                 heston_params: HestonParameters,
-                                x_grid:        np.array,
-                                f_nu_grid:     np.array,
-                                f_sigma_grid:  np.array,
+                                x_grid:        np.ndarray,
+                                f_nu_grid:     np.ndarray,
+                                f_sigma_grid:  np.ndarray,
                                 T:             float = 1.,
                                 N_T:           int   = 100,
                                 n_simulations: int   = 10_000,
@@ -315,9 +315,9 @@ def simulate_heston_andersen_tg(state:         MarketState,
     Args:
         state (MarketState):              Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
-        x_grid (np.array):                _description_
-        f_nu_grid (np.array):             _description_
-        f_sigma_grid (np.array):          _description_
+        x_grid (np.ndarray):              _description_
+        f_nu_grid (np.ndarray):           _description_
+        f_sigma_grid (np.ndarray):        _description_
         T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional):             Time step. Defaults to 1e-2.
         n_simulations (int, optional):    number of the simulations. Defaults to 10_000.
@@ -405,7 +405,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
 
 def cir_chi_sq_sample(heston_params: HestonParameters,
                       dt:            float,
-                      v_i:           np.array,
+                      v_i:           np.ndarray,
                       n_simulations: int):
     """Samples chi_squared statistics for v_{i+1} conditional on 
        v_i and parameters of the Heston model. 
@@ -417,7 +417,7 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
         n_simulations (int): number of simulations.
         
     Returns:
-        np.array: sampled chi_squared statistics 
+        np.ndarray: sampled chi_squared statistics 
     """
     kappa, vbar, gamma = heston_params.kappa, heston_params.vbar, heston_params.gamma
     
@@ -430,7 +430,7 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
 
 def Phi(a:             Union[float, np.ndarray], 
         V:             Union[float, np.ndarray],
-        T:          Union[float, np.ndarray],
+        T:             Union[float, np.ndarray],
         heston_params: HestonParameters
         ) -> np.ndarray:
     
@@ -439,7 +439,7 @@ def Phi(a:             Union[float, np.ndarray],
                                         heston_params.vbar, heston_params.gamma
     dt = T[1::]-T[:-1:]
     
-    A=np.array(a)
+    A=np.ndarray(a)
     gamma_a = np.sqrt(kappa**2 - 2*gamma**2*1j*A).reshape(1,1,len(A)).T
     
     E1 = np.exp(-kappa*dt)
@@ -465,7 +465,7 @@ def Pr(V:             np.ndarray,
        eps:           float=1e-2
        ) -> np.ndarray:
     
-    x=np.array(X)
+    x=np.ndarray(X)
     P=h*x/np.pi
     S = 0.0
     j = 1
