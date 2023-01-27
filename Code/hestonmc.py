@@ -16,9 +16,23 @@ import warnings
 from scipy.stats import norm
 warnings.filterwarnings("ignore")
 
-from numba import njit, prange
-from numba.experimental import jitclass, float64
- # type: ignore
+from numba import jit, njit, prange, float64
+from numba.experimental import jitclass
+
+if __name__ == '__main__':
+    print("This is a module. Please import it.\n")
+    exit(-1)
+
+
+def european_call_payoff(maturity: float,
+                         strike: float,
+                         interest_rate: float = 0.):
+    @jit
+    def payoff(St: np.ndarray):
+        DF = np.exp( - interest_rate * maturity)
+        return np.maximum(St - strike, 0.)*DF
+
+    return payoff
 @jitclass([("kappa", float64),
            ("gamma", float64),
            ("rho", float64), 
@@ -51,11 +65,10 @@ def get_len_conf_interval(data:             np.ndarray,
     """
     return -2*sps.norm.ppf(confidence_level*0.5) * np.sqrt(np.var(data) / len(data))
 
-@njit(parallel=True)
 def mc_price(payoff:                 Callable,
              simulate:               Callable,
-             market_state:           MarketState,
-             params:                 HestonParameters,
+             state:                  MarketState,
+             heston_params:          HestonParameters,
              T:                      float    = 1.,
              N_T:                    int      = 100,
              absolute_error:         float    = 0.01,
@@ -73,8 +86,8 @@ def mc_price(payoff:                 Callable,
     Args:
         payoff (Callable):                  payoff function
         simulate (Callable):                simulation engine
-        market_state (MarketState):         market state
-        params (HestonParameters):          Heston parameters
+        state (MarketState):                market state
+        heston_params (HestonParameters):   Heston parameters
         T (float, optional):                Contract expiration T. Defaults to 1.. 
         N_T (int, optional):                Number of steps in time. Defaults to 100.
         absolute_error (float, optional):   absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
@@ -87,13 +100,14 @@ def mc_price(payoff:                 Callable,
               
     """
 
-    arg = {'state':           market_state,
-           'heston_params':   params, 
-           'T':               T, 
-           'N_T':             N_T, 
-           'n_simulations':   batch_size}
+    arg = {'state':         state,
+           'heston_params': heston_params, 
+           'T':             T, 
+           'N_T':           N_T, 
+           'n_simulations': batch_size}
 
     args       = {**arg, **kwargs}
+    #args       = arg
     iter_count = 0   
 
     length_conf_interval = 1.
@@ -105,7 +119,7 @@ def mc_price(payoff:                 Callable,
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)['price'])
+            batch_new = payoff(simulate(**args)[0])
             iter_count+=1
 
             sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
@@ -175,8 +189,8 @@ def simulate_heston_euler(state:           MarketState,
     log_st     = np.zeros(n_simulations)
     log_st[:]  = np.log(s0)
     
-    Z1         = np.random.normal(size=(n_simulations, N_T))
-    Z2         = np.random.normal(size=(n_simulations, N_T))
+    Z1         = np.random.standard_normal(size=(n_simulations, N_T))
+    Z2         = np.random.standard_normal(size=(n_simulations, N_T))
     V          = np.zeros([n_simulations, N_T])
     V[:, 0]    = vt
     
@@ -192,9 +206,9 @@ def simulate_heston_euler(state:           MarketState,
         V2           = gamma*np.sqrt(vmax*(dt))*(rho*Z1[:, i]+np.sqrt(1-rho**2)*Z2[:, i])
         V[:, i+1]    = V[:, i] + V1 + V2
 
-    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
+    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
-@njit(fastmath=True, parallel=True, cache=True)
+@njit(parallel=True, fastmath=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
@@ -242,27 +256,26 @@ def simulate_heston_andersen_qe(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.zeros([n_simulations, N_T])
+    V          = np.zeros((n_simulations, N_T))
     V[:, 0]    = v0
 
-    logS       = np.zeros([n_simulations, N_T])
+    logS       = np.zeros((n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
-    Z          = np.random.normal(size=(n_simulations, N_T))
-    Z_V        = np.random.normal(size=(n_simulations, N_T))    #do we need this?
-    U          = np.random.uniform(size=(n_simulations, N_T))   #do we need this?
-    # ksi = np.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
-    # eta = np.random.exponential(scale = 1., size=(n_simulations, N_T))
-    p1 = (1. - E)*(gamma**2)*E/kappa
-    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
-    p3 = vbar * (1.- E)
+    Z          = np.random.standard_normal(size=(n_simulations, N_T))
+    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
+    U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
+
+    p1         = (1. - E)*(gamma**2)*E/kappa
+    p2         = (vbar*gamma**2)/(2.0*kappa)*np.power(1.-E, 2)
+    p3         = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
     for n in prange(n_simulations):
         for i in range(N_T - 1):
-            m            = p3 + V[n, i]*E
-            s_2          = V[n, i]*p1 + p2
-            Psi          = s_2/np.power(m,2) 
+            m   = p3 + V[n, i]*E
+            s_2 = V[n, i]*p1 + p2
+            Psi = s_2/np.power(m,2) 
 
             if Psi <= Psi_c:
                 c         = 2. / Psi
@@ -274,11 +287,11 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 p         = (Psi - 1)/(Psi + 1)
                 beta      = (1.0 - p)/m
 
-                V[n,i+1] = np.where(U[n, i] < p, 0., np.log((1-p)/(1-U[n, i]))/beta)
+                V[n,i+1]  = np.where(U[n, i] < p, 0., np.log((1-p)/(1-U[n, i]))/beta)
 
             logS[n,i+1] = logS[n,i] + rdtK0 + K_1*V[n,i] + K_2*V[n,i+1] + np.sqrt(K_3*V[n,i]+K_4*V[n,i+1]) * Z[n,i]
             
-    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
+    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
@@ -352,8 +365,8 @@ def simulate_heston_andersen_tg(state:         MarketState,
     logS       = np.zeros([n_simulations, N_T])
     logS[:, 0] = np.log(s0)
 
-    Z          = np.random.normal(size=(n_simulations, N_T))
-    Z_V        = np.random.normal(size=(n_simulations, N_T))
+    Z          = np.random.standard_normal(size=(n_simulations, N_T))
+    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))
     
     dx         = np.diff(x_grid[0:2])[0]
     p1         = (1. - E)*(gamma**2)*E/kappa
@@ -375,7 +388,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
         logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
     
-    return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
+    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
 
