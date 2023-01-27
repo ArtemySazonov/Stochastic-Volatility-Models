@@ -107,7 +107,6 @@ def mc_price(payoff:                 Callable,
            'n_simulations': batch_size}
 
     args       = {**arg, **kwargs}
-    #args       = arg
     iter_count = 0   
 
     length_conf_interval = 1.
@@ -127,16 +126,12 @@ def mc_price(payoff:                 Callable,
 
             n+=batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
-
-            #if debug:
-            #    print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
     else:
         S = simulate(control_variate_iter)
         c = np.cov(payoff(S), control_variate_payoff(S))
         theta = c[0, 1] / c[1, 1]
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)['price']) - theta * control_variate_payoff(simulate(**args)['price'])
-            # derivative_price_array = np.append(derivative_price_array, batch_new)
+            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
             iter_count+=1
 
             sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
@@ -145,11 +140,8 @@ def mc_price(payoff:                 Callable,
             n+=batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
-            #if debug:
-            #    print(f"Current price: {current_Pt_sum/n:.4f} +/- {length_conf_interval:.4f}")
-
     if debug:
-        print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\nAbsolute error:         {length_conf_interval}\nConfidence level:       {confidence_level}\n")
+        print(f"Number of iterations:   {iter_count}\nNumber of simulations:  {n}\nAbsolute error:         {absolute_error}\nEmpirical error:        {length_conf_interval}\nConfidence level:       {confidence_level}\n")
 
     return current_Pt_sum/n
 
@@ -208,7 +200,7 @@ def simulate_heston_euler(state:           MarketState,
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
-@njit(parallel=True, fastmath=True)
+@njit(parallel=True, fastmath=True, cache=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
