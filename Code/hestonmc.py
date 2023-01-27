@@ -16,18 +16,27 @@ import warnings
 from scipy.stats import norm
 warnings.filterwarnings("ignore")
 
-@dataclass
+from numba import njit, jitclass, float64, int64, prange
+
+@jitclass([("kappa", float64),
+           ("gamma", float64),
+           ("rho", float64), 
+           ("vbar", float64),
+           ("v0", float64)])
 class HestonParameters:
-    kappa:  Union[float, np.ndarray]
-    gamma:  Union[float, np.ndarray]
-    rho:    Union[float, np.ndarray]
-    vbar:   Union[float, np.ndarray]
-    v0:     Union[float, np.ndarray]
+    def __init__(self, kappa, gamma, rho, vbar, v0):
+        self.kappa = kappa
+        self.gamma = gamma
+        self.rho = rho
+        self.vbar = vbar
+        self.v0 = v0
         
-@dataclass
+@jitclass([("stock_price", float64),
+           ("interest_rate", float64)])
 class MarketState:
-    stock_price:   Union[float, np.ndarray]
-    interest_rate: Union[float, np.ndarray]
+    def __init__(self, stock_price, interest_rate):
+        self.stock_price = stock_price
+        self.interest_rate = interest_rate
 
 def get_len_conf_interval(data:             np.ndarray, 
                           confidence_level: float = 0.05):
@@ -41,6 +50,7 @@ def get_len_conf_interval(data:             np.ndarray,
     """
     return -2*sps.norm.ppf(confidence_level*0.5) * np.sqrt(np.var(data) / len(data))
 
+@njit(parallel=True)
 def mc_price(payoff:                 Callable,
              simulate:               Callable,
              market_state:           MarketState,
