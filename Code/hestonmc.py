@@ -16,7 +16,8 @@ import warnings
 from scipy.stats import norm
 warnings.filterwarnings("ignore")
 
-from numba import njit, jitclass, float64, int64, prange
+from numba import njit, prange
+from numba.experimental import jitclass, float64
  # type: ignore
 @jitclass([("kappa", float64),
            ("gamma", float64),
@@ -193,24 +194,25 @@ def simulate_heston_euler(state:           MarketState,
 
     return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
 
-def simulate_heston_andersen_qe(state:        MarketState,
-                               heston_params: HestonParameters,
-                               T:             float = 1.,
-                               N_T:           int   = 100,
-                               n_simulations: int   = 10_000,
-                               Psi_c:         float = 1.5,
-                               gamma_1:       float = 0.0     
-                               ) -> dict: 
+@njit(fastmath=True, parallel=True, cache=True)
+def simulate_heston_andersen_qe(state:         MarketState,
+                                heston_params: HestonParameters,
+                                T:             float = 1.,
+                                N_T:           int   = 100,
+                                n_simulations: int   = 10_000,
+                                Psi_c:         float = 1.5,
+                                gamma_1:       float = 0.0     
+                                ) -> dict: 
     """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
     Args:
-        state (MarketState):                 _description_
-        heston_params (HestonParameters):    _description_
-        T (float, optional):                 Contract termination time expressed as a non-integer amount of years. Defaults to 1..
-        dt (float, optional): _description_. Defaults to 1e-2.
-        n_simulations (int, optional):       _description_. Defaults to 10_000.
-        Psi_c (float, optional):             _description_. Defaults to 1.5.
-        gamma_1 (float, optional):           _description_. Defaults to 0.5.
+        state (MarketState):              _description_
+        heston_params (HestonParameters): _description_
+        T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        N_T (int, optional):              Number of steps in time. Defaults to 100.
+        n_simulations (int, optional):    _description_. Defaults to 10_000.
+        Psi_c (float, optional):          _description_. Defaults to 1.5.
+        gamma_1 (float, optional):        _description_. Defaults to 0.5.
 
     Raises:
         Error: The critical value \psi_c must be in the interval [1,2]
@@ -256,28 +258,25 @@ def simulate_heston_andersen_qe(state:        MarketState,
     p3 = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
+    for n in prange(n_simulations):
+        for i in range(N_T - 1):
+            m            = p3 + V[n, i]*E
+            s_2          = V[n, i]*p1 + p2
+            Psi          = s_2/np.power(m,2) 
 
-    for i in range(N_T - 1):
-        m            = p3 + V[:, i]*E
-        s_2          = V[:, i]*p1 + p2
-        Psi          = s_2/np.power(m,2) 
+            if Psi <= Psi_c:
+                c         = 2. / Psi
+                b         = c - 1. + np.sqrt(c*(c - 1.))
+                a         = m/(1.+b)
+                b         = np.sqrt(b)
+                V[n, i+1] = a*(np.power(b+Z_V[n, i], 2))
+            else:
+                p         = (Psi - 1)/(Psi + 1)
+                beta      = (1.0 - p)/m
 
-        cond         = np.where(Psi<=Psi_c)
-        c            = 2 / Psi[cond]
-        b            = c - 1. + np.sqrt(c*(c - 1.))
-        a            = m[cond]/(1.+b)
-        b            = np.sqrt(b)
-        # Z_V          = np.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(np.power(b+Z_V[cond, i] , 2))
+                V[n,i+1] = np.where(U[n, i] < p, 0., np.log((1-p)/(1-U[n, i]))/beta)
 
-        cond         = np.where(Psi>Psi_c)
-        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
-        beta         = (1.0 - p)/m[cond]
-
-        V[cond,i+1] = np.where(U[cond, i] < p, 0., np.log((1-p)/(1-U[cond, i]))/beta)
-
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + np.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[:,i]
+            logS[n,i+1] = logS[n,i] + rdtK0 + K_1*V[n,i] + K_2*V[n,i+1] + np.sqrt(K_3*V[n,i]+K_4*V[n,i+1]) * Z[n,i]
             
     return {"price": np.exp(logS[:, N_T-1]), "variance": V[:, N_T-1]}
 
