@@ -310,7 +310,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
                                 n_simulations: int   = 10_000,
                                 gamma_1:       float = 0.0
                                 ) -> dict: 
-    """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
+    """ Simulation engine for the Heston model using the Truncated Gaussian Andersen scheme.
 
     Args:
         state (MarketState):              Market state.
