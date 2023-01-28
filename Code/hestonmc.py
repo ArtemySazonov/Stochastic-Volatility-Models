@@ -1,20 +1,11 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.stats as sps
 import math
 
-from dataclasses import dataclass
 from typing import Union, Callable, Optional
 from copy import error
-from dataclasses import dataclass
 from scipy.interpolate import RectBivariateSpline
 from scipy.optimize import newton, root_scalar
-from scipy.stats import norm
-
-import warnings
-from scipy.stats import norm
-warnings.filterwarnings("ignore")
 
 from numba import jit, njit, prange, float64
 from numba.experimental import jitclass
@@ -22,7 +13,6 @@ from numba.experimental import jitclass
 if __name__ == '__main__':
     print("This is a module. Please import it.\n")
     exit(-1)
-
 
 def european_call_payoff(maturity: float,
                          strike: float,
