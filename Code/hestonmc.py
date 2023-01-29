@@ -86,8 +86,7 @@ def mc_price(payoff:                 Callable,
         MAX_ITER (int, optional):           maximum number of iterations. Defaults to 100_000.  
 
     Returns:    
-        The price of the derivative.
-              
+        The price(-s) of the derivative(-s).    
     """
 
     arg = {'state':         state,
@@ -154,7 +153,7 @@ def simulate_heston_euler(state:           MarketState,
         error: Contract termination time must be positive.
 
     Returns:
-        dict: a tuple containing the simulated stock price and the simulated stochastic variance
+        A tuple containing the simulated stock price and the simulated stochastic variance
     """    
     if T <= 0:
         raise error("Contract termination time must be positive.")
@@ -215,7 +214,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
         Error: The parameter \gamma_1 must be in the interval [0,1]
 
     Returns:
-        dict: a tuple containing the simulated stock price and the simulated stochastic variance.
+        A tuple containing the simulated stock price and the simulated stochastic variance.
         The number of paths is doubled to account for the antithetic variates.
     """    
     
@@ -341,7 +340,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
         error: Contract termination time must be positive.
 
     Returns:
-        dict: a tuple containing the simulated stock price and the simulated stochastic variance.
+        A tuple containing the simulated stock price and the simulated stochastic variance.
     """    
     if gamma_1 >1 or gamma_1<0:
         raise error('The parameter \gamma_1 must be in the interval [0,1]')
