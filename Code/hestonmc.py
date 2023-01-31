@@ -273,7 +273,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
             else:
                 p           = (Psi - 1)/(Psi + 1)
                 beta        = (1.0 - p)/m
-                V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(U[n, i]))/beta
+                V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(1-U[n, i]))/beta
 
             logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
 
@@ -290,7 +290,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
-                V[2*n+1,i+1]  = 0. if U[n, i] > 1 - p else log((1-p)/(U[n, i]))/beta
+                V[2*n+1,i+1]  = 0. if 1-U[n, i] < p else log((1-p)/(U[n, i]))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
             
