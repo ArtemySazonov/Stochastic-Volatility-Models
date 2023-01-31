@@ -1,9 +1,9 @@
 import numpy as np
-import scipy.stats as sps
 import math
 sqrt = math.sqrt
 exp  = math.exp
 log  = math.log
+from scipy.stats import norm
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -56,7 +56,7 @@ def get_len_conf_interval(data:             np.ndarray,
     Returns:
         The confidence interval.
     """
-    return -2*sps.norm.ppf(confidence_level*0.5) * np.sqrt(np.var(data) / len(data))
+    return -2*norm.ppf(confidence_level*0.5) * sqrt(np.var(data) / len(data))
 
 def mc_price(payoff:                 Callable,
              simulate:               Callable,
