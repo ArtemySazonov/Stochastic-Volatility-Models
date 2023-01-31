@@ -3,6 +3,7 @@ import scipy.stats as sps
 import math
 sqrt = math.sqrt
 exp  = math.exp
+log  = math.log
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -264,34 +265,32 @@ def simulate_heston_andersen_qe(state:         MarketState,
             Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
-                c         = 2. / Psi
-                b         = c - 1. + sqrt(c*(c - 1.))
-                a         = m/(1.+b)
-                b         = sqrt(b)
-                V[2*n, i+1] = a*(((b+Z_V[n, i])** 2))
+                c           = 2. / Psi
+                b           = c - 1. + sqrt(c*(c - 1.))
+                a           = m/(1.+b)
+                b           = sqrt(b)
+                V[2*n, i+1] = a*((b+Z_V[n, i])**2)
             else:
-                p         = (Psi - 1)/(Psi + 1)
-                beta      = (1.0 - p)/m
-
-                V[2*n,i+1]  = np.where(U[n, i] < p, 0., np.log((1-p)/(1-U[n, i]))/beta)
+                p           = (Psi - 1)/(Psi + 1)
+                beta        = (1.0 - p)/m
+                V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(U[n, i]))/beta
 
             logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
 
             m   = p3 + V[2*n+1, i]*E
             s_2 = V[2*n+1, i]*p1 + p2
-            Psi = s_2/np.power(m,2) 
+            Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
-                c         = 2. / Psi
-                b         = c - 1. + sqrt(c*(c - 1.))
-                a         = m/(1.+b)
-                b         = sqrt(b)
-                V[2*n+1, i+1] = a*(np.power(b-Z_V[n, i], 2))
+                c             = 2. / Psi
+                b             = c - 1. + sqrt(c*(c - 1.))
+                a             = m/(1.+b)
+                b             = sqrt(b)
+                V[2*n+1, i+1] = a*((b-Z_V[n, i])**2)
             else:
-                p         = (Psi - 1)/(Psi + 1)
-                beta      = (1.0 - p)/m
-
-                V[2*n+1,i+1]  = np.where(1-U[n, i] < p, 0., np.log((1-p)/(U[n, i]))/beta)
+                p             = (Psi - 1)/(Psi + 1)
+                beta          = (1.0 - p)/m
+                V[2*n+1,i+1]  = 0. if 1-U[n, i] < p else log((1-p)/(U[n, i]))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
             
