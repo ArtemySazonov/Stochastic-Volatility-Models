@@ -105,7 +105,7 @@ def mc_price(payoff:                 Callable,
 
     length_conf_interval = 1.
     n                    = 0
-    C                    = -2*sps.norm.ppf(confidence_level*0.5)
+    C                    = -2*norm.ppf(confidence_level*0.5)
     sigma_n              = 0.
     batch_new            = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
