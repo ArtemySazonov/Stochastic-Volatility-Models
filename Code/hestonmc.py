@@ -175,7 +175,8 @@ def simulate_heston_euler(state:           MarketState,
         error: Contract termination time must be positive.
 
     Returns:
-        A tuple containing the simulated stock price and the simulated stochastic variance
+        A tuple containing the simulated stock price and the simulated stochastic variance.
+        The number of paths is doubled to account for the antithetic variates.
     """    
     if T <= 0:
         raise error("Contract termination time must be positive.")
@@ -221,13 +222,13 @@ def simulate_heston_andersen_qe(state:         MarketState,
     """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
 
     Args:
-        state (MarketState):              _description_
-        heston_params (HestonParameters): _description_
+        state (MarketState):              Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
         T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         N_T (int, optional):              Number of steps in time. Defaults to 100.
-        n_simulations (int, optional):    _description_. Defaults to 10_000.
-        Psi_c (float, optional):          _description_. Defaults to 1.5.
-        gamma_1 (float, optional):        _description_. Defaults to 0.5.
+        n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
+        Psi_c (float, optional):          Critical value of \psi, i.e. the moment of the scheme switching. Defaults to 1.5.
+        gamma_1 (float, optional):        Integration parameter. Defaults to 0.5.
 
     Raises:
         Error: The critical value \psi_c must be in the interval [1,2]
@@ -331,7 +332,7 @@ def calculate_r_for_andersen_tg(x_:      float,
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
 
 
-@njit(parallel=True, cache=True, nogil=True)
+@njit(parallel=True, cache=True)
 def simulate_heston_andersen_tg(state:         MarketState,
                                 heston_params: HestonParameters,
                                 x_grid:        np.ndarray,
@@ -361,6 +362,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
 
     Returns:
         A tuple containing the simulated stock price and the simulated stochastic variance.
+        The number of paths is doubled to account for the antithetic variates.
     """    
     if gamma_1 >1 or gamma_1<0:
         raise error('The parameter \gamma_1 must be in the interval [0,1]')
