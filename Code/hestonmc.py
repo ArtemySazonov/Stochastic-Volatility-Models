@@ -155,7 +155,7 @@ def mc_price(payoff:                 Callable,
 
     return current_Pt_sum/n
 
-@njit(parallel=True, cache=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
                           T:               float = 1.,
@@ -210,7 +210,7 @@ def simulate_heston_euler(state:           MarketState,
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
-@njit(parallel=True, cache=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
@@ -332,7 +332,7 @@ def calculate_r_for_andersen_tg(x_:      float,
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
 
 
-@njit(parallel=True, cache=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_tg(state:         MarketState,
                                 heston_params: HestonParameters,
                                 x_grid:        np.ndarray,
