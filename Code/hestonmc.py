@@ -58,6 +58,10 @@ def get_len_conf_interval(data:             np.ndarray,
     """
     return -2*norm.ppf(confidence_level*0.5) * sqrt(np.var(data) / len(data))
 
+@njit
+def set_seed(value):
+    np.random.seed(value)
+
 def mc_price(payoff:                 Callable,
              simulate:               Callable,
              state:                  MarketState,
@@ -71,6 +75,7 @@ def mc_price(payoff:                 Callable,
              control_variate_payoff: Callable = None,
              control_variate_iter:   int      = 1_000,
              verbose:                bool     = False,
+             random_seed:            int      = None,
              **kwargs):
     """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
 
@@ -109,6 +114,9 @@ def mc_price(payoff:                 Callable,
     sigma_n              = 0.
     batch_new            = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
+
+    if random_seed is not None:
+        set_seed(random_seed)
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
