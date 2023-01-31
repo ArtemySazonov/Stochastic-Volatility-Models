@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.stats as sps
 import math
+sqrt = math.sqrt
+exp  = math.exp
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -69,21 +71,23 @@ def mc_price(payoff:                 Callable,
              control_variate_iter:   int      = 1_000,
              debug:                  bool     = False,
              **kwargs):
-    """A function that performs a Monte-Carlo based pricing of a 
-       derivative with a given payoff (possibly path-dependent)
-       under the Heston model.
+    """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
 
     Args:
-        payoff (Callable):                  payoff function
-        simulate (Callable):                simulation engine
-        state (MarketState):                market state
-        heston_params (HestonParameters):   Heston parameters
-        T (float, optional):                Contract expiration T. Defaults to 1.. 
-        N_T (int, optional):                Number of steps in time. Defaults to 100.
-        absolute_error (float, optional):   absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
-        confidence_level (float, optional): confidence level for the price. Defaults to 0.05.
-        batch_size (int, optional):         path-batch size. Defaults to 10_000.
-        MAX_ITER (int, optional):           maximum number of iterations. Defaults to 100_000.  
+        payoff (Callable):                           Payoff function
+        simulate (Callable):                         Simulation engine
+        state (MarketState):                         Market state
+        heston_params (HestonParameters):            Heston parameters
+        T (float, optional):                         Contract expiration T. Defaults to 1.. 
+        N_T (int, optional):                         Number of steps in time. Defaults to 100.
+        absolute_error (float, optional):            Absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
+        confidence_level (float, optional):          Confidence level for the price. Defaults to 0.05.
+        batch_size (int, optional):                  Path-batch size. Defaults to 10_000.
+        MAX_ITER (int, optional):                    Maximum number of iterations. Defaults to 100_000.  
+        control_variate_payoff (Callable, optional): Control variate payoff. Defaults to None.
+        control_variate_iter (int, optional):        Number of iterations for the control variate. Defaults to 1_000.
+        debug (bool, optional):                      Debug flag. Defaults to False.
+        **kwargs:                                    Additional arguments for the simulation engine.
 
     Returns:    
         The price(-s) of the derivative(-s).    
@@ -231,7 +235,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
     dt         = T/float(N_T)
-    E          = np.exp(-kappa*dt)
+    E          = exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
@@ -249,7 +253,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
     U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
 
     p1         = (1. - E)*(gamma**2)*E/kappa
-    p2         = (vbar*gamma**2)/(2.0*kappa)*np.power(1.-E, 2)
+    p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
@@ -257,21 +261,21 @@ def simulate_heston_andersen_qe(state:         MarketState,
         for i in range(N_T - 1):
             m   = p3 + V[2*n, i]*E
             s_2 = V[2*n, i]*p1 + p2
-            Psi = s_2/np.power(m,2) 
+            Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
                 c         = 2. / Psi
-                b         = c - 1. + np.sqrt(c*(c - 1.))
+                b         = c - 1. + sqrt(c*(c - 1.))
                 a         = m/(1.+b)
-                b         = np.sqrt(b)
-                V[2*n, i+1] = a*(np.power(b+Z_V[n, i], 2))
+                b         = sqrt(b)
+                V[2*n, i+1] = a*(((b+Z_V[n, i])** 2))
             else:
                 p         = (Psi - 1)/(Psi + 1)
                 beta      = (1.0 - p)/m
 
                 V[2*n,i+1]  = np.where(U[n, i] < p, 0., np.log((1-p)/(1-U[n, i]))/beta)
 
-            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + np.sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
+            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
 
             m   = p3 + V[2*n+1, i]*E
             s_2 = V[2*n+1, i]*p1 + p2
@@ -279,9 +283,9 @@ def simulate_heston_andersen_qe(state:         MarketState,
 
             if Psi <= Psi_c:
                 c         = 2. / Psi
-                b         = c - 1. + np.sqrt(c*(c - 1.))
+                b         = c - 1. + sqrt(c*(c - 1.))
                 a         = m/(1.+b)
-                b         = np.sqrt(b)
+                b         = sqrt(b)
                 V[2*n+1, i+1] = a*(np.power(b-Z_V[n, i], 2))
             else:
                 p         = (Psi - 1)/(Psi + 1)
@@ -289,7 +293,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
 
                 V[2*n+1,i+1]  = np.where(1-U[n, i] < p, 0., np.log((1-p)/(U[n, i]))/beta)
 
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - np.sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
+            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
