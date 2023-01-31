@@ -117,8 +117,6 @@ def mc_price(payoff:                 Callable,
     current_Pt_sum       = 0.        
 
     if random_seed is not None:
-        if verbose:
-            print(f"Random seed:            {random_seed}")
         set_seed(random_seed)
 
     if control_variate_payoff is None:
@@ -146,7 +144,14 @@ def mc_price(payoff:                 Callable,
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
     if verbose:
-        print(f"Number of simulate calls: {iter_count}\nMAX_ITER:                 {MAX_ITER}\nNumber of paths:          {n}\nAbsolute error:           {absolute_error}\nLength of the conf intl:  {length_conf_interval}\nConfidence level:         {confidence_level}\n")
+        if random_seed is not None:
+            print(f"Random seed:                {random_seed}")
+
+        if control_variate_payoff is not None:
+            print(f"Control variate payoff:     {control_variate_payoff.__name__}")
+            print(f"Control variate iterations: {control_variate_iter}")
+        
+        print(f"Number of simulate calls:   {iter_count}\nMAX_ITER:                   {MAX_ITER}\nNumber of paths:            {n}\nAbsolute error:             {absolute_error}\nLength of the conf intl:    {length_conf_interval}\nConfidence level:           {confidence_level}\n")
 
     return current_Pt_sum/n
 
