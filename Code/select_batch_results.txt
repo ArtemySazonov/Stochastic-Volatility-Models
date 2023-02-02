@@ -1,0 +1,107 @@
+
+common_mc_params = {"absolute_error": 5e-2,  "state": state, "heston_params": heston_params, "payoff": ec_payoff, "T": T, "random_seed": 42, "verbose": False}
+[[simulate_heston_euler, 100], [simulate_heston_andersen_qe, 50], [simulate_heston_andersen_tg, 50]]
+
+
+simulate_heston_euler
+Batch size: 1000
+2.29 s ± 20 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 2000
+1.96 s ± 20.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 3000
+1.86 s ± 14.1 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 4000
+1.83 s ± 38.1 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 5000
+1.85 s ± 40.2 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 6000
+1.85 s ± 31.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 7000
+2 s ± 22.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 8000
+2.15 s ± 26.4 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 9000
+2.25 s ± 30.7 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 10000
+2.36 s ± 28.8 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 11000
+2.5 s ± 68.4 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 12000
+2.5 s ± 18.2 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 13000
+2.54 s ± 29.6 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 14000
+2.57 s ± 18 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 15000
+3.22 s ± 28.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+
+
+
+simulate_heston_andersen_qe
+Batch size: 1000
+1.97 s ± 10 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 2000
+1.6 s ± 9.15 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 3000
+1.49 s ± 21.7 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 4000
+1.42 s ± 23.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 5000
+1.41 s ± 19.2 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 6000
+1.39 s ± 13.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 7000
+1.38 s ± 23.5 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 8000
+1.39 s ± 22.5 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 9000
+1.39 s ± 18.4 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 10000
+1.39 s ± 19.8 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 11000
+1.4 s ± 23.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 12000
+1.41 s ± 17.5 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 13000
+1.42 s ± 20.2 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 14000
+1.4 s ± 24.8 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 15000
+1.41 s ± 29.6 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+
+
+
+simulate_heston_andersen_tg
+Batch size: 1000
+1.64 s ± 14.4 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 2000
+1.35 s ± 7.27 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 3000
+1.25 s ± 10 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 4000
+1.2 s ± 9.22 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 5000
+1.17 s ± 17.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 6000
+1.16 s ± 16.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 7000
+1.15 s ± 13.9 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 8000
+1.16 s ± 21.8 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 9000
+1.17 s ± 21.5 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 10000
+1.17 s ± 22.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 11000
+1.18 s ± 31 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 12000
+1.19 s ± 24.6 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 13000
+1.21 s ± 20.3 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 14000
+1.21 s ± 21.5 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+Batch size: 15000
+1.23 s ± 12.2 ms per loop (mean ± std. dev. of 10 runs, 1 loop each)
+
+
+
