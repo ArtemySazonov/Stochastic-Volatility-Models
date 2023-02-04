@@ -394,14 +394,19 @@ def simulate_heston_andersen_tg(state:         MarketState,
     p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
     rdtK0      = r*dt + K_0
-    dx         = np.diff(x_grid[0:2])[0]
+    dx         = x_grid[1] - x_grid[0]
     
     for n in prange(n_simulations):
         for i in range(N_T - 1):
             m               = p3 + V[2*n, i]*E
             s_2             = V[2*n, i]*p1 + p2
             Psi             = s_2/(m**2) 
-            inx             = int(Psi/dx)
+
+
+            if Psi > x_grid[-1]:
+                inx         = x_grid.shape[0] -1
+            else:
+                inx         = int(Psi/dx)
         
             nu              = m*f_nu_grid[inx]
             sigma           = sqrt(s_2)*f_sigma_grid[inx]
@@ -412,7 +417,11 @@ def simulate_heston_andersen_tg(state:         MarketState,
             m               = p3 + V[2*n+1, i]*E
             s_2             = V[2*n+1, i]*p1 + p2
             Psi             = s_2/(m**2) 
-            inx             = int(Psi/dx)
+
+            if Psi > x_grid[-1]:
+                inx         = x_grid.shape[0] -1
+            else:
+                inx             = int(Psi/dx)
         
             nu              = m * f_nu_grid[inx]
             sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
