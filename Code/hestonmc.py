@@ -433,12 +433,18 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         m            = p3 + v*E
         s_2          = v*p1 + p2
         Psi          = s_2/cp.power(m,2) 
-
+    
         return m, Psi
 
+
+
     for i in range(N_T - 1):
-        
+        #m            = p3 + V[:, i]*E
+        #s_2          = V[:, i]*p1 + p2
+        #Psi          = s_2/cp.power(m,2) 
+
         m, Psi = kernel1(V[:, i], E, p1, p2, p3)
+
 
         cond         = cp.where(Psi<=Psi_c)
         c            = 2 / Psi[cond]
