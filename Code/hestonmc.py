@@ -243,12 +243,24 @@ def simulate_heston_euler_cupy(state:      MarketState,
     logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
+    @cp.fuse
+    def kernel(s, v, z0, z1, kappa, vbar, gamma, rho, dt):
+        vmax = cp.maximum(v, 0)
+        sqrtvmaxdt = cp.sqrt(vmax*dt)
+        s = s + (r - 0.5 * vmax) * dt + sqrtvmaxdt * z0
+        v = v + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*z0+cp.sqrt(1-rho**2)*z1)
+        return s, v
+
     for i in range(0,  N_T-1):
-        vmax         = cp.maximum(V[:, i],0)
+        #vmax         = cp.maximum(V[:, i],0)
 
-        logS[:, i+1] = logS[:, i] + (r - 0.5 * vmax) * (dt) + cp.sqrt(vmax*(dt)) * Z[0, :, i]
+        #logS[:, i+1] = logS[:, i] + (r - 0.5 * vmax) * (dt) + cp.sqrt(vmax*(dt)) * Z[0, :, i]
 
-        V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
+        #V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
+
+        logS[:, i+1], V[:, i+1] = kernel(logS[:, i], V[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
+
+
 
     return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
@@ -416,11 +428,17 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     p3 = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
+    @cp.fuse
+    def kernel1(v, E, p1, p2, p3):
+        m            = p3 + v*E
+        s_2          = v*p1 + p2
+        Psi          = s_2/cp.power(m,2) 
+
+        return m, Psi
 
     for i in range(N_T - 1):
-        m            = p3 + V[:, i]*E
-        s_2          = V[:, i]*p1 + p2
-        Psi          = s_2/cp.power(m,2) 
+        
+        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
 
         cond         = cp.where(Psi<=Psi_c)
         c            = 2 / Psi[cond]
@@ -621,20 +639,40 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     rdtK0      = r*dt + K_0
 
     dx         = x_grid[1] - x_grid[0]
-    
-    for i in range(N_T - 1):
-        m            = p3 + V[:, i]*E
-        s_2          = V[:, i]*p1 + p2
+
+    @cp.fuse
+    def kernel1(v, E, p1, p2, p3, dx):
+        m            = p3 + v*E
+        s_2          = v*p1 + p2
         Psi          = s_2/cp.power(m,2) 
         
-        inx = (Psi/dx).astype(int)
+        return (Psi/dx).astype(int) , m, s_2
+
+
+    @cp.fuse
+    def kernel2(s, v, v_1, z0, z1, K_1, K_2, K_3, K_4, rdtK0, nu, sigma):
+        v_1    = cp.maximum(nu + sigma*z1, 0)
+
+        s = s + rdtK0 + K_1*v + K_2*v_1 - cp.sqrt(K_3*v+K_4*v_1) * z0
+        return s, v_1
+    
+    
+    for i in range(N_T - 1):
+        #m            = p3 + V[:, i]*E
+        #_2          = V[:, i]*p1 + p2
+        #Psi          = s_2/cp.power(m,2) 
+        
+        #inx = (Psi/dx).astype(int)
+        inx, m, s_2 = kernel1(V[:, i], E, p1, p2, p3, dx)
         
         nu           = m * f_nu_grid[inx]
         sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
 
-        V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
-        logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
+        #V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
+        #logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+        #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
+        logS[:,i+1], V[:, i+1] = kernel2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+
     
     return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
