@@ -1,4 +1,5 @@
 import numpy as np
+import cupy as cp
 import math
 sqrt = math.sqrt
 exp  = math.exp
@@ -78,7 +79,6 @@ def mc_price(payoff:                 Callable,
              random_seed:            int      = None,
              **kwargs):
     """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
-
     Args:
         payoff (Callable):                           Payoff function
         simulate (Callable):                         Simulation engine
@@ -95,7 +95,6 @@ def mc_price(payoff:                 Callable,
         verbose (bool, optional):                    Verbose flag. If true, the technical information is printed. Defaults to False.
         random_seed (int, optional):                 Random seed. Defaults to None.
         **kwargs:                                    Additional arguments for the simulation engine.
-
     Returns:    
         The price(-s) of the derivative(-s).    
     """
@@ -155,6 +154,7 @@ def mc_price(payoff:                 Callable,
 
     return current_Pt_sum/n
 
+
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
@@ -163,17 +163,14 @@ def simulate_heston_euler(state:           MarketState,
                           n_simulations:   int   = 10_000
                           ) -> np.ndarray:
     """Simulation engine for the Heston model using the Euler scheme.
-
     Args:
         state (MarketState):              Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
         T (float, optional):              Contract termination time expressed as a number of years. Defaults to 1..
         N_T (int, optional):              Number of steps in time. Defaults to 100.
         n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
-
     Raises:
         error: Contract termination time must be positive.
-
     Returns:
         A tuple containing the simulated stock price and the simulated stochastic variance.
         The number of paths is doubled to account for the antithetic variates.
@@ -209,6 +206,51 @@ def simulate_heston_euler(state:           MarketState,
             V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+
+def simulate_heston_euler_cupy(state:      MarketState,
+                          heston_params:   HestonParameters,
+                          T:               float = 1.,
+                          N_T:             int   = 100,
+                          n_simulations:   int   = 10_000
+                          ) -> np.ndarray:
+    """Simulation engine for the Heston model using the Euler scheme.
+    Args:
+        state (MarketState):              Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
+        T (float, optional):              Contract termination time expressed as a number of years. Defaults to 1..
+        N_T (int, optional):              Number of steps in time. Defaults to 100.
+        n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
+    Raises:
+        error: Contract termination time must be positive.
+    Returns:
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
+    """    
+    if T <= 0:
+        raise error("Contract termination time must be positive.")
+    
+    # initialize market and model parameters
+    r, s0 = state.interest_rate, state.stock_price
+    
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, \
+                                  heston_params.vbar, heston_params.gamma
+    
+    dt         = T/float(N_T)
+    
+    Z          = cp.random.normal(size=(2 , 2*n_simulations, N_T), dtype=cp.float32)
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V[:, 0]    = v0
+    
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS[:, 0] = cp.log(s0)
+
+    for i in range(0,  N_T-1):
+        vmax         = cp.maximum(V[:, i],0)
+
+        logS[:, i+1] = logS[:, i] + (r - 0.5 * vmax) * (dt) + cp.sqrt(vmax*(dt)) * Z[0, :, i]
+
+        V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
+
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
@@ -311,6 +353,93 @@ def simulate_heston_andersen_qe(state:         MarketState,
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+
+
+
+def simulate_heston_andersen_qe_cupy(state:        MarketState,
+                               heston_params: HestonParameters,
+                               T:             float = 1.,
+                               N_T:           int   = 100,
+                               n_simulations: int   = 10_000,
+                               Psi_c:         float = 1.5,
+                               gamma_1:       float = 0.0     
+                               ) -> dict: 
+    """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
+    Args:
+        state (MarketState):                 _description_
+        heston_params (HestonParameters):    _description_
+        T (float, optional):                 Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional): _description_. Defaults to 1e-2.
+        n_simulations (int, optional):       _description_. Defaults to 10_000.
+        Psi_c (float, optional):             _description_. Defaults to 1.5.
+        gamma_1 (float, optional):           _description_. Defaults to 0.5.
+    Raises:
+        Error: The critical value \psi_c must be in the interval [1,2]
+        Error: The parameter \gamma_1 must be in the interval [0,1]
+    Returns:
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
+    """    
+    
+    if Psi_c>2 or Psi_c<1:
+        raise error('The critical value \psi_c must be in the interval [1,2]')
+    if gamma_1 >1 or gamma_1<0:
+        raise error('The parameter \gamma_1 must be in the interval [0,1]')
+    if T <= 0:
+        raise error("Contract termination time must be positive.")
+        
+    gamma_2 = 1.0 - gamma_1
+    
+    r, s0 = state.interest_rate, state.stock_price
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    dt         = T/float(N_T)
+    E          = math.exp(-kappa*dt)
+    K_0        = -(rho*kappa*vbar/gamma)*dt
+    K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1 * dt * (1.0 - rho**2)
+    K_4        = gamma_2 * dt * (1.0 - rho**2)
+        
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V[:, 0]    = v0
+
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS[:, 0] = cp.log(s0)
+
+    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    #Z_V        = cp.random.normal(size=(n_simulations, N_T))    #do we need this?
+    U          = cp.random.uniform(size=(2*n_simulations, N_T))   #do we need this?
+    # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
+    # eta = cp.random.exponential(scale = 1., size=(n_simulations, N_T))
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3 = vbar * (1.- E)
+    rdtK0      = r*dt + K_0
+
+
+    for i in range(N_T - 1):
+        m            = p3 + V[:, i]*E
+        s_2          = V[:, i]*p1 + p2
+        Psi          = s_2/cp.power(m,2) 
+
+        cond         = cp.where(Psi<=Psi_c)
+        c            = 2 / Psi[cond]
+        b            = c - 1. + cp.sqrt(c*(c - 1.))
+        a            = m[cond]/(1.+b)
+        b            = cp.sqrt(b)
+        # Z_V          = cp.random.normal(size=cond[0].shape[0])
+        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
+
+        cond         = cp.where(Psi>Psi_c)
+        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
+        beta         = (1.0 - p)/m[cond]
+
+        V[cond,i+1] = cp.where(U[cond, i] < p, 0., cp.log((1-p)/(1-U[cond, i]))/beta)
+
+        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
+            
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
@@ -430,6 +559,84 @@ def simulate_heston_andersen_tg(state:         MarketState,
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+
+
+
+
+def simulate_heston_andersen_tg_cupy(state:         MarketState,
+                                heston_params: HestonParameters,
+                                x_grid:        cp.array,
+                                f_nu_grid:     cp.array,
+                                f_sigma_grid:  cp.array,
+                                T:             float = 1.,
+                                N_T:           int   = 100,
+                                n_simulations: int   = 10_000,
+                                gamma_1:       float = 0.0
+                                ) -> dict: 
+    """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
+    Args:
+        state (MarketState):              Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
+        x_grid (np.array):                _description_
+        f_nu_grid (np.array):             _description_
+        f_sigma_grid (np.array):          _description_
+        T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional):             Time step. Defaults to 1e-2.
+        n_simulations (int, optional):    number of the simulations. Defaults to 10_000.
+        gamma_1 (float, optional):        _description_. Defaults to 0.0.
+    Raises:
+        error: The parameter \gamma_1 must be in the interval [0,1].
+        error: Contract termination time must be positive.
+    Returns:
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance.
+    """    
+    if gamma_1 >1 or gamma_1<0:
+        raise error('The parameter \gamma_1 must be in the interval [0,1]')
+    if T <= 0:
+        raise error("Contract termination time must be positive.")
+        
+    gamma_2 = 1.0 - gamma_1
+    
+    r, s0 = state.interest_rate, state.stock_price
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    dt         = T/float(N_T)
+    E          = math.exp(-kappa*dt)
+    K_0        = -(rho*kappa*vbar/gamma)*dt
+    K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1 * dt * (1.0 - rho**2)
+    K_4        = gamma_2 * dt * (1.0 - rho**2)
+        
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V[:, 0]    = v0
+
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS[:, 0] = cp.log(s0)
+
+    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3 = vbar * (1.- E)
+    rdtK0      = r*dt + K_0
+
+    dx         = x_grid[1] - x_grid[0]
+    
+    for i in range(N_T - 1):
+        m            = p3 + V[:, i]*E
+        s_2          = V[:, i]*p1 + p2
+        Psi          = s_2/cp.power(m,2) 
+        
+        inx = (Psi/dx).astype(int)
+        
+        nu           = m * f_nu_grid[inx]
+        sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
+
+        V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
+        logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
+    
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 
 
