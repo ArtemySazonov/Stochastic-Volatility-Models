@@ -185,10 +185,10 @@ def simulate_heston_euler(state:           MarketState,
     
     Z1         = np.random.standard_normal(size=(n_simulations, N_T))
     Z2         = np.random.standard_normal(size=(n_simulations, N_T))
-    V          = np.zeros((2*n_simulations, N_T))
+    V          = np.empty((2*n_simulations, N_T))
     V[:, 0]    = v0
     
-    logS       = np.zeros((2*n_simulations, N_T))
+    logS       = np.empty((2*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     sqrt1_rho2 = sqrt(1-rho**2)
@@ -313,10 +313,10 @@ def simulate_heston_andersen_qe(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.zeros((2*n_simulations, N_T))
+    V          = np.empty((2*n_simulations, N_T))
     V[:, 0]    = v0
 
-    logS       = np.zeros((2*n_simulations, N_T))
+    logS       = np.empty((2*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(n_simulations, N_T))
@@ -534,9 +534,9 @@ def simulate_heston_andersen_tg(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.zeros((2*n_simulations, N_T))
+    V          = np.empty((2*n_simulations, N_T))
     V[:, 0]    = v0
-    logS       = np.zeros((2*n_simulations, N_T))
+    logS       = np.empty((2*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(n_simulations, N_T))
