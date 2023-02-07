@@ -27,6 +27,7 @@ def european_call_payoff(maturity: float,
         return np.maximum(St - strike, 0.)*DF
 
     return payoff
+
 @jitclass([("kappa", float64),
            ("gamma", float64),
            ("rho", float64), 
@@ -121,6 +122,7 @@ def mc_price(payoff:                 Callable,
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             batch_new = payoff(simulate(**args)[0])
+
             iter_count+=1
 
             sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
@@ -141,6 +143,108 @@ def mc_price(payoff:                 Callable,
 
             n+=2*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
+
+    if verbose:
+        if random_seed is not None:
+            print(f"Random seed:                {random_seed}")
+
+        if control_variate_payoff is not None:
+            print(f"Control variate payoff:     {control_variate_payoff.__name__}")
+            print(f"Control variate iterations: {control_variate_iter}")
+        
+        print(f"Number of simulate calls:   {iter_count}\nMAX_ITER:                   {MAX_ITER}\nNumber of paths:            {n}\nAbsolute error:             {absolute_error}\nLength of the conf intl:    {length_conf_interval}\nConfidence level:           {confidence_level}\n")
+
+    return current_Pt_sum/n
+
+def mc_price_cupy(payoff:                 Callable,
+             simulate:               Callable,
+             state:                  MarketState,
+             heston_params:          HestonParameters,
+             T:                      float    = 1.,
+             N_T:                    int      = 100,
+             absolute_error:         float    = 0.01,
+             confidence_level:       float    = 0.05,
+             batch_size:             int      = 10_000,
+             MAX_ITER:               int      = 100_000,
+             control_variate_payoff: Callable = None,
+             control_variate_iter:   int      = 1_000,
+             verbose:                bool     = False,
+             random_seed:            int      = None,
+             **kwargs):
+    """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
+    Args:
+        payoff (Callable):                           Payoff function
+        simulate (Callable):                         Simulation engine
+        state (MarketState):                         Market state
+        heston_params (HestonParameters):            Heston parameters
+        T (float, optional):                         Contract expiration T. Defaults to 1.. 
+        N_T (int, optional):                         Number of steps in time. Defaults to 100.
+        absolute_error (float, optional):            Absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
+        confidence_level (float, optional):          Confidence level for the price. Defaults to 0.05.
+        batch_size (int, optional):                  Path-batch size. Defaults to 10_000.
+        MAX_ITER (int, optional):                    Maximum number of iterations. Defaults to 100_000.  
+        control_variate_payoff (Callable, optional): Control variate payoff. Defaults to None.
+        control_variate_iter (int, optional):        Number of iterations for the control variate. Defaults to 1_000.
+        verbose (bool, optional):                    Verbose flag. If true, the technical information is printed. Defaults to False.
+        random_seed (int, optional):                 Random seed. Defaults to None.
+        **kwargs:                                    Additional arguments for the simulation engine.
+    Returns:    
+        The price(-s) of the derivative(-s).    
+    """
+
+    arg = {'state':         state,
+           'heston_params': heston_params, 
+           'T':             T, 
+           'N_T':           N_T, 
+           'n_simulations': batch_size}
+
+    args       = {**arg, **kwargs}
+    iter_count = 0   
+
+    length_conf_interval = 1.
+    n                    = 0
+    C                    = -2*norm.ppf(confidence_level*0.5)
+    sigma_n              = 0.
+    batch_new            = cp.zeros(batch_size, dtype=cp.float64)
+    current_Pt_sum       = 0.        
+
+    if random_seed is not None:
+        set_seed(random_seed)
+
+
+    def kernel1(payoff, simulate, args, batch_new):
+        batch_new = payoff(simulate(**args)[0])
+        return batch_new
+    
+    def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
+        sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+        current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+
+        n+=2*batch_size
+        length_conf_interval = C * cp.sqrt(sigma_n / n)
+        return sigma_n, n, length_conf_interval, current_Pt_sum
+
+
+    if control_variate_payoff is None:
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = kernel1(payoff, simulate, args, batch_new)
+
+            iter_count+=1
+
+            sigma_n, n, length_conf_interval, current_Pt_sum = kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum)
+    else:
+        S = simulate(control_variate_iter)
+        c = cp.cov(payoff(S), control_variate_payoff(S))
+        theta = c[0, 1] / c[1, 1]
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
+            iter_count+=1
+
+            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+
+            n+=2*batch_size
+            length_conf_interval = C * cp.sqrt(sigma_n / n)
 
     if verbose:
         if random_seed is not None:
@@ -263,6 +367,8 @@ def simulate_heston_euler_cupy(state:      MarketState,
 
 
     return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
+
+
 
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
@@ -412,13 +518,13 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
     #Z_V        = cp.random.normal(size=(n_simulations, N_T))    #do we need this?
     U          = cp.random.uniform(size=(2*n_simulations, N_T))   #do we need this?
     # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
@@ -462,7 +568,12 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
 
         logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
-            
+        
+    print('fff v negative', cp.argwhere(V < 0))
+    print('fff v negative', V[cp.where(V < 0)])
+    print('fff v ', cp.argwhere(np.isnan(V)))
+    print('fff', cp.argwhere(np.isnan(logS)))
+    #print(cp.asnumpy(cp.exp(logS[:, N_T-1])))     
     return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 def calculate_r_for_andersen_tg(x_:      float,
