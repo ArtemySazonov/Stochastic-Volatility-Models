@@ -156,10 +156,110 @@ def mc_price(payoff:                 Callable,
 
     return current_Pt_sum/n
 
+def mc_price_cupy(payoff:                 Callable,
+             simulate:               Callable,
+             state:                  MarketState,
+             heston_params:          HestonParameters,
+             T:                      float    = 1.,
+             N_T:                    int      = 100,
+             absolute_error:         float    = 0.01,
+             confidence_level:       float    = 0.05,
+             batch_size:             int      = 10_000,
+             MAX_ITER:               int      = 100_000,
+             control_variate_payoff: Callable = None,
+             control_variate_iter:   int      = 1_000,
+             verbose:                bool     = False,
+             random_seed:            int      = None,
+             **kwargs):
+    """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
+    Args:
+        payoff (Callable):                           Payoff function
+        simulate (Callable):                         Simulation engine
+        state (MarketState):                         Market state
+        heston_params (HestonParameters):            Heston parameters
+        T (float, optional):                         Contract expiration T. Defaults to 1.. 
+        N_T (int, optional):                         Number of steps in time. Defaults to 100.
+        absolute_error (float, optional):            Absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
+        confidence_level (float, optional):          Confidence level for the price. Defaults to 0.05.
+        batch_size (int, optional):                  Path-batch size. Defaults to 10_000.
+        MAX_ITER (int, optional):                    Maximum number of iterations. Defaults to 100_000.  
+        control_variate_payoff (Callable, optional): Control variate payoff. Defaults to None.
+        control_variate_iter (int, optional):        Number of iterations for the control variate. Defaults to 1_000.
+        verbose (bool, optional):                    Verbose flag. If true, the technical information is printed. Defaults to False.
+        random_seed (int, optional):                 Random seed. Defaults to None.
+        **kwargs:                                    Additional arguments for the simulation engine.
+    Returns:    
+        The price(-s) of the derivative(-s).    
+    """
+
+    arg = {'state':         state,
+           'heston_params': heston_params, 
+           'T':             T, 
+           'N_T':           N_T, 
+           'n_simulations': batch_size}
+
+    args       = {**arg, **kwargs}
+    iter_count = 0   
+
+    length_conf_interval = 1.
+    n                    = 0
+    C                    = -2*norm.ppf(confidence_level*0.5)
+    sigma_n              = 0.
+    batch_new            = cp.zeros(batch_size, dtype=cp.float64)
+    current_Pt_sum       = 0.        
+
+    if random_seed is not None:
+        set_seed(random_seed)
 
 
-@njit(parallel=True, cache=True, nogil=True)
-def simulate_heston_euler(state:           MarketState,
+    def kernel1(payoff, simulate, args, batch_new):
+        batch_new = payoff(simulate(**args)[0])
+        return batch_new
+    
+    def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
+        sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+        current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+
+        n+=2*batch_size
+        length_conf_interval = C * cp.sqrt(sigma_n / n)
+        return sigma_n, n, length_conf_interval, current_Pt_sum
+
+
+    if control_variate_payoff is None:
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = kernel1(payoff, simulate, args, batch_new)
+
+            iter_count+=1
+
+            sigma_n, n, length_conf_interval, current_Pt_sum = kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum)
+    else:
+        S = simulate(control_variate_iter)
+        c = cp.cov(payoff(S), control_variate_payoff(S))
+        theta = c[0, 1] / c[1, 1]
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
+            iter_count+=1
+
+            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+
+            n+=2*batch_size
+            length_conf_interval = C * cp.sqrt(sigma_n / n)
+
+    if verbose:
+        if random_seed is not None:
+            print(f"Random seed:                {random_seed}")
+
+        if control_variate_payoff is not None:
+            print(f"Control variate payoff:     {control_variate_payoff.__name__}")
+            print(f"Control variate iterations: {control_variate_iter}")
+        
+        print(f"Number of simulate calls:   {iter_count}\nMAX_ITER:                   {MAX_ITER}\nNumber of paths:            {n}\nAbsolute error:             {absolute_error}\nLength of the conf intl:    {length_conf_interval}\nConfidence level:           {confidence_level}\n")
+
+    return current_Pt_sum/n
+
+
+def simulate_heston_euler_cupy(state:      MarketState,
                           heston_params:   HestonParameters,
                           T:               float = 1.,
                           N_T:             int   = 100,
@@ -175,70 +275,70 @@ def simulate_heston_euler(state:           MarketState,
     Raises:
         error: Contract termination time must be positive.
     Returns:
-        A tuple containing the simulated stock price and the simulated stochastic variance.
-        The number of paths is doubled to account for the antithetic variates.
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
     if T <= 0:
         raise error("Contract termination time must be positive.")
     
+    # initialize market and model parameters
     r, s0 = state.interest_rate, state.stock_price
-    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, \
+                                  heston_params.vbar, heston_params.gamma
     
     dt         = T/float(N_T)
     
-    Z1         = np.random.standard_normal(size=(n_simulations, N_T))
-    Z2         = np.random.standard_normal(size=(n_simulations, N_T))
-    V          = np.empty((2*n_simulations, N_T))
+    Z          = cp.random.normal(size=(2 , 2*n_simulations, N_T), dtype=cp.float32)
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
     
-    logS       = np.empty((2*n_simulations, N_T))
-    logS[:, 0] = np.log(s0)
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS[:, 0] = cp.log(s0)
 
-    sqrt1_rho2 = sqrt(1-rho**2)
+    @cp.fuse
+    def kernel(s, v, z0, z1, kappa, vbar, gamma, rho, dt):
+        vmax = cp.maximum(v, 0)
+        sqrtvmaxdt = cp.sqrt(vmax*dt)
+        s = s + (r - 0.5 * vmax) * dt + sqrtvmaxdt * z0
+        v = v + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*z0+cp.sqrt(1-rho**2)*z1)
+        return s, v
 
-    for n in prange(n_simulations):
-        for i in range(0,  N_T-1):
-            vmax             = max(V[2*n, i],0)
-            sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n, i+1]   = logS[2*n, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z1[n, i]
-            V[2*n, i+1]      = V[2*n, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
+    for i in range(0,  N_T-1):
+        #vmax         = cp.maximum(V[:, i],0)
 
-            vmax             = max(V[2*n+1, i],0)
-            sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z1[n, i]
-            V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
+        #logS[:, i+1] = logS[:, i] + (r - 0.5 * vmax) * (dt) + cp.sqrt(vmax*(dt)) * Z[0, :, i]
 
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+        #V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
+
+        logS[:, i+1], V[:, i+1] = kernel(logS[:, i], V[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
 
 
 
-@njit(parallel=True, cache=True, nogil=True)
-def simulate_heston_andersen_qe(state:         MarketState,
-                                heston_params: HestonParameters,
-                                T:             float = 1.,
-                                N_T:           int   = 100,
-                                n_simulations: int   = 10_000,
-                                Psi_c:         float = 1.5,
-                                gamma_1:       float = 0.0     
-                                ) -> np.ndarray: 
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
+
+
+def simulate_heston_andersen_qe_cupy(state:        MarketState,
+                               heston_params: HestonParameters,
+                               T:             float = 1.,
+                               N_T:           int   = 100,
+                               n_simulations: int   = 10_000,
+                               Psi_c:         float = 1.5,
+                               gamma_1:       float = 0.0     
+                               ) -> dict: 
     """Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
-
     Args:
-        state (MarketState):              Market state.
-        heston_params (HestonParameters): Parameters of the Heston model.
-        T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
-        N_T (int, optional):              Number of steps in time. Defaults to 100.
-        n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
-        Psi_c (float, optional):          Critical value of \psi, i.e. the moment of the scheme switching. Defaults to 1.5.
-        gamma_1 (float, optional):        Integration parameter. Defaults to 0.5.
-
+        state (MarketState):                 _description_
+        heston_params (HestonParameters):    _description_
+        T (float, optional):                 Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional): _description_. Defaults to 1e-2.
+        n_simulations (int, optional):       _description_. Defaults to 10_000.
+        Psi_c (float, optional):             _description_. Defaults to 1.5.
+        gamma_1 (float, optional):           _description_. Defaults to 0.5.
     Raises:
         Error: The critical value \psi_c must be in the interval [1,2]
         Error: The parameter \gamma_1 must be in the interval [0,1]
-
     Returns:
-        A tuple containing the simulated stock price and the simulated stochastic variance.
-        The number of paths is doubled to account for the antithetic variates.
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance
     """    
     
     if Psi_c>2 or Psi_c<1:
@@ -254,66 +354,70 @@ def simulate_heston_andersen_qe(state:         MarketState,
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
     dt         = T/float(N_T)
-    E          = exp(-kappa*dt)
+    E          = math.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.empty((2*n_simulations, N_T))
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
     V[:, 0]    = v0
 
-    logS       = np.empty((2*n_simulations, N_T))
-    logS[:, 0] = np.log(s0)
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    logS[:, 0] = cp.log(s0)
 
-    Z          = np.random.standard_normal(size=(n_simulations, N_T))
-    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
-    U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
-
-    p1         = (1. - E)*(gamma**2)*E/kappa
-    p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
-    p3         = vbar * (1.- E)
+    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
+    #Z_V        = cp.random.normal(size=(n_simulations, N_T))    #do we need this?
+    U          = cp.random.uniform(size=(2*n_simulations, N_T))   #do we need this?
+    # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
+    # eta = cp.random.exponential(scale = 1., size=(n_simulations, N_T))
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3 = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
-    for n in prange(n_simulations):
-        for i in range(N_T - 1):
-            m   = p3 + V[2*n, i]*E
-            s_2 = V[2*n, i]*p1 + p2
-            Psi = s_2/(m**2) 
+    @cp.fuse
+    def kernel1(v, E, p1, p2, p3):
+        m            = p3 + v*E
+        s_2          = v*p1 + p2
+        Psi          = s_2/cp.power(m,2) 
+    
+        return m, Psi
 
-            if Psi <= Psi_c:
-                c           = 2. / Psi
-                b           = c - 1. + sqrt(c*(c - 1.))
-                a           = m/(1.+b)
-                b           = sqrt(b)
-                V[2*n, i+1] = a*((b+Z_V[n, i])**2)
-            else:
-                p           = (Psi - 1)/(Psi + 1)
-                beta        = (1.0 - p)/m
-                V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(1-U[n, i]))/beta
 
-            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
 
-            m   = p3 + V[2*n+1, i]*E
-            s_2 = V[2*n+1, i]*p1 + p2
-            Psi = s_2/(m**2) 
+    for i in range(N_T - 1):
+        #m            = p3 + V[:, i]*E
+        #s_2          = V[:, i]*p1 + p2
+        #Psi          = s_2/cp.power(m,2) 
 
-            if Psi <= Psi_c:
-                c             = 2. / Psi
-                b             = c - 1. + sqrt(c*(c - 1.))
-                a             = m/(1.+b)
-                b             = sqrt(b)
-                V[2*n+1, i+1] = a*((b-Z_V[n, i])**2)
-            else:
-                p             = (Psi - 1)/(Psi + 1)
-                beta          = (1.0 - p)/m
-                V[2*n+1,i+1]  = 0. if 1-U[n, i] < p else log((1-p)/(U[n, i]))/beta
+        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
 
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
-            
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
+        cond         = cp.where(Psi<=Psi_c)
+        c            = 2 / Psi[cond]
+        b            = c - 1. + cp.sqrt(c*(c - 1.))
+        a            = m[cond]/(1.+b)
+        b            = cp.sqrt(b)
+        # Z_V          = cp.random.normal(size=cond[0].shape[0])
+        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
+
+        cond         = cp.where(Psi>Psi_c)
+        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
+        beta         = (1.0 - p)/m[cond]
+
+        V[cond,i+1] = cp.where(U[cond, i] < p, 0., cp.log((1-p)/(1-U[cond, i]))/beta)
+
+        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
+        
+    print('fff v negative', cp.argwhere(V < 0))
+    print('fff v negative', V[cp.where(V < 0)])
+    print('fff v ', cp.argwhere(np.isnan(V)))
+    print('fff', cp.argwhere(np.isnan(logS)))
+    #print(cp.asnumpy(cp.exp(logS[:, N_T-1])))     
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
@@ -335,109 +439,101 @@ def calculate_r_for_andersen_tg(x_:      float,
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
 
 
-@njit(parallel=True, cache=True, nogil=True)
-def simulate_heston_andersen_tg(state:         MarketState,
+
+def simulate_heston_andersen_tg_cupy(state:         MarketState,
                                 heston_params: HestonParameters,
-                                x_grid:        np.ndarray,
-                                f_nu_grid:     np.ndarray,
-                                f_sigma_grid:  np.ndarray,
+                                x_grid:        cp.array,
+                                f_nu_grid:     cp.array,
+                                f_sigma_grid:  cp.array,
                                 T:             float = 1.,
                                 N_T:           int   = 100,
                                 n_simulations: int   = 10_000,
                                 gamma_1:       float = 0.0
-                                ) -> np.ndarray: 
-    """ Simulation engine for the Heston model using the Truncated Gaussian Andersen scheme.
-
+                                ) -> dict: 
+    """ Simulation engine for the Heston model using the Quadratic-Exponential Andersen scheme.
     Args:
         state (MarketState):              Market state.
         heston_params (HestonParameters): Parameters of the Heston model.
-        x_grid (np.ndarray):              _description_
-        f_nu_grid (np.ndarray):           _description_
-        f_sigma_grid (np.ndarray):        _description_
+        x_grid (np.array):                _description_
+        f_nu_grid (np.array):             _description_
+        f_sigma_grid (np.array):          _description_
         T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
         dt (float, optional):             Time step. Defaults to 1e-2.
         n_simulations (int, optional):    number of the simulations. Defaults to 10_000.
         gamma_1 (float, optional):        _description_. Defaults to 0.0.
-
     Raises:
         error: The parameter \gamma_1 must be in the interval [0,1].
         error: Contract termination time must be positive.
-
     Returns:
-        A tuple containing the simulated stock price and the simulated stochastic variance.
-        The number of paths is doubled to account for the antithetic variates.
+        dict: a tuple containing the simulated stock price and the simulated stochastic variance.
     """    
     if gamma_1 >1 or gamma_1<0:
         raise error('The parameter \gamma_1 must be in the interval [0,1]')
     if T <= 0:
         raise error("Contract termination time must be positive.")
-            
+        
+    gamma_2 = 1.0 - gamma_1
+    
     r, s0 = state.interest_rate, state.stock_price
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
-    gamma_2    = 1. - gamma_1
     dt         = T/float(N_T)
-    E          = exp(-kappa*dt)
+    E          = math.exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.empty((2*n_simulations, N_T))
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
-    logS       = np.empty((2*n_simulations, N_T))
-    logS[:, 0] = np.log(s0)
 
-    Z          = np.random.standard_normal(size=(n_simulations, N_T))
-    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
-    U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS[:, 0] = cp.log(s0)
 
-    p1         = (1. - E)*(gamma**2)*E/kappa
-    p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
-    p3         = vbar * (1.- E)
+    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    p1 = (1. - E)*(gamma**2)*E/kappa
+    p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
+    p3 = vbar * (1.- E)
     rdtK0      = r*dt + K_0
+
     dx         = x_grid[1] - x_grid[0]
+
+    @cp.fuse
+    def kernel1(v, E, p1, p2, p3, dx):
+        m            = p3 + v*E
+        s_2          = v*p1 + p2
+        Psi          = s_2/cp.power(m,2) 
+        
+        return (Psi/dx).astype(int) , m, s_2
+
+
+    @cp.fuse
+    def kernel2(s, v, v_1, z0, z1, K_1, K_2, K_3, K_4, rdtK0, nu, sigma):
+        v_1    = cp.maximum(nu + sigma*z1, 0)
+
+        s = s + rdtK0 + K_1*v + K_2*v_1 - cp.sqrt(K_3*v+K_4*v_1) * z0
+        return s, v_1
     
-    for n in prange(n_simulations):
-        for i in range(N_T - 1):
-            m               = p3 + V[2*n, i]*E
-            s_2             = V[2*n, i]*p1 + p2
-            Psi             = s_2/(m**2) 
-
-
-            if Psi > x_grid[-1]:
-                inx         = x_grid.shape[0] -1
-            else:
-                inx         = int(Psi/dx)
+    
+    for i in range(N_T - 1):
+        #m            = p3 + V[:, i]*E
+        #_2          = V[:, i]*p1 + p2
+        #Psi          = s_2/cp.power(m,2) 
         
-            nu              = m*f_nu_grid[inx]
-            sigma           = sqrt(s_2)*f_sigma_grid[inx]
-
-            V[2*n, i+1]     = max(nu + sigma*Z_V[n, i], 0)
-            logS[2*n,i+1]   = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
-
-            m               = p3 + V[2*n+1, i]*E
-            s_2             = V[2*n+1, i]*p1 + p2
-            Psi             = s_2/(m**2) 
-
-            if Psi > x_grid[-1]:
-                inx         = x_grid.shape[0] -1
-            else:
-                inx             = int(Psi/dx)
+        #inx = (Psi/dx).astype(int)
+        inx, m, s_2 = kernel1(V[:, i], E, p1, p2, p3, dx)
         
-            nu              = m * f_nu_grid[inx]
-            sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
+        nu           = m * f_nu_grid[inx]
+        sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
 
-            V[2*n+1,i+1]    = max(nu - sigma*Z_V[n, i], 0)
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
-            
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+        #V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
+        #logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+        #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
+        logS[:,i+1], V[:, i+1] = kernel2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
 
-
-
-
-
+    
+    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
 
 
 
