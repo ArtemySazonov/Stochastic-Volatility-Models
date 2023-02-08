@@ -18,13 +18,13 @@ if __name__ == '__main__':
     print("This is a module. Please import it.\n")
     exit(-1)
 
-def european_call_payoff(maturity: float,
+def european_call_payoff_cupy(maturity: float,
                          strike: float,
                          interest_rate: float = 0.):
-    @jit
+    @cp.fuse
     def payoff(St: np.ndarray):
-        DF = np.exp( - interest_rate * maturity)
-        return np.maximum(St - strike, 0.)*DF
+        DF = cp.exp( - interest_rate * maturity)
+        return cp.maximum(St - strike, 0.)*DF
 
     return payoff
 
@@ -210,12 +210,8 @@ def mc_price_cupy(payoff:                 Callable,
 
     if random_seed is not None:
         set_seed(random_seed)
-
-
-    def kernel1(payoff, simulate, args, batch_new):
-        batch_new = payoff(simulate(**args)[0])
-        return batch_new
     
+    @cp.fuse
     def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
         sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
         current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
@@ -227,11 +223,15 @@ def mc_price_cupy(payoff:                 Callable,
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = kernel1(payoff, simulate, args, batch_new)
+            batch_new = payoff(simulate(**args)[0])
 
             iter_count+=1
 
-            sigma_n, n, length_conf_interval, current_Pt_sum = kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum)
+            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+
+            n+=2*batch_size
+            length_conf_interval = C * cp.sqrt(sigma_n / n)
     else:
         S = simulate(control_variate_iter)
         c = cp.cov(payoff(S), control_variate_payoff(S))
@@ -288,7 +288,7 @@ def simulate_heston_euler_cupy(state:      MarketState,
     
     dt         = T/float(N_T)
     
-    Z          = cp.random.normal(size=(2 , 2*n_simulations, N_T), dtype=cp.float32)
+    Z          = cp.random.standard_normal(size=(2 , 2*n_simulations, N_T), dtype=cp.float32)
     V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
     
@@ -314,7 +314,7 @@ def simulate_heston_euler_cupy(state:      MarketState,
 
 
 
-    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
+    return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
 def simulate_heston_andersen_qe_cupy(state:        MarketState,
@@ -361,15 +361,15 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
+    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
     #Z_V        = cp.random.normal(size=(n_simulations, N_T))    #do we need this?
-    U          = cp.random.uniform(size=(2*n_simulations, N_T))   #do we need this?
+    U          = cp.random.uniform(size=(2*n_simulations, N_T), dtype=cp.float32)   #do we need this?
     # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
     # eta = cp.random.exponential(scale = 1., size=(n_simulations, N_T))
     p1 = (1. - E)*(gamma**2)*E/kappa
@@ -412,12 +412,12 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
         
-    print('fff v negative', cp.argwhere(V < 0))
-    print('fff v negative', V[cp.where(V < 0)])
-    print('fff v ', cp.argwhere(np.isnan(V)))
-    print('fff', cp.argwhere(np.isnan(logS)))
+    #print('fff v negative', cp.argwhere(V < 0))
+    #print('fff v negative', V[cp.where(V < 0)])
+    #print('fff v ', cp.argwhere(np.isnan(V)))
+    #print('fff', cp.argwhere(np.isnan(logS)))
     #print(cp.asnumpy(cp.exp(logS[:, N_T-1])))     
-    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
+    return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
@@ -491,7 +491,7 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
     p1 = (1. - E)*(gamma**2)*E/kappa
     p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
     p3 = vbar * (1.- E)
@@ -532,8 +532,8 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
         #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
         logS[:,i+1], V[:, i+1] = kernel2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
 
-    
-    return [cp.asnumpy(cp.exp(logS[:, N_T-1])), cp.asnumpy(V[:, N_T-1])]
+    #print(cp.exp(logS[:, N_T-1]))
+    return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
 

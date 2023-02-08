@@ -267,8 +267,8 @@ def simulate_heston_andersen_qe(state:         MarketState,
     logS       = np.empty((2*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
-    Z          = np.random.standard_normal(size=(n_simulations, N_T))
-    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
+    Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
+    #Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
     U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
 
     p1         = (1. - E)*(gamma**2)*E/kappa
@@ -287,13 +287,13 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b           = c - 1. + sqrt(c*(c - 1.))
                 a           = m/(1.+b)
                 b           = sqrt(b)
-                V[2*n, i+1] = a*((b+Z_V[n, i])**2)
+                V[2*n, i+1] = a*((b+Z[1,n, i])**2)
             else:
                 p           = (Psi - 1)/(Psi + 1)
                 beta        = (1.0 - p)/m
                 V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(1-U[n, i]))/beta
 
-            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
+            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0,n,i]
 
             m   = p3 + V[2*n+1, i]*E
             s_2 = V[2*n+1, i]*p1 + p2
@@ -304,13 +304,13 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b             = c - 1. + sqrt(c*(c - 1.))
                 a             = m/(1.+b)
                 b             = sqrt(b)
-                V[2*n+1, i+1] = a*((b-Z_V[n, i])**2)
+                V[2*n+1, i+1] = a*((b-Z[1,n, i])**2)
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
                 V[2*n+1,i+1]  = 0. if 1-U[n, i] < p else log((1-p)/(U[n, i]))/beta
 
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
+            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
