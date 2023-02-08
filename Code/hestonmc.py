@@ -1,5 +1,4 @@
 import numpy as np
-import cupy as cp
 import math
 sqrt = math.sqrt
 exp  = math.exp
@@ -156,8 +155,6 @@ def mc_price(payoff:                 Callable,
 
     return current_Pt_sum/n
 
-
-
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_euler(state:           MarketState,
                           heston_params:   HestonParameters,
@@ -209,8 +206,6 @@ def simulate_heston_euler(state:           MarketState,
             V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
-
-
 
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
@@ -333,7 +328,6 @@ def calculate_r_for_andersen_tg(x_:      float,
                 2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(x**2*norm.pdf(x) + norm.pdf(x) + norm.pdf(x) -x*norm.pdf(x) )
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
-
 
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_tg(state:         MarketState,
