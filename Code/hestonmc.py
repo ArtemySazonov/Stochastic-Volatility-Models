@@ -1,8 +1,8 @@
 import numpy as np
-import math
-sqrt = math.sqrt
-exp  = math.exp
-log  = math.log
+
+from math import erf, sqrt, exp, log
+sqrt2 = 1/sqrt(2)
+
 from scipy.stats import norm
 
 from typing import Union, Callable, Optional
@@ -12,6 +12,10 @@ from scipy.optimize import newton, root_scalar
 
 from numba import jit, njit, prange, float64
 from numba.experimental import jitclass
+
+@njit
+def Phi(x):
+    return (0.5 + 0.5 * erf(x * sqrt2))
 
 if __name__ == '__main__':
     print("This is a module. Please import it.\n")
@@ -183,8 +187,7 @@ def simulate_heston_euler(state:           MarketState,
     
     dt         = T/float(N_T)
     
-    Z1         = np.random.standard_normal(size=(n_simulations, N_T))
-    Z2         = np.random.standard_normal(size=(n_simulations, N_T))
+    Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
     V          = np.empty((2*n_simulations, N_T))
     V[:, 0]    = v0
     
@@ -197,13 +200,13 @@ def simulate_heston_euler(state:           MarketState,
         for i in range(0,  N_T-1):
             vmax             = max(V[2*n, i],0)
             sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n, i+1]   = logS[2*n, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z1[n, i]
-            V[2*n, i+1]      = V[2*n, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
+            logS[2*n, i+1]   = logS[2*n, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z[0, n, i]
+            V[2*n, i+1]      = V[2*n, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
 
             vmax             = max(V[2*n+1, i],0)
             sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z1[n, i]
-            V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z1[n, i]+sqrt1_rho2*Z2[n, i])
+            logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
+            V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
@@ -263,9 +266,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
-    #Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
-    U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
-
+    u          = 0
     p1         = (1. - E)*(gamma**2)*E/kappa
     p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
@@ -282,11 +283,12 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b           = c - 1. + sqrt(c*(c - 1.))
                 a           = m/(1.+b)
                 b           = sqrt(b)
-                V[2*n, i+1] = a*((b+Z[1,n, i])**2)
+                V[2*n, i+1] = a*((b+Z[1, n, i])**2)
             else:
                 p           = (Psi - 1)/(Psi + 1)
                 beta        = (1.0 - p)/m
-                V[2*n,i+1]  = 0. if U[n, i] < p else log((1-p)/(1-U[n, i]))/beta
+                u           = Phi(Z[1, n, i])
+                V[2*n,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
             logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0,n,i]
 
@@ -303,7 +305,8 @@ def simulate_heston_andersen_qe(state:         MarketState,
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
-                V[2*n+1,i+1]  = 0. if 1-U[n, i] < p else log((1-p)/(U[n, i]))/beta
+                u             = 1-u
+                V[2*n+1,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
             
@@ -483,7 +486,7 @@ def cir_chi_sq_sample(heston_params: HestonParameters,
     return  c*np.random.noncentral_chisquare(size = n_simulations, df   = d, nonc = barkappa)
 
 
-def Phi(a:             Union[float, np.ndarray], 
+def Phi_BK(a:             Union[float, np.ndarray], 
         V:             Union[float, np.ndarray],
         T:             Union[float, np.ndarray],
         heston_params: HestonParameters
@@ -526,7 +529,7 @@ def Pr(V:             np.ndarray,
     j = 1
     while(True):
         Sin=np.sin(h*j*x)/j
-        Phi_hj=Phi(h*j, V, T, heston_params)
+        Phi_hj=Phi_BK(h*j, V, T, heston_params)
         S+=Sin.reshape(1,1,len(x)).T * Phi_hj[0]
         if np.all(Phi_hj[0]<np.pi*eps*j/2.0):
             break
