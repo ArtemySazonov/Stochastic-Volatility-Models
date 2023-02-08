@@ -115,14 +115,14 @@ def mc_price_cupy(payoff:                 Callable,
     if random_seed is not None:
         cp.random.seed(random_seed)
     
-    @cp.fuse
-    def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
-        sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
-        current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
-
-        n+=2*batch_size
-        length_conf_interval = C * cp.sqrt(sigma_n / n)
-        return sigma_n, n, length_conf_interval, current_Pt_sum
+    #@cp.fuse
+    #def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
+    #    sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+    #    current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+    #
+    #    n+=2*batch_size
+    #    length_conf_interval = C * cp.sqrt(sigma_n / n)
+    #    return sigma_n, n, length_conf_interval, current_Pt_sum
 
 
     if control_variate_payoff is None:
