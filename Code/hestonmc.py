@@ -124,7 +124,9 @@ def mc_price(payoff:                 Callable,
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)[0])
+            temp  = simulate(**args)[0]
+            batch_new = payoff(temp)
+            print(sum(np.isnan(temp)))
 
             iter_count+=1
 
@@ -309,7 +311,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 V[2*n+1,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
-            
+           
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
@@ -386,10 +388,8 @@ def simulate_heston_andersen_tg(state:         MarketState,
     logS       = np.empty((2*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
-    Z          = np.random.standard_normal(size=(n_simulations, N_T))
-    Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?
-    U          = np.random.random_sample(size=(n_simulations, N_T))   #do we need this?
-
+    Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
+    #Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?  
     p1         = (1. - E)*(gamma**2)*E/kappa
     p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
@@ -411,8 +411,8 @@ def simulate_heston_andersen_tg(state:         MarketState,
             nu              = m*f_nu_grid[inx]
             sigma           = sqrt(s_2)*f_sigma_grid[inx]
 
-            V[2*n, i+1]     = max(nu + sigma*Z_V[n, i], 0)
-            logS[2*n,i+1]   = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[n,i]
+            V[2*n, i+1]     = max(nu + sigma*Z[1, n, i], 0)
+            logS[2*n,i+1]   = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0, n,i]
 
             m               = p3 + V[2*n+1, i]*E
             s_2             = V[2*n+1, i]*p1 + p2
@@ -426,8 +426,8 @@ def simulate_heston_andersen_tg(state:         MarketState,
             nu              = m * f_nu_grid[inx]
             sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
 
-            V[2*n+1,i+1]    = max(nu - sigma*Z_V[n, i], 0)
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[n,i]
+            V[2*n+1,i+1]    = max(nu - sigma*Z[1, n, i], 0)
+            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 

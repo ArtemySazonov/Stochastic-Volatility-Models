@@ -1,10 +1,18 @@
 import numpy as np
 import cupy as cp
-import math
-sqrt = math.sqrt
-exp  = math.exp
-log  = math.log
+
+from math import sqrt, exp, log
+sqrt2 = 1/sqrt(2)
+
+
+from cupyx.scipy.special import ndtr as ndtr
+
+def Phi(x):
+    return 0.5 + 0.5 * cupy_erf(x * sqrt2)
+
 from scipy.stats import norm
+
+
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -128,6 +136,8 @@ def mc_price_cupy(payoff:                 Callable,
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             batch_new = payoff(simulate(**args)[0])
+
+            #batch_new = batch_new[~cp.isnan(batch_new)]
 
             iter_count+=1
 
@@ -258,22 +268,22 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
     dt         = T/float(N_T)
-    E          = math.exp(-kappa*dt)
+    E          = exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
-    #Z_V        = cp.random.normal(size=(n_simulations, N_T))    #do we need this?
-    U          = cp.random.uniform(size=(2*n_simulations, N_T), dtype=cp.float32)   #do we need this?
+    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
+
+    #U          = cp.empty(2*n_simulations, dtype=cp.float32)   #do we need this?
     # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
     # eta = cp.random.exponential(scale = 1., size=(n_simulations, N_T))
     p1 = (1. - E)*(gamma**2)*E/kappa
@@ -310,16 +320,18 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         cond         = cp.where(Psi>Psi_c)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
         beta         = (1.0 - p)/m[cond]
+        U            = ndtr(Z[1,cond, i])
 
-        V[cond,i+1] = cp.where(U[cond, i] < p, 0., cp.log((1-p)/(1-U[cond, i]))/beta)
+        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
 
         logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
         
     #print('fff v negative', cp.argwhere(V < 0))
     #print('fff v negative', V[cp.where(V < 0)])
-    #print('fff v ', cp.argwhere(np.isnan(V)))
-    #print('fff', cp.argwhere(np.isnan(logS)))
+    #print('fff v ', cp.argwhere(cp.isnan(V)))
+    #print('fff v ', V[cp.isnan(logS)])
+    #print('fff', cp.argwhere(cp.isnan(logS)))
     #print(cp.asnumpy(cp.exp(logS[:, N_T-1])))     
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
@@ -382,7 +394,7 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
     
     dt         = T/float(N_T)
-    E          = math.exp(-kappa*dt)
+    E          = exp(-kappa*dt)
     K_0        = -(rho*kappa*vbar/gamma)*dt
     K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
     K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
