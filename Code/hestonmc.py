@@ -126,7 +126,6 @@ def mc_price(payoff:                 Callable,
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             temp  = simulate(**args)[0]
             batch_new = payoff(temp)
-            print(sum(np.isnan(temp)))
 
             iter_count+=1
 
@@ -134,6 +133,99 @@ def mc_price(payoff:                 Callable,
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=2*batch_size
+            length_conf_interval = C * np.sqrt(sigma_n / n)
+    else:
+        S = simulate(control_variate_iter)
+        c = np.cov(payoff(S), control_variate_payoff(S))
+        theta = c[0, 1] / c[1, 1]
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
+            iter_count+=1
+
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
+
+            n+=2*batch_size
+            length_conf_interval = C * np.sqrt(sigma_n / n)
+
+    if verbose:
+        if random_seed is not None:
+            print(f"Random seed:                {random_seed}")
+
+        if control_variate_payoff is not None:
+            print(f"Control variate payoff:     {control_variate_payoff.__name__}")
+            print(f"Control variate iterations: {control_variate_iter}")
+        
+        print(f"Number of simulate calls:   {iter_count}\nMAX_ITER:                   {MAX_ITER}\nNumber of paths:            {n}\nAbsolute error:             {absolute_error}\nLength of the conf intl:    {length_conf_interval}\nConfidence level:           {confidence_level}\n")
+
+    return current_Pt_sum/n
+
+def mc_price_anti(payoff:                 Callable,
+             simulate:               Callable,
+             state:                  MarketState,
+             heston_params:          HestonParameters,
+             T:                      float    = 1.,
+             N_T:                    int      = 100,
+             absolute_error:         float    = 0.01,
+             confidence_level:       float    = 0.05,
+             batch_size:             int      = 10_000,
+             MAX_ITER:               int      = 100_000,
+             control_variate_payoff: Callable = None,
+             control_variate_iter:   int      = 1_000,
+             verbose:                bool     = False,
+             random_seed:            int      = None,
+             **kwargs):
+    """A function that performs a Monte-Carlo based pricing of a derivative with a given payoff (possibly path-dependent) under the Heston model.
+    Args:
+        payoff (Callable):                           Payoff function
+        simulate (Callable):                         Simulation engine
+        state (MarketState):                         Market state
+        heston_params (HestonParameters):            Heston parameters
+        T (float, optional):                         Contract expiration T. Defaults to 1.. 
+        N_T (int, optional):                         Number of steps in time. Defaults to 100.
+        absolute_error (float, optional):            Absolute error of the price. Defaults to 0.01 (corresponds to 1 cent). 
+        confidence_level (float, optional):          Confidence level for the price. Defaults to 0.05.
+        batch_size (int, optional):                  Path-batch size. Defaults to 10_000.
+        MAX_ITER (int, optional):                    Maximum number of iterations. Defaults to 100_000.  
+        control_variate_payoff (Callable, optional): Control variate payoff. Defaults to None.
+        control_variate_iter (int, optional):        Number of iterations for the control variate. Defaults to 1_000.
+        verbose (bool, optional):                    Verbose flag. If true, the technical information is printed. Defaults to False.
+        random_seed (int, optional):                 Random seed. Defaults to None.
+        **kwargs:                                    Additional arguments for the simulation engine.
+    Returns:    
+        The price(-s) of the derivative(-s).    
+    """
+
+    arg = {'state':         state,
+           'heston_params': heston_params, 
+           'T':             T, 
+           'N_T':           N_T, 
+           'n_simulations': batch_size}
+
+    args       = {**arg, **kwargs}
+    iter_count = 0   
+
+    length_conf_interval = 1.
+    n                    = 0
+    C                    = -2*norm.ppf(confidence_level*0.5)
+    sigma_n              = 0.
+    batch_new            = np.zeros(batch_size, dtype=np.float64)
+    current_Pt_sum       = 0.        
+
+    if random_seed is not None:
+        set_seed(random_seed)
+
+    if control_variate_payoff is None:
+        while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+            temp  = simulate(**args)[0]
+            batch_new = payoff(temp)
+            
+            iter_count+=1
+
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
+
+            n+=batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
     else:
         S = simulate(control_variate_iter)
@@ -431,7 +523,86 @@ def simulate_heston_andersen_tg(state:         MarketState,
             
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
+@njit(parallel=True, cache=True, nogil=True)
+def simulate_heston_andersen_tg_anti(state:         MarketState,
+                                heston_params: HestonParameters,
+                                x_grid:        np.ndarray,
+                                f_nu_grid:     np.ndarray,
+                                f_sigma_grid:  np.ndarray,
+                                T:             float = 1.,
+                                N_T:           int   = 100,
+                                n_simulations: int   = 10_000,
+                                gamma_1:       float = 0.0
+                                ) -> np.ndarray: 
+    """ Simulation engine for the Heston model using the Truncated Gaussian Andersen scheme.
 
+    Args:
+        state (MarketState):              Market state.
+        heston_params (HestonParameters): Parameters of the Heston model.
+        x_grid (np.ndarray):              _description_
+        f_nu_grid (np.ndarray):           _description_
+        f_sigma_grid (np.ndarray):        _description_
+        T (float, optional):              Contract termination time expressed as a non-integer amount of years. Defaults to 1..
+        dt (float, optional):             Time step. Defaults to 1e-2.
+        n_simulations (int, optional):    number of the simulations. Defaults to 10_000.
+        gamma_1 (float, optional):        _description_. Defaults to 0.0.
+
+    Raises:
+        error: The parameter \gamma_1 must be in the interval [0,1].
+        error: Contract termination time must be positive.
+
+    Returns:
+        A tuple containing the simulated stock price and the simulated stochastic variance.
+        The number of paths is doubled to account for the antithetic variates.
+    """    
+    if gamma_1 >1 or gamma_1<0:
+        raise error('The parameter \gamma_1 must be in the interval [0,1]')
+    if T <= 0:
+        raise error("Contract termination time must be positive.")
+            
+    r, s0 = state.interest_rate, state.stock_price
+    v0, rho, kappa, vbar, gamma = heston_params.v0, heston_params.rho, heston_params.kappa, heston_params.vbar, heston_params.gamma
+    
+    gamma_2    = 1. - gamma_1
+    dt         = T/float(N_T)
+    E          = exp(-kappa*dt)
+    K_0        = -(rho*kappa*vbar/gamma)*dt
+    K_1        = gamma_1 * dt * (rho*kappa/gamma - 0.5) - rho/gamma
+    K_2        = gamma_2 * dt * (rho*kappa/gamma - 0.5) + rho/gamma
+    K_3        = gamma_1 * dt * (1.0 - rho**2)
+    K_4        = gamma_2 * dt * (1.0 - rho**2)
+        
+    V          = np.empty((n_simulations, N_T))
+    V[:, 0]    = v0
+    logS       = np.empty((n_simulations, N_T))
+    logS[:, 0] = np.log(s0)
+
+    Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
+    #Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?  
+    p1         = (1. - E)*(gamma**2)*E/kappa
+    p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
+    p3         = vbar * (1.- E)
+    rdtK0      = r*dt + K_0
+    dx         = x_grid[1] - x_grid[0]
+    
+    for n in prange(n_simulations):
+        for i in range(N_T - 1):
+            m               = p3 + V[n, i]*E
+            s_2             = V[n, i]*p1 + p2
+            Psi             = s_2/(m**2) 
+
+            if Psi > x_grid[-1]:
+                inx         = x_grid.shape[0] -1
+            else:
+                inx         = int(Psi/dx)
+        
+            nu              = m*f_nu_grid[inx]
+            sigma           = sqrt(s_2)*f_sigma_grid[inx]
+
+            V[n, i+1]     = max(nu + sigma*Z[1, n, i], 0)
+            logS[n,i+1]   = logS[n,i] + rdtK0 + K_1*V[n,i] + K_2*V[n,i+1] + sqrt(K_3*V[n,i]+K_4*V[n,i+1]) * Z[0, n,i]
+            
+    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
 
