@@ -3,7 +3,7 @@ import numpy as np
 from math import erf, sqrt, exp, log
 sqrt2 = 1/sqrt(2)
 
-from scipy.stats import norm
+# from scipy.stats import norm
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -12,6 +12,8 @@ from scipy.optimize import newton, root_scalar
 
 from numba import jit, njit, prange, float64
 from numba.experimental import jitclass
+from numba_stats import norm, uniform
+from statistics import NormalDist
 
 @njit
 def Phi(x):
@@ -114,7 +116,7 @@ def mc_price(payoff:                 Callable,
 
     length_conf_interval = 1.
     n                    = 0
-    C                    = -2*norm.ppf(confidence_level*0.5)
+    C                    = -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.)
     sigma_n              = 0.
     batch_new            = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
@@ -126,7 +128,7 @@ def mc_price(payoff:                 Callable,
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             temp  = simulate(**args)[0]
             batch_new = payoff(temp)
-            print(sum(np.isnan(temp)))
+            # print(sum(np.isnan(temp)))
 
             iter_count+=1
 
@@ -212,7 +214,7 @@ def simulate_heston_euler(state:           MarketState,
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
-@njit(parallel=True, cache=True, nogil=True)
+@njit(parallel=False, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
@@ -268,11 +270,12 @@ def simulate_heston_andersen_qe(state:         MarketState,
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
-    u          = 0
     p1         = (1. - E)*(gamma**2)*E/kappa
     p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
     rdtK0      = r*dt + K_0
+
+    u = 0.
 
     for n in prange(n_simulations):
         for i in range(N_T - 1):
@@ -307,8 +310,8 @@ def simulate_heston_andersen_qe(state:         MarketState,
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
-                u             = 1-u
-                V[2*n+1,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
+                u             = Phi(- Z[1, n, i])
+                V[2*n+1,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
            
