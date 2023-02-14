@@ -132,10 +132,10 @@ def mc_price(payoff:                 Callable,
 
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-            n+=2*batch_size
+            n+=4*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
     else:
         S = simulate(control_variate_iter)
@@ -145,10 +145,10 @@ def mc_price(payoff:                 Callable,
             batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-            n+=2*batch_size
+            n+=4*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
     if verbose:
@@ -263,10 +263,10 @@ def simulate_heston_andersen_qe(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.empty((2*n_simulations, N_T))
+    V          = np.empty((4*n_simulations, N_T))
     V[:, 0]    = v0
 
-    logS       = np.empty((2*n_simulations, N_T))
+    logS       = np.empty((4*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
@@ -279,8 +279,8 @@ def simulate_heston_andersen_qe(state:         MarketState,
 
     for n in prange(n_simulations):
         for i in range(N_T - 1):
-            m   = p3 + V[2*n, i]*E
-            s_2 = V[2*n, i]*p1 + p2
+            m   = p3 + V[4*n, i]*E
+            s_2 = V[4*n, i]*p1 + p2
             Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
@@ -288,17 +288,17 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b           = c - 1. + sqrt(c*(c - 1.))
                 a           = m/(1.+b)
                 b           = sqrt(b)
-                V[2*n, i+1] = a*((b+Z[1, n, i])**2)
+                V[4*n, i+1] = a*((b+Z[1, n, i])**2)
             else:
                 p           = (Psi - 1)/(Psi + 1)
                 beta        = (1.0 - p)/m
                 u           = Phi(Z[1, n, i])
-                V[2*n,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
+                V[4*n,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
-            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0,n,i]
+            logS[4*n,i+1] = logS[4*n,i] + rdtK0 + K_1*V[4*n,i] + K_2*V[4*n,i+1] + sqrt(K_3*V[4*n,i]+K_4*V[4*n,i+1]) * Z[0,n,i]
 
-            m   = p3 + V[2*n+1, i]*E
-            s_2 = V[2*n+1, i]*p1 + p2
+            m   = p3 + V[4*n+1, i]*E
+            s_2 = V[4*n+1, i]*p1 + p2
             Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
@@ -306,14 +306,50 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b             = c - 1. + sqrt(c*(c - 1.))
                 a             = m/(1.+b)
                 b             = sqrt(b)
-                V[2*n+1, i+1] = a*((b-Z[1,n, i])**2)
+                V[4*n+1, i+1] = a*((b-Z[1,n, i])**2)
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
                 u             = Phi(- Z[1, n, i])
-                V[2*n+1,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+                V[4*n+1,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
 
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
+            logS[4*n+1,i+1] = logS[4*n+1,i] + rdtK0 + K_1*V[4*n+1,i] + K_2*V[4*n+1,i+1] - sqrt(K_3*V[4*n+1,i]+K_4*V[4*n+1,i+1]) * Z[0,n,i]
+
+            m   = p3 + V[4*n+2, i]*E
+            s_2 = V[4*n+2, i]*p1 + p2
+            Psi = s_2/(m**2)
+
+            if Psi <= Psi_c:
+                c             = 2. / Psi
+                b             = c - 1. + sqrt(c*(c - 1.))
+                a             = m/(1.+b)
+                b             = sqrt(b)
+                V[4*n+2, i+1] = a*((b-Z[1,n, i])**2)
+            else:
+                p             = (Psi - 1)/(Psi + 1)
+                beta          = (1.0 - p)/m
+                u             = Phi(- Z[1, n, i])
+                V[4*n+2,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+
+            logS[4*n+2,i+1] = logS[4*n+2,i] + rdtK0 + K_1*V[4*n+2,i] + K_2*V[4*n+2,i+1] + sqrt(K_3*V[4*n+2,i]+K_4*V[4*n+2,i+1]) * Z[0,n,i]
+
+            m   = p3 + V[4*n+3, i]*E
+            s_2 = V[4*n+3, i]*p1 + p2
+            Psi = s_2/(m**2)
+
+            if Psi <= Psi_c:
+                c             = 2. / Psi
+                b             = c - 1. + sqrt(c*(c - 1.))
+                a             = m/(1.+b)
+                b             = sqrt(b)
+                V[4*n+3, i+1] = a*((b+Z[1,n, i])**2)
+            else:
+                p             = (Psi - 1)/(Psi + 1)
+                beta          = (1.0 - p)/m
+                u             = Phi(Z[1, n, i])
+                V[4*n+3,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+
+            logS[4*n+3,i+1] = logS[4*n+3,i] + rdtK0 + K_1*V[4*n+3,i] + K_2*V[4*n+3,i+1] - sqrt(K_3*V[4*n+3,i]+K_4*V[4*n+3,i+1]) * Z[0,n,i]
            
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
