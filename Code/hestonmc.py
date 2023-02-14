@@ -3,7 +3,7 @@ import numpy as np
 from math import erf, sqrt, exp, log
 sqrt2 = 1/sqrt(2)
 
-# from scipy.stats import norm
+from scipy.stats import norm
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -12,7 +12,7 @@ from scipy.optimize import newton, root_scalar
 
 from numba import jit, njit, prange, float64
 from numba.experimental import jitclass
-from numba_stats import norm, uniform
+# from numba_stats import norm, uniform
 from statistics import NormalDist
 
 @njit
@@ -117,6 +117,7 @@ def mc_price(payoff:                 Callable,
     length_conf_interval = 1.
     n                    = 0
     C                    = -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.)
+    # print(confidence_level*0.5, -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.))
     sigma_n              = 0.
     batch_new            = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
@@ -132,11 +133,12 @@ def mc_price(payoff:                 Callable,
 
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4.*batch_size - 1.))/(n + 4.*batch_size - 1.)
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=4*batch_size
-            length_conf_interval = C * np.sqrt(sigma_n / n)
+            length_conf_interval = C * sqrt(sigma_n / n)
+            # print(sigma_n, length_conf_interval, n, C, sigma_n / n)
     else:
         S = simulate(control_variate_iter)
         c = np.cov(payoff(S), control_variate_payoff(S))
@@ -214,7 +216,7 @@ def simulate_heston_euler(state:           MarketState,
 
     return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
-@njit(parallel=False, cache=True, nogil=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
