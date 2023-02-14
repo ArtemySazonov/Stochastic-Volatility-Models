@@ -27,7 +27,7 @@ def european_call_payoff(maturity: float,
     @jit
     def payoff(St: np.ndarray):
         DF = np.exp( - interest_rate * maturity)
-        return np.maximum(St - strike, 0.)*DF
+        return np.maximum(St[:, -1] - strike, 0.)*DF
 
     return payoff
 
@@ -126,7 +126,6 @@ def mc_price(payoff:                 Callable,
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             temp  = simulate(**args)[0]
             batch_new = payoff(temp)
-            print(sum(np.isnan(temp)))
 
             iter_count+=1
 
@@ -134,7 +133,7 @@ def mc_price(payoff:                 Callable,
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=2*batch_size
-            length_conf_interval = C * np.sqrt(sigma_n / n)
+            length_conf_interval = C * sqrt(sigma_n / n)
     else:
         S = simulate(control_variate_iter)
         c = np.cov(payoff(S), control_variate_payoff(S))
@@ -147,7 +146,7 @@ def mc_price(payoff:                 Callable,
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=2*batch_size
-            length_conf_interval = C * np.sqrt(sigma_n / n)
+            length_conf_interval = C * sqrt(sigma_n / n)
 
     if verbose:
         if random_seed is not None:
@@ -210,7 +209,7 @@ def simulate_heston_euler(state:           MarketState,
             logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
             V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
 
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
@@ -230,7 +229,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
         N_T (int, optional):              Number of steps in time. Defaults to 100.
         n_simulations (int, optional):    Number of simulations. Defaults to 10_000.
         Psi_c (float, optional):          Critical value of \psi, i.e. the moment of the scheme switching. Defaults to 1.5.
-        gamma_1 (float, optional):        Integration parameter. Defaults to 0.5.
+        gamma_1 (float, optional):        Integration parameter. Defaults to 0.0.
 
     Raises:
         Error: The critical value \psi_c must be in the interval [1,2]
@@ -307,12 +306,12 @@ def simulate_heston_andersen_qe(state:         MarketState,
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
-                u             = 1-u
+                u             = Phi(- Z[1, n, i])
                 V[2*n+1,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
            
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 
 def calculate_r_for_andersen_tg(x_:      float,
@@ -389,7 +388,6 @@ def simulate_heston_andersen_tg(state:         MarketState,
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
-    #Z_V        = np.random.standard_normal(size=(n_simulations, N_T))    #do we need this?  
     p1         = (1. - E)*(gamma**2)*E/kappa
     p2         = (vbar*gamma**2)/(2.0*kappa)*((1.-E)**2)
     p3         = vbar * (1.- E)
@@ -401,7 +399,6 @@ def simulate_heston_andersen_tg(state:         MarketState,
             m               = p3 + V[2*n, i]*E
             s_2             = V[2*n, i]*p1 + p2
             Psi             = s_2/(m**2) 
-
 
             if Psi > x_grid[-1]:
                 inx         = x_grid.shape[0] -1
@@ -421,15 +418,15 @@ def simulate_heston_andersen_tg(state:         MarketState,
             if Psi > x_grid[-1]:
                 inx         = x_grid.shape[0] -1
             else:
-                inx             = int(Psi/dx)
+                inx         = int(Psi/dx)
         
             nu              = m * f_nu_grid[inx]
-            sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
+            sigma           = sqrt(s_2)*f_sigma_grid[inx]
 
             V[2*n+1,i+1]    = max(nu - sigma*Z[1, n, i], 0)
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
             
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 
 
@@ -516,7 +513,7 @@ def Phi_BK(a:             Union[float, np.ndarray],
     return P1*P2*P3
 
 def Pr(V:             np.ndarray, 
-       T:          np.ndarray,
+       T:             np.ndarray,
        X:             Union[np.ndarray, float],
        heston_params: HestonParameters,
        h:             float=1e-2, 
@@ -539,7 +536,7 @@ def Pr(V:             np.ndarray,
     return P+S
 
 def IV(V:             np.ndarray, 
-       T:          np.ndarray,
+       T:             np.ndarray,
        heston_params: HestonParameters,
        h:             float=1e-2, 
        eps:           float=1e-2
