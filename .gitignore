@@ -18,16 +18,4 @@
 *.pyc
 __pycache__
 .ipynb_checkpoints
-Code/mine/r_x 0.0 16.66666 833333.npy
-Code/mine/r_x 16.66666 33.33332 833333.npy
-Code/mine/r_x 33.33332 49.99998 833333.npy
-Code/mine/r_x 49.99998 66.66664 833333.npy
-Code/mine/r_x 66.66664 83.33330000000001 833333.npy
-Code/mine/r_x 83.33330000000001 99.99996 833333.npy
-Code/mine/r_y 0.0 16.66666 833333.npy
-Code/mine/r_y 16.66666 33.33332 833333.npy
-Code/mine/r_y 33.33332 49.99998 833333.npy
-Code/mine/r_y 49.99998 66.66664 833333.npy
-Code/mine/r_y 66.66664 83.33330000000001 833333.npy
-Code/mine/r_y 83.33330000000001 99.99996 833333.npy
-Code/mine/MC_compare_models_grid_test_3_euler.csv
+
