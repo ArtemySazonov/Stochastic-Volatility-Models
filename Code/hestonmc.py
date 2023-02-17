@@ -13,7 +13,6 @@ from scipy.optimize import newton, root_scalar
 from numba import jit, njit, prange, float64
 from numba.experimental import jitclass
 from numba_stats import norm, uniform
-from statistics import NormalDist
 
 @njit
 def Phi(x):
@@ -22,16 +21,6 @@ def Phi(x):
 if __name__ == '__main__':
     print("This is a module. Please import it.\n")
     exit(-1)
-
-def european_call_payoff(maturity: float,
-                         strike: float,
-                         interest_rate: float = 0.):
-    @jit
-    def payoff(St: np.ndarray):
-        DF = np.exp( - interest_rate * maturity)
-        return np.maximum(St - strike, 0.)*DF
-
-    return payoff
 
 @jitclass([("kappa", float64),
            ("gamma", float64),
@@ -128,7 +117,6 @@ def mc_price(payoff:                 Callable,
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
             temp  = simulate(**args)[0]
             batch_new = payoff(temp)
-            # print(sum(np.isnan(temp)))
 
             iter_count+=1
 
@@ -212,7 +200,7 @@ def simulate_heston_euler(state:           MarketState,
             logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
             V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
 
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 @njit(parallel=False, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
@@ -315,7 +303,7 @@ def simulate_heston_andersen_qe(state:         MarketState,
 
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
            
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 
 def calculate_r_for_andersen_tg(x_:      float,
@@ -432,7 +420,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
             V[2*n+1,i+1]    = max(nu - sigma*Z[1, n, i], 0)
             logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
             
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 
 
