@@ -126,7 +126,7 @@ def mc_price(payoff:                 Callable,
             n+=2*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
     else:
-        S = simulate(control_variate_iter)
+        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter)
         c = np.cov(payoff(S), control_variate_payoff(S))
         theta = c[0, 1] / c[1, 1]
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
