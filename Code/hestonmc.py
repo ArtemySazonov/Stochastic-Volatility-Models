@@ -500,7 +500,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
             logS[4*n+3,i+1] = logS[4*n+3,i] + rdtK0 + K_1*V[4*n+3,i] + K_2*V[4*n+3,i+1] - sqrt(K_3*V[4*n+3,i]+K_4*V[4*n+3,i+1]) * Z[0,n,i]
             
 
-    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
+    return [np.exp(logS), V]
 
 
 
