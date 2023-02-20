@@ -309,7 +309,9 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         m, Psi = kernel1(V[:, i], E, p1, p2, p3)
 
 
-        cond         = cp.where(Psi<=Psi_c)
+        filt = Psi<=Psi_c
+
+        cond         = cp.where(filt)
         c            = 2 / Psi[cond]
         b            = c - 1. + cp.sqrt(c*(c - 1.))
         a            = m[cond]/(1.+b)
@@ -317,7 +319,7 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         # Z_V          = cp.random.normal(size=cond[0].shape[0])
         V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
 
-        cond         = cp.where(Psi>Psi_c)
+        cond         = cp.where(~filt)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
         beta         = (1.0 - p)/m[cond]
         U            = ndtr(Z[1,cond, i])
