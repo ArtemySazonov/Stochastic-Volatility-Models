@@ -210,6 +210,7 @@ def simulate_heston_euler(state:           MarketState,
     return [np.exp(logS), V]
 
 @njit(parallel=True, cache=True, nogil=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
