@@ -70,6 +70,7 @@ def mc_price(payoff:                 Callable,
              MAX_ITER:               int      = 100_000,
              control_variate_payoff: Callable = None,
              control_variate_iter:   int      = 1_000,
+             mu:                     float    = None,
              verbose:                bool     = False,
              random_seed:            int      = None,
              **kwargs):
@@ -126,11 +127,17 @@ def mc_price(payoff:                 Callable,
             n+=2*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
     else:
-        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter)
-        c = np.cov(payoff(S), control_variate_payoff(S))
+        if mu == None:
+            return "NaN"
+
+        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter)[0]
+        s1 = payoff(S)
+        s2 = control_variate_payoff(S)
+        c = np.cov(s1, s2)
         theta = c[0, 1] / c[1, 1]
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
+            temp  = simulate(**args)[0]
+            batch_new = payoff(temp) - theta * (control_variate_payoff(temp) - mu)
             iter_count+=1
 
             sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
@@ -202,7 +209,7 @@ def simulate_heston_euler(state:           MarketState,
 
     return [np.exp(logS), V]
 
-@njit(parallel=False, cache=True, nogil=True)
+@njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
                                 T:             float = 1.,
@@ -412,7 +419,7 @@ def simulate_heston_andersen_tg(state:         MarketState,
             if Psi > x_grid[-1]:
                 inx         = x_grid.shape[0] -1
             else:
-                inx             = int(Psi/dx)
+                inx         = int(Psi/dx)
         
             nu              = m * f_nu_grid[inx]
             sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
