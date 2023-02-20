@@ -31,7 +31,7 @@ def asian_call_AM_payoff(maturity: float,
                          interest_rate: float = 0.):
     @njit
     def asian_call_AM(S: np.ndarray):
-        dt = maturity/S.shape[1]
+        dt = maturity/np.shape(S)[1]
         I = np.sum(S, axis=1) * dt
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(I - strike, 0.)*DF
@@ -43,7 +43,7 @@ def asian_put_AM_payoff(maturity: float,
                         interest_rate: float = 0.):
     @njit
     def asian_put_AM(S: np.ndarray):
-        dt = maturity/S.shape[1]
+        dt = maturity/np.shape(S)[1]
         I = np.sum(S, axis=1) * dt
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(strike - I, 0.)*DF
@@ -55,7 +55,7 @@ def asian_call_GM_payoff(maturity: float,
                          interest_rate: float = 0.):
     @njit
     def asian_call_GM(S: np.ndarray):
-        dt = maturity/S.shape[1]
+        dt = maturity/np.shape(S)[1]
         I = np.exp(np.sum(np.log(S), axis=1) * dt)
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(I - strike, 0.)*DF
@@ -67,7 +67,7 @@ def asian_put_GM_payoff(maturity: float,
                         interest_rate: float = 0.):
     @njit
     def asian_put_GM(S: np.ndarray):
-        dt = maturity/S.shape[1]
+        dt = maturity/np.shape(S)[1]
         I = np.exp(np.sum(np.log(S), axis=1) * dt)
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(strike - I, 0.)*DF
