@@ -3,7 +3,7 @@ import numpy as np
 from math import erf, sqrt, exp, log
 sqrt2 = 1/sqrt(2)
 
-# from scipy.stats import norm
+from scipy.stats import norm
 
 from typing import Union, Callable, Optional
 from copy import error
@@ -107,6 +107,7 @@ def mc_price(payoff:                 Callable,
     length_conf_interval = 1.
     n                    = 0
     C                    = -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.)
+    # print(confidence_level*0.5, -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.))
     sigma_n              = 0.
     batch_new            = np.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
@@ -121,11 +122,12 @@ def mc_price(payoff:                 Callable,
 
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4.*batch_size - 1.))/(n + 4.*batch_size - 1.)
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-            n+=2*batch_size
-            length_conf_interval = C * np.sqrt(sigma_n / n)
+            n+=4*batch_size
+            length_conf_interval = C * sqrt(sigma_n / n)
+            # print(sigma_n, length_conf_interval, n, C, sigma_n / n)
     else:
         if mu == None:
             return "NaN"
@@ -140,10 +142,10 @@ def mc_price(payoff:                 Callable,
             batch_new = payoff(temp) - theta * (control_variate_payoff(temp) - mu)
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(2*batch_size - 1.))/(n + 2*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
             current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
-            n+=2*batch_size
+            n+=4*batch_size
             length_conf_interval = C * np.sqrt(sigma_n / n)
 
     if verbose:
@@ -187,29 +189,40 @@ def simulate_heston_euler(state:           MarketState,
     dt         = T/float(N_T)
     
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
-    V          = np.empty((2*n_simulations, N_T))
+    V          = np.empty((4*n_simulations, N_T))
     V[:, 0]    = v0
     
-    logS       = np.empty((2*n_simulations, N_T))
+    logS       = np.empty((4*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     sqrt1_rho2 = sqrt(1-rho**2)
 
     for n in prange(n_simulations):
         for i in range(0,  N_T-1):
-            vmax             = max(V[2*n, i],0)
+            vmax             = max(V[4*n, i],0)
             sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n, i+1]   = logS[2*n, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z[0, n, i]
-            V[2*n, i+1]      = V[2*n, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
+            logS[4*n, i+1]   = logS[4*n, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z[0, n, i]
+            V[4*n, i+1]      = V[4*n, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
 
-            vmax             = max(V[2*n+1, i],0)
+            vmax             = max(V[4*n+1, i],0)
             sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[2*n+1, i+1] = logS[2*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
-            V[2*n+1, i+1]    = V[2*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
+            logS[4*n+1, i+1] = logS[4*n+1, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
+            V[4*n+1, i+1]    = V[4*n+1, i] + kappa*(vbar - vmax)*dt - gamma*sqrtvmaxdt*(rho*Z[0, n, i]+sqrt1_rho2*Z[1, n, i])
+
+            vmax             = max(V[4*n+2, i],0)
+            sqrtvmaxdt       = sqrt(vmax*dt)
+            logS[4*n+2, i+1] = logS[4*n+2, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z[0, n, i]
+            V[4*n+2, i+1]    = V[4*n+2, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z[0, n, i]-sqrt1_rho2*Z[1, n, i])
+
+            vmax             = max(V[4*n+3, i],0)
+            sqrtvmaxdt       = sqrt(vmax*dt)
+            logS[4*n+3, i+1] = logS[4*n+3, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
+            V[4*n+3, i+1]    = V[4*n+3, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(-rho*Z[0, n, i] + sqrt1_rho2*Z[1, n, i])
+
+
 
     return [np.exp(logS), V]
 
-@njit(parallel=True, cache=True, nogil=True)
 @njit(parallel=True, cache=True, nogil=True)
 def simulate_heston_andersen_qe(state:         MarketState,
                                 heston_params: HestonParameters,
@@ -259,10 +272,10 @@ def simulate_heston_andersen_qe(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.empty((2*n_simulations, N_T))
+    V          = np.empty((4*n_simulations, N_T))
     V[:, 0]    = v0
 
-    logS       = np.empty((2*n_simulations, N_T))
+    logS       = np.empty((4*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
@@ -275,8 +288,8 @@ def simulate_heston_andersen_qe(state:         MarketState,
 
     for n in prange(n_simulations):
         for i in range(N_T - 1):
-            m   = p3 + V[2*n, i]*E
-            s_2 = V[2*n, i]*p1 + p2
+            m   = p3 + V[4*n, i]*E
+            s_2 = V[4*n, i]*p1 + p2
             Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
@@ -284,17 +297,17 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b           = c - 1. + sqrt(c*(c - 1.))
                 a           = m/(1.+b)
                 b           = sqrt(b)
-                V[2*n, i+1] = a*((b+Z[1, n, i])**2)
+                V[4*n, i+1] = a*((b+Z[1, n, i])**2)
             else:
                 p           = (Psi - 1)/(Psi + 1)
                 beta        = (1.0 - p)/m
                 u           = Phi(Z[1, n, i])
-                V[2*n,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
+                V[4*n,i+1]  = 0. if u < p else log((1-p)/(1-u))/beta
 
-            logS[2*n,i+1] = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0,n,i]
+            logS[4*n,i+1] = logS[4*n,i] + rdtK0 + K_1*V[4*n,i] + K_2*V[4*n,i+1] + sqrt(K_3*V[4*n,i]+K_4*V[4*n,i+1]) * Z[0,n,i]
 
-            m   = p3 + V[2*n+1, i]*E
-            s_2 = V[2*n+1, i]*p1 + p2
+            m   = p3 + V[4*n+1, i]*E
+            s_2 = V[4*n+1, i]*p1 + p2
             Psi = s_2/(m**2) 
 
             if Psi <= Psi_c:
@@ -302,14 +315,50 @@ def simulate_heston_andersen_qe(state:         MarketState,
                 b             = c - 1. + sqrt(c*(c - 1.))
                 a             = m/(1.+b)
                 b             = sqrt(b)
-                V[2*n+1, i+1] = a*((b-Z[1,n, i])**2)
+                V[4*n+1, i+1] = a*((b-Z[1,n, i])**2)
             else:
                 p             = (Psi - 1)/(Psi + 1)
                 beta          = (1.0 - p)/m
                 u             = Phi(- Z[1, n, i])
-                V[2*n+1,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+                V[4*n+1,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
 
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
+            logS[4*n+1,i+1] = logS[4*n+1,i] + rdtK0 + K_1*V[4*n+1,i] + K_2*V[4*n+1,i+1] - sqrt(K_3*V[4*n+1,i]+K_4*V[4*n+1,i+1]) * Z[0,n,i]
+
+            m   = p3 + V[4*n+2, i]*E
+            s_2 = V[4*n+2, i]*p1 + p2
+            Psi = s_2/(m**2)
+
+            if Psi <= Psi_c:
+                c             = 2. / Psi
+                b             = c - 1. + sqrt(c*(c - 1.))
+                a             = m/(1.+b)
+                b             = sqrt(b)
+                V[4*n+2, i+1] = a*((b-Z[1,n, i])**2)
+            else:
+                p             = (Psi - 1)/(Psi + 1)
+                beta          = (1.0 - p)/m
+                u             = Phi(- Z[1, n, i])
+                V[4*n+2,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+
+            logS[4*n+2,i+1] = logS[4*n+2,i] + rdtK0 + K_1*V[4*n+2,i] + K_2*V[4*n+2,i+1] + sqrt(K_3*V[4*n+2,i]+K_4*V[4*n+2,i+1]) * Z[0,n,i]
+
+            m   = p3 + V[4*n+3, i]*E
+            s_2 = V[4*n+3, i]*p1 + p2
+            Psi = s_2/(m**2)
+
+            if Psi <= Psi_c:
+                c             = 2. / Psi
+                b             = c - 1. + sqrt(c*(c - 1.))
+                a             = m/(1.+b)
+                b             = sqrt(b)
+                V[4*n+3, i+1] = a*((b+Z[1,n, i])**2)
+            else:
+                p             = (Psi - 1)/(Psi + 1)
+                beta          = (1.0 - p)/m
+                u             = Phi(Z[1, n, i])
+                V[4*n+3,i+1]  = 0. if u < p else log((1.-p)/(1.-u))/beta
+
+            logS[4*n+3,i+1] = logS[4*n+3,i] + rdtK0 + K_1*V[4*n+3,i] + K_2*V[4*n+3,i+1] - sqrt(K_3*V[4*n+3,i]+K_4*V[4*n+3,i+1]) * Z[0,n,i]
            
     return [np.exp(logS), V]
 
@@ -382,9 +431,9 @@ def simulate_heston_andersen_tg(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = np.empty((2*n_simulations, N_T))
+    V          = np.empty((4*n_simulations, N_T))
     V[:, 0]    = v0
-    logS       = np.empty((2*n_simulations, N_T))
+    logS       = np.empty((4*n_simulations, N_T))
     logS[:, 0] = np.log(s0)
 
     Z          = np.random.standard_normal(size=(2, n_simulations, N_T))
@@ -397,8 +446,8 @@ def simulate_heston_andersen_tg(state:         MarketState,
     
     for n in prange(n_simulations):
         for i in range(N_T - 1):
-            m               = p3 + V[2*n, i]*E
-            s_2             = V[2*n, i]*p1 + p2
+            m               = p3 + V[4*n, i]*E
+            s_2             = V[4*n, i]*p1 + p2
             Psi             = s_2/(m**2) 
 
 
@@ -410,11 +459,11 @@ def simulate_heston_andersen_tg(state:         MarketState,
             nu              = m*f_nu_grid[inx]
             sigma           = sqrt(s_2)*f_sigma_grid[inx]
 
-            V[2*n, i+1]     = max(nu + sigma*Z[1, n, i], 0)
-            logS[2*n,i+1]   = logS[2*n,i] + rdtK0 + K_1*V[2*n,i] + K_2*V[2*n,i+1] + sqrt(K_3*V[2*n,i]+K_4*V[2*n,i+1]) * Z[0, n,i]
+            V[4*n, i+1]     = max(nu + sigma*Z[1, n, i], 0)
+            logS[4*n,i+1]   = logS[4*n,i] + rdtK0 + K_1*V[4*n,i] + K_2*V[4*n,i+1] + sqrt(K_3*V[4*n,i]+K_4*V[4*n,i+1]) * Z[0, n,i]
 
-            m               = p3 + V[2*n+1, i]*E
-            s_2             = V[2*n+1, i]*p1 + p2
+            m               = p3 + V[4*n+1, i]*E
+            s_2             = V[4*n+1, i]*p1 + p2
             Psi             = s_2/(m**2) 
 
             if Psi > x_grid[-1]:
@@ -425,10 +474,33 @@ def simulate_heston_andersen_tg(state:         MarketState,
             nu              = m * f_nu_grid[inx]
             sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
 
-            V[2*n+1,i+1]    = max(nu - sigma*Z[1, n, i], 0)
-            logS[2*n+1,i+1] = logS[2*n+1,i] + rdtK0 + K_1*V[2*n+1,i] + K_2*V[2*n+1,i+1] - sqrt(K_3*V[2*n+1,i]+K_4*V[2*n+1,i+1]) * Z[0,n,i]
+            V[4*n+1,i+1]    = max(nu - sigma*Z[1, n, i], 0)
+            logS[4*n+1,i+1] = logS[4*n+1,i] + rdtK0 + K_1*V[4*n+1,i] + K_2*V[4*n+1,i+1] - sqrt(K_3*V[4*n+1,i]+K_4*V[4*n+1,i+1]) * Z[0,n,i]
             
-    return [np.exp(logS), V]
+            if Psi > x_grid[-1]:
+                inx         = x_grid.shape[0] -1
+            else:
+                inx             = int(Psi/dx)
+        
+            nu              = m * f_nu_grid[inx]
+            sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
+
+            V[4*n+2,i+1]    = max(nu - sigma*Z[1, n, i], 0)
+            logS[4*n+2,i+1] = logS[4*n+2,i] + rdtK0 + K_1*V[4*n+2,i] + K_2*V[4*n+2,i+1] + sqrt(K_3*V[4*n+2,i]+K_4*V[4*n+2,i+1]) * Z[0,n,i]
+            
+            if Psi > x_grid[-1]:
+                inx         = x_grid.shape[0] -1
+            else:
+                inx             = int(Psi/dx)
+        
+            nu              = m * f_nu_grid[inx]
+            sigma           = np.sqrt(s_2)*f_sigma_grid[inx]
+
+            V[4*n+3,i+1]    = max(nu + sigma*Z[1, n, i], 0)
+            logS[4*n+3,i+1] = logS[4*n+3,i] + rdtK0 + K_1*V[4*n+3,i] + K_2*V[4*n+3,i+1] - sqrt(K_3*V[4*n+3,i]+K_4*V[4*n+3,i+1]) * Z[0,n,i]
+            
+
+    return [np.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
 
