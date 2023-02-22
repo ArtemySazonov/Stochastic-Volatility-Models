@@ -132,7 +132,7 @@ def mc_price(payoff:                 Callable,
         if mu == None:
             return "NaN"
 
-        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter)[0]
+        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter, **kwargs)[0]
         s1 = payoff(S)
         s2 = control_variate_payoff(S)
         c = np.cov(s1, s2)
