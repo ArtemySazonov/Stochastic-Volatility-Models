@@ -278,17 +278,14 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    V          = cp.empty([4*n_simulations, N_T], dtype=cp.float64)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    logS       = cp.empty([4*n_simulations, N_T], dtype=cp.float64)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
+    Z          = cp.random.standard_normal(size=(2, n_simulations, N_T), dtype=cp.float64)
 
-    #U          = cp.empty(2*n_simulations, dtype=cp.float32)   #do we need this?
-    # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
-    # eta = cp.random.exponential(scale = 1., size=(n_simulations, N_T))
     p1 = (1. - E)*(gamma**2)*E/kappa
     p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
     p3 = vbar * (1.- E)
@@ -302,18 +299,11 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     
         return m, Psi
     
-
-
-
-
     for i in range(N_T - 1):
-        #m            = p3 + V[:, i]*E
-        #s_2          = V[:, i]*p1 + p2
-        #Psi          = s_2/cp.power(m,2) 
 
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
+# ------------------------------------------------- '++'
 
-
+        m, Psi = kernel1(V[0::4, i], E, p1, p2, p3)
         filt = Psi<=Psi_c
         
 
@@ -322,70 +312,93 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         b            = c - 1. + cp.sqrt(c*(c - 1.))
         a            = m[cond]/(1.+b)
         b            = cp.sqrt(b)
-        # Z_V          = cp.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
+        V[4*cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
 
         cond         = cp.where(~filt)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
         beta         = (1.0 - p)/m[cond]
         U            = ndtr(Z[1,cond, i])
 
-        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
+        V[4*cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
 
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
+        logS[0::4,i+1] = logS[0::4,i] + rdtK0 + K_1*V[0::4,i] + K_2*V[0::4,i+1] \
+                        + cp.sqrt(K_3*V[0::4,i]+K_4*V[0::4,i+1]) * Z[0, :,i]
         
 
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
+        m, Psi = kernel1(V[0::4, i], E, p1, p2, p3)
+
+# ------------------------------------------------- '+-'
 
 
+        m, Psi = kernel1(V[1::4, i], E, p1, p2, p3)
         filt = Psi<=Psi_c
         
-
         cond         = cp.where(filt)
         c            = 2 / Psi[cond]
         b            = c - 1. + cp.sqrt(c*(c - 1.))
         a            = m[cond]/(1.+b)
         b            = cp.sqrt(b)
-        # Z_V          = cp.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
+        V[4*cond+1, i+1] = a*(cp.power(b-Z[1, cond, i] , 2))
 
         cond         = cp.where(~filt)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
         beta         = (1.0 - p)/m[cond]
-        U            = ndtr(Z[1,cond, i])
+        U            = ndtr(-Z[1,cond, i])
 
-        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
+        V[4*cond+1,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
 
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
+        logS[1::4,i+1] = logS[1::4,i] + rdtK0 + K_1*V[1::4,i] + K_2*V[1::4,i+1] \
+                        + cp.sqrt(K_3*V[1::4,i]+K_4*V[1::4,i+1]) * Z[0, :,i]
+        
+# ------------------------------------------------- '-+'
 
-
+        m, Psi = kernel1(V[2::4, i], E, p1, p2, p3)
         filt = Psi<=Psi_c
         
-
         cond         = cp.where(filt)
         c            = 2 / Psi[cond]
         b            = c - 1. + cp.sqrt(c*(c - 1.))
         a            = m[cond]/(1.+b)
         b            = cp.sqrt(b)
-        # Z_V          = cp.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
+        V[4*cond+2, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
 
         cond         = cp.where(~filt)
         p            = (Psi[cond] - 1)/(Psi[cond] + 1)
         beta         = (1.0 - p)/m[cond]
         U            = ndtr(Z[1,cond, i])
 
-        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
+        V[4*cond+2,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
 
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
+        logS[2::4,i+1] = logS[2::4,i] + rdtK0 + K_1*V[2::4,i] + K_2*V[2::4,i+1] \
+                        - cp.sqrt(K_3*V[2::4,i]+K_4*V[2::4,i+1]) * Z[0, :,i]
+
+# ------------------------------------------------- '--'
+
+        m, Psi = kernel1(V[3::4, i], E, p1, p2, p3)
+        filt = Psi<=Psi_c
         
+        cond         = cp.where(filt)
+        c            = 2 / Psi[cond]
+        b            = c - 1. + cp.sqrt(c*(c - 1.))
+        a            = m[cond]/(1.+b)
+        b            = cp.sqrt(b)
+        V[4*cond+3, i+1] = a*(cp.power(b-Z[1, cond, i] , 2))
+
+        cond         = cp.where(~filt)
+        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
+        beta         = (1.0 - p)/m[cond]
+        U            = ndtr(-Z[1,cond, i])
+
+        V[4*cond+3,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
+
+        logS[3::4,i+1] = logS[3::4,i] + rdtK0 + K_1*V[3::4,i] + K_2*V[3::4,i+1] \
+                        - cp.sqrt(K_3*V[3::4,i]+K_4*V[3::4,i+1]) * Z[0, :,i]
         
            
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
+
+
+
 
 def calculate_r_for_andersen_tg(x_:      float,
                                 maxiter: int = 2500, 
@@ -453,13 +466,13 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V          = cp.empty([4*n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS       = cp.empty([4*n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    Z          = cp.random.standard_normal(size=(2, n_simulations, N_T), dtype=cp.float32)
     p1 = (1. - E)*(gamma**2)*E/kappa
     p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
     p3 = vbar * (1.- E)
@@ -475,7 +488,6 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
         
         return (Psi/dx).astype(int) , m, s_2
 
-
     @cp.fuse
     def kernel2(s, v, v_1, z0, z1, K_1, K_2, K_3, K_4, rdtK0, nu, sigma):
         v_1    = cp.maximum(nu + sigma*z1, 0)
@@ -485,20 +497,42 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     
     
     for i in range(N_T - 1):
-        #m            = p3 + V[:, i]*E
-        #_2          = V[:, i]*p1 + p2
-        #Psi          = s_2/cp.power(m,2) 
-        
-        #inx = (Psi/dx).astype(int)
-        inx, m, s_2 = kernel1(V[:, i], E, p1, p2, p3, dx)
+
+# ------------------------------------------------- '++'  
+        inx, m, s_2 = kernel1(V[0::4, i], E, p1, p2, p3, dx)
         
         nu           = m * f_nu_grid[inx]
         sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
 
-        #V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
-        #logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-        #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
-        logS[:,i+1], V[:, i+1] = kernel2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+        logS[0::4,i+1], V[0::4, i+1] = kernel2(logS[0::4,i], V[0::4, i], V[0::4, i+1],
+                                                Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+        
+# ------------------------------------------------- '+-'        
+        inx, m, s_2 = kernel1(V[1::4, i], E, p1, p2, p3, dx)
+        
+        nu           = m * f_nu_grid[inx]
+        sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
 
-    #print(cp.exp(logS[:, N_T-1]))
+        logS[1::4,i+1], V[1::4, i+1] = kernel2(logS[1::4,i], V[1::4, i], V[1::4, i+1],
+                                                Z[0,:,i], -Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+
+# ------------------------------------------------- '-+'       
+        inx, m, s_2 = kernel1(V[0::4, i], E, p1, p2, p3, dx)
+        
+        nu           = m * f_nu_grid[inx]
+        sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
+
+        logS[2::4,i+1], V[2::4, i+1] = kernel2(logS[2::4,i], V[2::4, i], V[2::4, i+1],
+                                                -Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+        
+# ------------------------------------------------- '--'
+        inx, m, s_2 = kernel1(V[3::4, i], E, p1, p2, p3, dx)
+        
+        nu           = m * f_nu_grid[inx]
+        sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
+
+        logS[3::4,i+1], V[3::4, i+1] = kernel2(logS[3::4,i], V[3::4, i], V[3::4, i+1],
+                                                -Z[0,:,i], -Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+                                                
+
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
