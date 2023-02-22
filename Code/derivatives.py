@@ -9,7 +9,7 @@ if __name__ == '__main__':
 def european_call_payoff(maturity: float,
                          strike: float,
                          interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def european_call(S: np.ndarray):
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(S[:, -1] - strike, 0.)*DF
@@ -19,7 +19,7 @@ def european_call_payoff(maturity: float,
 def european_put_payoff(maturity: float,
                         strike: float,
                         interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def european_put(S: np.ndarray):
         DF = np.exp( - interest_rate * maturity)
         return np.maximum(strike - S[:, -1], 0.)*DF
@@ -29,7 +29,7 @@ def european_put_payoff(maturity: float,
 def asian_call_AM_payoff(maturity: float,
                          strike: float,
                          interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def asian_call_AM(S: np.ndarray):
         dt = maturity/np.shape(S)[1]
         I = np.sum(S, axis=1) * dt
@@ -41,7 +41,7 @@ def asian_call_AM_payoff(maturity: float,
 def asian_put_AM_payoff(maturity: float,
                         strike: float,
                         interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def asian_put_AM(S: np.ndarray):
         dt = maturity/np.shape(S)[1]
         I = np.sum(S, axis=1) * dt
@@ -53,7 +53,7 @@ def asian_put_AM_payoff(maturity: float,
 def asian_call_GM_payoff(maturity: float,
                          strike: float,
                          interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def asian_call_GM(S: np.ndarray):
         dt = maturity/np.shape(S)[1]
         I = np.exp(np.sum(np.log(S), axis=1) * dt)
@@ -65,7 +65,7 @@ def asian_call_GM_payoff(maturity: float,
 def asian_put_GM_payoff(maturity: float,
                         strike: float,
                         interest_rate: float = 0.):
-    @njit
+    @njit(parallel=True, cache=True)
     def asian_put_GM(S: np.ndarray):
         dt = maturity/np.shape(S)[1]
         I = np.exp(np.sum(np.log(S), axis=1) * dt)
