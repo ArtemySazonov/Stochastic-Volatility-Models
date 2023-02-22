@@ -216,7 +216,7 @@ def simulate_heston_euler(state:           MarketState,
 
             vmax             = max(V[4*n+2, i],0)
             sqrtvmaxdt       = sqrt(vmax*dt)
-            logS[4*n+2, i+1] = logS[4*n+2, i] + (r - 0.5 * vmax) * dt - sqrtvmaxdt * Z[0, n, i]
+            logS[4*n+2, i+1] = logS[4*n+2, i] + (r - 0.5 * vmax) * dt + sqrtvmaxdt * Z[0, n, i]
             V[4*n+2, i+1]    = V[4*n+2, i] + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*Z[0, n, i]-sqrt1_rho2*Z[1, n, i])
 
             vmax             = max(V[4*n+3, i],0)
