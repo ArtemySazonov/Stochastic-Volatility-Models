@@ -7,11 +7,10 @@ sqrt2 = 1/sqrt(2)
 
 from cupyx.scipy.special import ndtr as ndtr
 
-def Phi(x):
-    return 0.5 + 0.5 * cupy_erf(x * sqrt2)
-
 from scipy.stats import norm
 
+def set_seed(value):
+    np.random.seed(value)
 
 
 from typing import Union, Callable, Optional
@@ -80,6 +79,7 @@ def mc_price_cupy_old(payoff:                 Callable,
              MAX_ITER:               int      = 100_000,
              control_variate_payoff: Callable = None,
              control_variate_iter:   int      = 1_000,
+             mu:                     float    = None,
              verbose:                bool     = False,
              random_seed:            int      = None,
              **kwargs):
@@ -115,13 +115,14 @@ def mc_price_cupy_old(payoff:                 Callable,
 
     length_conf_interval = 1.
     n                    = 0
-    C                    = -2*norm.ppf(confidence_level*0.5)
+    C                    = -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.)
+    # print(confidence_level*0.5, -2*norm.ppf(confidence_level*0.5, loc = 0., scale = 1.))
     sigma_n              = 0.
-    batch_new            = cp.zeros(batch_size, dtype=cp.float64)
+    batch_new            = cp.zeros(batch_size, dtype=np.float64)
     current_Pt_sum       = 0.        
 
     if random_seed is not None:
-        cp.random.seed(random_seed)
+        set_seed(random_seed)
     
     #@cp.fuse
     #def kernel2(batch_new, sigma_n, n, batch_size, current_Pt_sum):
@@ -135,30 +136,36 @@ def mc_price_cupy_old(payoff:                 Callable,
 
     if control_variate_payoff is None:
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)[0])
-
-            #batch_new = batch_new[~cp.isnan(batch_new)]
+            temp  = simulate(**args)[0]
+            batch_new = payoff(temp)
 
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
-            current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=batch_size
-            length_conf_interval = C * cp.sqrt(sigma_n / n)
+            length_conf_interval = C * sqrt(sigma_n / n)
+            # print(sigma_n, length_conf_interval, n, C, sigma_n / n)
     else:
-        S = simulate(control_variate_iter)
-        c = cp.cov(payoff(S), control_variate_payoff(S))
+        if mu == None:
+            return "NaN"
+
+        S = simulate(state = state, heston_params = heston_params, T = T, N_T = N_T, n_simulations = control_variate_iter, **kwargs)[0]
+        s1 = payoff(S)
+        s2 = control_variate_payoff(S)
+        c = np.cov(s1, s2)
         theta = c[0, 1] / c[1, 1]
         while length_conf_interval > absolute_error and iter_count < MAX_ITER:
-            batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
+            temp  = simulate(**args)[0]
+            batch_new = payoff(temp) - theta * (control_variate_payoff(temp) - mu)
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
-            current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
+            sigma_n = (sigma_n*(n-1.) + np.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
+            current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
 
             n+=batch_size
-            length_conf_interval = C * cp.sqrt(sigma_n / n)
+            length_conf_interval = C * np.sqrt(sigma_n / n)
 
     if verbose:
         if random_seed is not None:
@@ -171,6 +178,16 @@ def mc_price_cupy_old(payoff:                 Callable,
         print(f"Number of simulate calls:   {iter_count}\nMAX_ITER:                   {MAX_ITER}\nNumber of paths:            {n}\nAbsolute error:             {absolute_error}\nLength of the conf intl:    {length_conf_interval}\nConfidence level:           {confidence_level}\n")
 
     return current_Pt_sum/n
+
+
+
+@cp.fuse
+def kernel_euler(s, v, z0, z1, kappa, vbar, gamma, rho, dt, r):
+    vmax = cp.maximum(v, 0)
+    sqrtvmaxdt = cp.sqrt(vmax*dt)
+    s = s + (r - 0.5 * vmax) * dt + sqrtvmaxdt * z0
+    v = v + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*z0+cp.sqrt(1-rho**2)*z1)
+    return s, v
 
 
 def simulate_heston_euler_cupy_old(state:      MarketState,
@@ -209,14 +226,6 @@ def simulate_heston_euler_cupy_old(state:      MarketState,
     logS       = cp.empty([n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
-    @cp.fuse
-    def kernel(s, v, z0, z1, kappa, vbar, gamma, rho, dt):
-        vmax = cp.maximum(v, 0)
-        sqrtvmaxdt = cp.sqrt(vmax*dt)
-        s = s + (r - 0.5 * vmax) * dt + sqrtvmaxdt * z0
-        v = v + kappa*(vbar - vmax)*dt + gamma*sqrtvmaxdt*(rho*z0+cp.sqrt(1-rho**2)*z1)
-        return s, v
-
     for i in range(0,  N_T-1):
         #vmax         = cp.maximum(V[:, i],0)
 
@@ -224,11 +233,25 @@ def simulate_heston_euler_cupy_old(state:      MarketState,
 
         #V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
 
-        logS[:, i+1], V[:, i+1] = kernel(logS[:, i], V[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
+        logS[:, i+1], V[:, i+1] = kernel_euler(logS[:, i], V[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
 
 
 
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
+
+
+@cp.fuse
+def kernel_qe_1(v, E, p1, p2, p3):
+    m            = p3 + v*E
+    s_2          = v*p1 + p2
+    Psi          = s_2/cp.power(m,2) 
+
+    return m, Psi
+
+@cp.fuse
+def kernel_qe_2(s, v, v_1, z0, K_1, K_2, K_3, K_4, rdtK0):
+    s = s + rdtK0 + K_1*v + K_2*v_1 - cp.sqrt(K_3*v+K_4*v_1) * z0
+    return s
 
 
 def simulate_heston_andersen_qe_cupy_old(state:        MarketState,
@@ -291,16 +314,6 @@ def simulate_heston_andersen_qe_cupy_old(state:        MarketState,
     p3 = vbar * (1.- E)
     rdtK0      = r*dt + K_0
 
-    @cp.fuse
-    def kernel1(v, E, p1, p2, p3):
-        m            = p3 + v*E
-        s_2          = v*p1 + p2
-        Psi          = s_2/cp.power(m,2) 
-    
-        return m, Psi
-    
-
-
 
 
     for i in range(N_T - 1):
@@ -308,7 +321,7 @@ def simulate_heston_andersen_qe_cupy_old(state:        MarketState,
         #s_2          = V[:, i]*p1 + p2
         #Psi          = s_2/cp.power(m,2) 
 
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
+        m, Psi = kernel_qe_1(V[:, i], E, p1, p2, p3)
 
 
         filt = Psi<=Psi_c
@@ -329,8 +342,9 @@ def simulate_heston_andersen_qe_cupy_old(state:        MarketState,
 
         V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
 
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
+        logS[:,i+1] = kernel_qe_2(logS[:,i], V[:,i], V[:,i+1], Z[0, :,i], K_1, K_2, K_3, K_4, rdtK0)
+        #logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
+        #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
         
         
            
@@ -354,6 +368,23 @@ def calculate_r_for_andersen_tg(x_:      float,
                 2*(1+x_)*(norm.pdf(x) + x*norm.cdf(x))*(x**2*norm.pdf(x) + norm.pdf(x) + norm.pdf(x) -x*norm.pdf(x) )
 
     return newton(foo,  x0 = 1/x_,fprime = foo_dif, fprime2 = foo_dif2, maxiter = maxiter , tol= tol )
+
+
+@cp.fuse
+def kernel_tg_1(v, E, p1, p2, p3, dx):
+    m            = p3 + v*E
+    s_2          = v*p1 + p2
+    Psi          = s_2/cp.power(m,2) 
+    
+    return (Psi/dx).astype(int) , m, s_2
+
+
+@cp.fuse
+def kernel_tg_2(s, v, v_1, z0, z1, K_1, K_2, K_3, K_4, rdtK0, nu, sigma):
+    v_1    = cp.maximum(nu + sigma*z1, 0)
+
+    s = s + rdtK0 + K_1*v + K_2*v_1 - cp.sqrt(K_3*v+K_4*v_1) * z0
+    return s, v_1
 
 
 
@@ -415,22 +446,6 @@ def simulate_heston_andersen_tg_cupy_old(state:         MarketState,
     rdtK0      = r*dt + K_0
 
     dx         = x_grid[1] - x_grid[0]
-
-    @cp.fuse
-    def kernel1(v, E, p1, p2, p3, dx):
-        m            = p3 + v*E
-        s_2          = v*p1 + p2
-        Psi          = s_2/cp.power(m,2) 
-        
-        return (Psi/dx).astype(int) , m, s_2
-
-
-    @cp.fuse
-    def kernel2(s, v, v_1, z0, z1, K_1, K_2, K_3, K_4, rdtK0, nu, sigma):
-        v_1    = cp.maximum(nu + sigma*z1, 0)
-
-        s = s + rdtK0 + K_1*v + K_2*v_1 - cp.sqrt(K_3*v+K_4*v_1) * z0
-        return s, v_1
     
     
     for i in range(N_T - 1):
@@ -439,7 +454,7 @@ def simulate_heston_andersen_tg_cupy_old(state:         MarketState,
         #Psi          = s_2/cp.power(m,2) 
         
         #inx = (Psi/dx).astype(int)
-        inx, m, s_2 = kernel1(V[:, i], E, p1, p2, p3, dx)
+        inx, m, s_2 = kernel_tg_1(V[:, i], E, p1, p2, p3, dx)
         
         nu           = m * f_nu_grid[inx]
         sigma        = cp.sqrt(s_2)*f_sigma_grid[inx]
@@ -447,7 +462,7 @@ def simulate_heston_andersen_tg_cupy_old(state:         MarketState,
         #V[:, i+1]    = cp.maximum(nu + sigma*Z[1, :,i+1], 0)
         #logS[:,i+1]  = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
         #                + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0,:,i]
-        logS[:,i+1], V[:, i+1] = kernel2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
+        logS[:,i+1], V[:, i+1] = kernel_tg_2(logS[:,i], V[:, i], V[:, i+1], Z[0,:,i], Z[1, :,i+1], K_1, K_2, K_3, K_4, rdtK0, nu, sigma)
 
     #print(cp.exp(logS[:, N_T-1]))
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]

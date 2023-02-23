@@ -245,12 +245,10 @@ def simulate_heston_euler_cupy(state:      MarketState,
         #V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
 
         logS_1[:, i+1], V_1[:, i+1] = kernel_euler(logS_1[:, i], V_1[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        logS_2[:, i+1], V_2[:, i+1] = kernel_euler(logS_2[:, i], V_2[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        logS_3[:, i+1], V_3[:, i+1] = kernel_euler(logS_3[:, i], V_3[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        logS_4[:, i+1], V_4[:, i+1] = kernel_euler(logS_4[:, i], V_4[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        #logS[1::4, i+1], V[1::4, i+1] = kernel_euler(logS[1::4, i], V[1::4, i], Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        #logS[2::4, i+1], V[2::4, i+1] = kernel_euler(logS[2::4, i], V[2::4, i], -Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
-        #logS[3::4, i+1], V[3::4, i+1] = kernel_euer(logS[3::4, i], V[3::4, i], -Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt , r)
+        logS_2[:, i+1], V_2[:, i+1] = kernel_euler(logS_2[:, i], V_2[:, i], Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
+        logS_3[:, i+1], V_3[:, i+1] = kernel_euler(logS_3[:, i], V_3[:, i], -Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
+        logS_4[:, i+1], V_4[:, i+1] = kernel_euler(logS_4[:, i], V_4[:, i], -Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt, r)
+        
 
 
     logS = cp.concatenate((logS_1, logS_2, logS_3, logS_4))
