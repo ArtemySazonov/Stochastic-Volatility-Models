@@ -68,7 +68,7 @@ def get_len_conf_interval(data:             np.ndarray,
     """
     return -2*norm.ppf(confidence_level*0.5) * sqrt(np.var(data) / len(data))
 
-def mc_price_cupy(payoff:                 Callable,
+def mc_price_cupy_old(payoff:                 Callable,
              simulate:               Callable,
              state:                  MarketState,
              heston_params:          HestonParameters,
@@ -141,10 +141,10 @@ def mc_price_cupy(payoff:                 Callable,
 
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
             current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
 
-            n+=4*batch_size
+            n+=batch_size
             length_conf_interval = C * cp.sqrt(sigma_n / n)
     else:
         S = simulate(control_variate_iter)
@@ -154,10 +154,10 @@ def mc_price_cupy(payoff:                 Callable,
             batch_new = payoff(simulate(**args)[0]) - theta * control_variate_payoff(simulate(**args)[0])
             iter_count+=1
 
-            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(4*batch_size - 1.))/(n + 4*batch_size - 1.)
+            sigma_n = (sigma_n*(n-1.) + cp.var(batch_new)*(batch_size - 1.))/(n + batch_size - 1.)
             current_Pt_sum = current_Pt_sum + cp.sum(batch_new) 
 
-            n+=4*batch_size
+            n+=batch_size
             length_conf_interval = C * cp.sqrt(sigma_n / n)
 
     if verbose:
@@ -173,7 +173,7 @@ def mc_price_cupy(payoff:                 Callable,
     return current_Pt_sum/n
 
 
-def simulate_heston_euler_cupy(state:      MarketState,
+def simulate_heston_euler_cupy_old(state:      MarketState,
                           heston_params:   HestonParameters,
                           T:               float = 1.,
                           N_T:             int   = 100,
@@ -203,10 +203,10 @@ def simulate_heston_euler_cupy(state:      MarketState,
     dt         = T/float(N_T)
     
     Z          = cp.random.standard_normal(size=(2 ,n_simulations, N_T), dtype=cp.float32)
-    V          = cp.empty([4*n_simulations, N_T], dtype=cp.float32)
+    V          = cp.empty([n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
     
-    logS       = cp.empty([4*n_simulations, N_T], dtype=cp.float32)
+    logS       = cp.empty([n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
     @cp.fuse
@@ -224,17 +224,14 @@ def simulate_heston_euler_cupy(state:      MarketState,
 
         #V[:, i+1]    = V[:, i] + kappa*(vbar - vmax)*(dt) + gamma*cp.sqrt(vmax*(dt))*(rho*Z[0, :, i]+math.sqrt(1-rho**2)*Z[1, :, i])
 
-        logS[0::4, i+1], V[0::4, i+1] = kernel(logS[0::4, i], V[0::4, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
-        logS[1::4, i+1], V[1::4, i+1] = kernel(logS[1::4, i], V[1::4, i], Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt)
-        logS[2::4, i+1], V[2::4, i+1] = kernel(logS[2::4, i], V[2::4, i], -Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
-        logS[3::4, i+1], V[3::4, i+1] = kernel(logS[3::4, i], V[3::4, i], -Z[0, :, i], -Z[1, :, i], kappa, vbar, gamma, rho, dt)
+        logS[:, i+1], V[:, i+1] = kernel(logS[:, i], V[:, i], Z[0, :, i], Z[1, :, i], kappa, vbar, gamma, rho, dt)
 
 
 
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
 
 
-def simulate_heston_andersen_qe_cupy(state:        MarketState,
+def simulate_heston_andersen_qe_cupy_old(state:        MarketState,
                                heston_params: HestonParameters,
                                T:             float = 1.,
                                N_T:           int   = 100,
@@ -278,13 +275,13 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    V          = cp.empty([n_simulations, N_T], dtype=cp.float64)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float64)
+    logS       = cp.empty([n_simulations, N_T], dtype=cp.float64)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float64)
+    Z          = cp.random.standard_normal(size=(2, n_simulations, N_T), dtype=cp.float64)
 
     #U          = cp.empty(2*n_simulations, dtype=cp.float32)   #do we need this?
     # ksi = cp.random.binomial(1, 1.0-p, size=(n_simulations, N_T))
@@ -335,54 +332,6 @@ def simulate_heston_andersen_qe_cupy(state:        MarketState,
         logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
                         + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
         
-
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
-
-
-        filt = Psi<=Psi_c
-        
-
-        cond         = cp.where(filt)
-        c            = 2 / Psi[cond]
-        b            = c - 1. + cp.sqrt(c*(c - 1.))
-        a            = m[cond]/(1.+b)
-        b            = cp.sqrt(b)
-        # Z_V          = cp.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
-
-        cond         = cp.where(~filt)
-        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
-        beta         = (1.0 - p)/m[cond]
-        U            = ndtr(Z[1,cond, i])
-
-        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
-
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
-        m, Psi = kernel1(V[:, i], E, p1, p2, p3)
-
-
-        filt = Psi<=Psi_c
-        
-
-        cond         = cp.where(filt)
-        c            = 2 / Psi[cond]
-        b            = c - 1. + cp.sqrt(c*(c - 1.))
-        a            = m[cond]/(1.+b)
-        b            = cp.sqrt(b)
-        # Z_V          = cp.random.normal(size=cond[0].shape[0])
-        V[cond, i+1] = a*(cp.power(b+Z[1, cond, i] , 2))
-
-        cond         = cp.where(~filt)
-        p            = (Psi[cond] - 1)/(Psi[cond] + 1)
-        beta         = (1.0 - p)/m[cond]
-        U            = ndtr(Z[1,cond, i])
-
-        V[cond,i+1] = cp.where(U < p, 0., cp.log((1-p)/(1-U))/beta)
-
-        logS[:,i+1] = logS[:,i] + rdtK0 + K_1*V[:,i] + K_2*V[:,i+1] \
-                        + cp.sqrt(K_3*V[:,i]+K_4*V[:,i+1]) * Z[0, :,i]
-        
         
            
     return [cp.exp(logS[:, N_T-1]), V[:, N_T-1]]
@@ -408,7 +357,7 @@ def calculate_r_for_andersen_tg(x_:      float,
 
 
 
-def simulate_heston_andersen_tg_cupy(state:         MarketState,
+def simulate_heston_andersen_tg_cupy_old(state:         MarketState,
                                 heston_params: HestonParameters,
                                 x_grid:        cp.array,
                                 f_nu_grid:     cp.array,
@@ -453,13 +402,13 @@ def simulate_heston_andersen_tg_cupy(state:         MarketState,
     K_3        = gamma_1 * dt * (1.0 - rho**2)
     K_4        = gamma_2 * dt * (1.0 - rho**2)
         
-    V          = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    V          = cp.empty([n_simulations, N_T], dtype=cp.float32)
     V[:, 0]    = v0
 
-    logS       = cp.empty([2*n_simulations, N_T], dtype=cp.float32)
+    logS       = cp.empty([n_simulations, N_T], dtype=cp.float32)
     logS[:, 0] = cp.log(s0)
 
-    Z          = cp.random.standard_normal(size=(2, 2*n_simulations, N_T), dtype=cp.float32)
+    Z          = cp.random.standard_normal(size=(2, n_simulations, N_T), dtype=cp.float32)
     p1 = (1. - E)*(gamma**2)*E/kappa
     p2 = (vbar*gamma**2)/(2.0*kappa)*((1-E)**2)
     p3 = vbar * (1.- E)
