@@ -1,0 +1,2 @@
+,scheme,heston_params#,strike,T,N_T,batch_size,absolute error,true,MC_price,time
+0,simulate_heston_andersen_qe_wa,3,140.0,5.0,125,30000,0.05,0.043362011714762616,0.04383473921475534,0.05119047164916992
