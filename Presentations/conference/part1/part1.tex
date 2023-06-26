@@ -1,0 +1,54 @@
+\subsection{Monte Carlo Simulation}
+    \begin{frame}{Monte Carlo Simulation}{Statistical Estimation}
+        \begin{lemma}
+            Let $X_1, X_2, \dots, X_n$ be a series of independent and identically distributed random variables, and $h: \mathbb{R} \to \mathbb{R}$ be a borel function. Then $h(X_1), h(X_2), \dots, h(X_n)$ is a series of independent and identically distributed random variables.
+        \end{lemma}
+        Thus, we could write an unbiased consistent estimator of $\E \left[h(X)\right]$ as follows:
+        \begin{equation}
+            \widehat{\E \left[h(X)\right]} = \frac{1}{n} \sum_{i=1}^n h(X_i).
+        \end{equation}
+    \end{frame}
+
+    \begin{frame}{Monte Carlo Simulation}{Local Truncation Error}
+        \begin{definition}
+            Monte Carlo simulation is a set of techniques that use pseudorandom number generators to solve problems that might be too complicated to be solved analytically. It is based on the central limit theorem.
+        \end{definition}
+        Asymptotic confidence interval for $\hat{\mu} = \widehat{\E\left[X\right]}$ at the confidence level $\alpha$:
+        \begin{equation}
+            \mu \in \left(\hat{\mu} - z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}, \hat{\mu} + z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}\right).
+        \end{equation}
+        That means that the estimation error is equal to $2z_{\alpha/2} \sqrt{\frac{\sigma^2}{n}}$.
+    \end{frame}
+    
+\subsection{Variance Reduction Methods}
+    \begin{frame}{Variance Reduction Methods}{Control Variates}
+        Suppose that we have another random variable $Z$ that is correlated with $Y$ and 
+        $\E\left[Z\right] = \mu$ is known. Then we could introduce the following estimator:
+        \begin{equation}
+            \hat\theta^b = \bar Y + b(\bar Z - \mu),
+        \end{equation}
+        where $b$ is a constant. Obviously, $\hat\theta^b$ is a consistent unbiased estimator of 
+        $\theta$. How do we choose $b$? We need to minimize the variance of $\hat\theta^b$. A simple 
+        unconstrained optimization problem:
+        \begin{equation*}
+            \var \hat\theta^b = \var \bar Y + b^2 \var \bar Z - 2b \cov [\bar Y, \bar Z] \to \min_b.
+        \end{equation*}
+        The solution is
+        \begin{equation}
+            b^* = \frac{\cov [Y, Z]}{\var Z}.\label{eq:control_variates:bopt}
+        \end{equation}
+    \end{frame}
+
+    \begin{frame}{Variance Reduction Methods}{Antithetic Variates}
+        Suppose that we have two correlated identically distributed samples $Y^1$ and $Y^2$: $\cov[Y_i^1, Y_j^2] = \delta_{ij}\cov[Y_i^1, Y_i^2]$.
+        Then we could introduce the following estimator:
+        \begin{equation}
+            \hat\theta_{\operatorname{AV}} = \frac{\bar Y^1 + \bar Y^2}{2}.
+        \end{equation}
+        Again, we can see that this estimator is unbiased and consistent. The variance of this estimator is
+        \begin{equation*}
+            \var \hat\theta_{\operatorname{AV}} = \frac{1}{4} \var[\bar Y^1] + \frac{1}{4} \var[\bar Y^2] + \frac{1}{2} \cov[\bar Y^1, \bar Y^2] .
+        \end{equation*}
+        Thus, the variance reduction effect takes place when $\rho < 0$. If $Y^1 = g(U)$, then its antithetic 
+        variate is $Y^2 = g(1-U)$, where $U \sim U[0, 1]$. 
+    \end{frame}

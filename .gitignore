@@ -12,10 +12,15 @@
 *.synctex.gz
 *.toc
 *.ini
-.DS_Store
 *.lot
 *.lof
 *.pyc
+*.pygtex
+*.pyo
+*.pygstyle
+
 __pycache__
 .ipynb_checkpoints
+.vscode
 
+.DS_Store

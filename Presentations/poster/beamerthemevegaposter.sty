@@ -1,0 +1,342 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Developers:
+%   - Artemy Sazonov (July 2022 - now)
+%
+%
+% Options: 
+%   - russian: pass if document is in Russian to change the language of the pre-defined text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ProvidesPackage{beamerthemevegaposter}
+
+\newif\ifbeamer@russian
+\beamer@russianfalse
+\DeclareOptionBeamer{russian}{\beamer@russiantrue}
+
+\ProcessOptionsBeamer
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Language-dependent commands:
+% Default:   English
+% Available: English, Russian
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\textSRG}           {Student Research Group}
+\newcommand{\textSupervisors}   {Supervisors}
+
+
+\ifx\ifbeamer@russian
+    \renewcommand{\textSRG}           {Студенческая научная группа}
+    \renewcommand{\textSupervisors}   {Руководители}
+
+    \RequirePackage[english,russian]{babel}
+    \renewcommand{\epsilon}{\varepsilon}
+    \renewcommand{\phi}{\varphi}
+\fi
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Packages and Options
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{cmap}
+\RequirePackage[T1,T2A]{fontenc}
+\RequirePackage[utf8]{inputenc}
+
+\RequirePackage{tikz}
+\RequirePackage{geometry}
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+
+\RequirePackage{booktabs}
+\RequirePackage{bbm}
+
+\RequirePackage{amsmath,amssymb}
+\RequirePackage{mathtext}
+\RequirePackage{amsthm}
+
+\RequirePackage[backend=biber,style=alphabetic,sorting=ynt]{biblatex}
+\RequirePackage{csquotes}
+
+\usetikzlibrary{arrows,backgrounds}
+\RequirePackage{lmodern}
+\usepackage{exscale}
+\RequirePackage{textcomp}
+\RequirePackage{calc}
+\usefonttheme{professionalfonts}
+\newcommand{\makeruleinbox}{{\usebeamercolor[bg]{block alerted title}\centering\hspace*{-0.7cm}\rule{\inboxrule}{0.5cm}}}
+\usepackage{ragged2e}
+
+% Spacing before and inside list environments to add white space before lists and between items inside lists
+\makeatletter
+\def\@listi{\leftmargin\leftmarginii
+\topsep 1ex % Spacing before lists
+\parsep 0\p@ \@plus\p@
+\itemsep 6pt} % Spacing between items
+\makeatother
+
+\usecaptiontemplate{\small\structure{\insertcaptionname~\insertcaptionnumber:\ \ }\insertcaption} % A fix for figure numbering
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Colors, Fonts, and General Settings
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{paratype}
+\usefonttheme[onlymath]{serif}
+
+\mode<presentation>
+
+\newlength{\inboxwd}
+\newlength{\iinboxwd}
+\newlength{\inboxrule}
+
+\definecolor{color1bg}{HTML}{5F468D}
+\definecolor{color2bg}{HTML}{BC7297}
+\definecolor{color2lightened}{HTML}{F2959D}
+\definecolor{white}{HTML}{FFFFFF}
+\definecolor{color3bg}{HTML}{F5B69D}
+\definecolor{color4bg}{HTML}{F0ECF5}
+\definecolor{colormainblue}{HTML}{2C2F88}
+
+\newcommand{\headlinecolor}{\normalcolor}
+
+\hypersetup
+{
+	colorlinks=true,
+	linkcolor=[HTML]{BC7297},
+	filecolor=magenta,      
+	urlcolor=[HTML]{BC7297},
+	citecolor=black
+}
+
+\setbeamercolor{palette primary}{bg=white,fg=colormainblue}
+\setbeamercolor{palette secondary}{bg=white,fg=color3bg}
+\setbeamercolor{palette tertiary}{bg=white,fg=colormainblue}
+\setbeamercolor{palette quaternary}{bg=white,fg=colormainblue}
+\setbeamercolor{structure}{fg=colormainblue}
+\setbeamercolor{section in toc}{fg=colormainblue}
+
+\setbeamercolor{subsection in head/foot}{bg=white,fg=colormainblue}
+
+\setbeamercolor{footnote}{fg=color3bg}
+\setbeamercolor{footnote mark}{fg=color3bg}
+
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+
+\setbeamercolor{footline}{fg=color3bg}
+
+\setbeamercolor{block title}{bg=white}
+\setbeamercolor{block body}{bg=white}
+
+\setbeamercolor{item}{fg=black}
+
+\setbeamercolor{block alerted title}{fg=white,bg=color1bg}
+\setbeamercolor{block alerted body}{fg=black,bg=color1bg!10}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Beamer Theme
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newlength{\sepwid}
+\newlength{\onecolwid}
+\newlength{\twocolwid}
+\newlength{\threecolwid}
+\setlength{\paperwidth}{46.8in} % A0 width: 46.8in
+\setlength{\paperheight}{33.1in} % A0 height: 33.1in
+\setlength{\sepwid}{0.025\paperwidth} % Separation width (white space) between columns
+\setlength{\onecolwid}{0.218\paperwidth} % Width of one column
+\setlength{\twocolwid}{0.4625\paperwidth} % Width of two columns
+\setlength{\threecolwid}{0.706\paperwidth} % Width of three columns
+\setlength{\topmargin}{0in} 
+
+\beamertemplatenavigationsymbolsempty
+\setbeamersize{text margin left=1cm,text margin right=2cm}
+
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+\setbeamertemplate{theorems}[numbered]
+\setbeamertemplate{bibliography item}[text]
+
+
+\makeatletter
+\newcommand{\supervisor}{\@dblarg\beamer@supervisor}
+\long\def\beamer@supervisor[#1]#2{%
+  \def\insertsupervisor{#2}%
+  \def\insertshortsupervisor{#1}%
+  }
+  \newcommand{\researchgroup}{\@dblarg\beamer@researchgroup}
+  \long\def\beamer@researchgroup[#1]#2{%
+    \def\insertresearchgroup{#2}%
+    \def\insertshortresearchgroup{#1}%
+    }
+\makeatother
+
+\newcommand{\defindent}{0cm}
+\setbeamertemplate{headline}{
+ \leavevmode
+  \begin{columns}
+   \begin{column}{\maxlogowidth}
+   		\vskip1cm
+        \ifdefined\insertlogoleft
+        \vspace*{\fill}
+        \hspace{\sepwid}
+        \raggedright
+        \insertlogoleft
+        \vspace*{\fill}
+        \else\fi
+   \end{column}
+   \begin{column}{\dimexpr\paperwidth-\maxlogowidth-\maxlogowidth-\sepwid - \sepwid}
+    \vskip2.5cm
+    \centering
+    \usebeamercolor{title in headline}{\color{colormainblue}\Huge{\textbf{\inserttitle}}} 
+
+    \vspace*{1.5cm}
+    
+    \usebeamercolor{author in headline}{\color{fg}\Large{\insertauthor}} 
+
+    \vspace*{1cm}
+    
+    \usebeamercolor{institute in headline}{\color{fg}\large{\textSRG \ <<\insertresearchgroup>>}} 
+    
+    \vspace*{0.5cm}
+
+    \usebeamercolor{author in headline}{\color{fg}\large{\textSupervisors: \insertsupervisor}} 
+
+    \vspace*{1cm}
+   \end{column}
+   \begin{column}{\maxlogowidth}
+        \vskip1cm
+        \ifdefined\insertlogoright
+        \vspace*{\fill}
+        \raggedleft
+        \insertlogoright
+        \hspace{\sepwid}
+        \vspace*{\fill}
+        \else\fi
+   \end{column}
+  \end{columns}
+% \vspace{0.05in}
+ \hspace{0.5in}\begin{beamercolorbox}[wd=47in,colsep=0.15cm]{cboxb}\end{beamercolorbox}
+% \vspace{0.05in}
+}
+
+% Logo
+\newlength{\logoleftwidth}
+\setlength{\logoleftwidth}{0cm}
+\newlength{\logorightwidth}
+\setlength{\logorightwidth}{0cm}
+\newlength{\maxlogowidth}  % space on both sides set to maxlogowidth to keep title centered
+\setlength{\maxlogowidth}{0cm}
+
+\newcommand{\logoright}[1]{
+  \newcommand{\insertlogoright}{#1}
+  \settowidth{\logorightwidth}{\insertlogoright}
+  \addtolength{\logorightwidth}{10ex}
+  \setlength{\maxlogowidth}{\maxof{\logoleftwidth}{\logorightwidth}}
+}
+\newcommand{\logoleft}[1]{
+  \newcommand{\insertlogoleft}{#1}
+  \settowidth{\logoleftwidth}{\insertlogoleft}
+  \addtolength{\logoleftwidth}{10ex}
+  \setlength{\maxlogowidth}{\maxof{\logoleftwidth}{\logorightwidth}}
+}
+
+
+\setbeamertemplate{block begin}
+{
+  \par\vskip\medskipamount
+  \begin{beamercolorbox}[colsep*=0ex,dp={2ex},center]{block title}
+    \vskip-0.25cm
+    \usebeamerfont{block title}\large\insertblocktitle
+    \begin{flushleft}
+    \vskip-1cm
+    \begin{tikzpicture}[remember picture,overlay]
+      \shade [inner color=gray,outer color=white]
+      (0,0) rectangle (\textwidth,0.3cm);
+    \end{tikzpicture}
+    \end{flushleft}
+  \end{beamercolorbox}
+  {\parskip0pt\par}
+  \ifbeamercolorempty[bg]{block title}
+  {}
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}
+  \usebeamerfont{block body}
+  \vskip-0.5cm
+  \begin{beamercolorbox}[colsep*=0ex,vmode]{block body}
+  \justifying
+}
+
+\setbeamertemplate{block end}
+{
+  \end{beamercolorbox}
+  \vskip\smallskipamount
+}
+
+\setbeamertemplate{block alerted begin}
+{
+  \par\vskip\medskipamount
+  \begin{beamercolorbox}[sep=0ex,rounded=true,center,dp={2ex}]{block alerted title}
+    \vskip0.01cm
+    \usebeamerfont{block title}\large\insertblocktitle
+  \end{beamercolorbox}
+  {\parskip0pt\par}
+  \usebeamerfont{block body}
+  \vskip-0.8cm
+  \begin{beamercolorbox}[sep=0.5cm, rounded=true,center]{block alerted title}
+  \setlength{\inboxwd}{\linewidth}
+  \addtolength{\inboxwd}{-1cm}
+  \begin{beamercolorbox}[rounded=true,wd={\inboxwd},center]{block alerted body}
+  \setlength{\iinboxwd}{\inboxwd}
+  \setlength{\inboxrule}{\inboxwd}
+  \addtolength{\iinboxwd}{-0.5cm}
+  \addtolength{\inboxrule}{0.5cm}
+  \begin{center}
+  \begin{minipage}{\iinboxwd}
+  \justifying
+}
+
+\setbeamertemplate{block alerted end}
+{
+  \end{minipage}
+  \end{center}
+  \end{beamercolorbox}
+  \end{beamercolorbox}
+  \vskip\smallskipamount
+}
+
+\newtheorem{proposition}{\textProposition}
+\newtheorem*{nb}{NB}
+
+\logoleft{\includegraphics[height=10cm]{figures/vega_logo.png}}
+\logoright{\includegraphics[height=10cm]{figures/QR.png}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Maths commands
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mode<all>
+
+\DeclareMathOperator*{\sgn}{sgn}
+\DeclareMathOperator*{\var}{var}   
+\DeclareMathOperator*{\cov}{cov}
+\DeclareMathOperator*{\law}{Law}
+
+\newcommand{\1}{\mathbbm{1}} 
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+
+\newcommand{\independent}{\perp\!\!\!\!\perp}

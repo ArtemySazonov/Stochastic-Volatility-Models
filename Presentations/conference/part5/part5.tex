@@ -1,0 +1,87 @@
+\subsection{Control Variates}
+    \begin{frame}{Control Variates}{Params \#3: $\kappa = 0.5$, $\gamma = 1$, $\rho = -0.9$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/surf_3.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Control Variates}{Params \#3: $\kappa = 0.5$, $\gamma = 1$, $\rho = -0.9$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/pot_3.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Control Variates}{Params \#4: $\kappa = 0.3$, $\gamma = 0.9$, $\rho = -0.5$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/surf_4.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Control Variates}{Params \#4: $\kappa = 0.3$, $\gamma = 0.9$, $\rho = -0.5$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/pot_4.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Control Variates}{Params \#5: $\kappa = 1$, $\gamma = 1$, $\rho = -0.3$, $\bar v = 0.04$, $v_0 = 0.09$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/surf_5.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Control Variates}{Params \#5: $\kappa = 1$, $\gamma = 1$, $\rho = -0.3$, $\bar v = 0.04$, $v_0 = 0.09$, \texttt{absolute\_error = 5e-2}}
+        \begin{figure}
+            \includegraphics[width=\textwidth]{part5/pictures/pot_5.pdf}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Antithetic Variates}{Params \#3: $\kappa = 0.5$, $\gamma = 1$, $\rho = -0.9$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{table}
+            \begin{tabular}{lrrrrr}
+                \toprule
+                strike | T &     0.100 &     1.325 &     2.550 &     3.775 &     5.000 \\
+                \midrule
+                60.0   &  2.013505 &  2.207756 &  2.155487 &  2.208512 &  2.248140 \\
+                80.0   &  1.849364 &  2.335388 &  2.062118 &  2.176501 &  2.133676 \\
+                100.0  &  1.061477 &  1.625179 &  1.721840 &  1.900734 &  2.316427 \\
+                120.0  &  0.732203 &  0.713929 &  0.743541 &  1.142146 &  2.173608 \\
+                140.0  &  0.758740 &  0.713107 &  0.738851 &  0.727490 &  0.780455 \\
+                \bottomrule
+            \end{tabular}   
+            \caption{Euler AV Estimator Speed-Up. N\_T = 50.}
+        \end{table}         
+    \end{frame}
+
+    \begin{frame}{Antithetic Variates}{Params \#3: $\kappa = 0.5$, $\gamma = 1$, $\rho = -0.9$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{table}
+            \begin{tabular}{lrrrrr}
+                \toprule
+                strike | T &     0.100 &     1.325 &     2.550 &     3.775 &     5.000 \\
+                \midrule
+                60.0   &  1.949344 &  1.756579 &  1.726879 &  1.688654 &  1.626986 \\
+                80.0   &  1.704026 &  1.515961 &  1.673850 &  1.664354 &  1.678994 \\
+                100.0  &  0.669384 &  1.123111 &  1.438825 &  1.512500 &  1.242045 \\
+                120.0  &  0.692517 &  0.551672 &  0.617581 &  0.689563 &  0.864373 \\
+                140.0  &  0.700559 &  0.587885 &  0.592445 &  0.525306 &  0.544784 \\
+                \bottomrule
+                \end{tabular}
+            \caption{QE AV Estimator Speed-Up. N\_T = 50.}
+        \end{table}         
+    \end{frame}
+
+    \begin{frame}{Antithetic Variates}{Params \#3: $\kappa = 0.5$, $\gamma = 1$, $\rho = -0.9$, $\bar v = 0.04$, $v_0 = 0.04$, \texttt{absolute\_error = 5e-2}}
+        \begin{table}
+            \begin{tabular}{lrrrrr}
+                \toprule
+                strike | T &     0.100 &     1.325 &     2.550 &     3.775 &     5.000 \\
+                \midrule
+                60.0   &  2.059236 &  2.250601 &  2.228231 &  2.505417 &  2.206968 \\
+                80.0   &  1.838265 &  1.868023 &  1.998318 &  1.984901 &  2.155268 \\
+                100.0  &  0.672273 &  1.201758 &  1.845470 &  1.818466 &  1.914416 \\
+                120.0  &  0.741082 &  0.758342 &  0.720228 &  0.826217 &  1.090340 \\
+                140.0  &  0.724028 &  0.707492 &  0.717789 &  0.730815 &  0.730584 \\
+                \bottomrule
+                \end{tabular}
+            \caption{TG AV Estimator Speed-Up. N\_T = 50.}
+        \end{table}         
+    \end{frame}

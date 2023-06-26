@@ -1,0 +1,62 @@
+\subsection{Designing the Module}
+            \begin{frame}{Designing the Module}{General structure -- Package}
+                The package consists of three files:
+                \begin{enumerate}
+                    \item \texttt{hestonmc.py}
+                    \item \texttt{hestonmc\_cuda.py}\footnote{QE was not optimized due to the CUDA limitations}
+                    \item \texttt{derivatives.py}
+                \end{enumerate}
+            \end{frame}
+            \begin{frame}{Designing the Module}{General structure -- \texttt{hestonmc.py}}
+                The file consists of several functions and entities:
+                \begin{enumerate}
+                    \item Main function: \texttt{mc\_price};
+                    \item Simulators: \begin{itemize}
+                        \item \texttt{simulate\_heston\_euler},
+                        \item \texttt{simulate\_heston\_andersen\_qe},
+                        \item \texttt{simulate\_heston\_andersen\_tg};
+                    \end{itemize}
+                    \item Instrumental entities and functions.
+                \end{enumerate}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{Designing the Module}{\texttt{mc\_price}}
+                \begin{pythoncode}
+    def mc_price(payoff:                 Union[Callable, np.array],
+                 simulate:               Callable,
+                 state:                  MarketState,
+                 heston_params:          HestonParameters,
+                 T:                      float    = 1.,
+                 N_T:                    int      = 100,
+                 absolute_error:         float    = 0.01,
+                 confidence_level:       float    = 0.05,
+                 batch_size:             int      = 10_000,
+                 MAX_ITER:               int      = 100_000,
+                 control_variate_payoff: Callable = None,
+                 control_variate_iter:   int      = 1_000,
+                 mu:                     float    = None,
+                 verbose:                bool     = False,
+                 random_seed:            int      = None,
+                 **kwargs) -> Union[float, np.array]
+                \end{pythoncode}
+            \end{frame}
+
+            \begin{frame}[containsverbatim]{Designing the Module}{\texttt{simulate}}
+                \begin{pythoncode}
+    @jit(nopython=True, parallel=True, cache=True, nogil=True)
+    def simulate_heston(state:           MarketState,
+                        heston_params:   HestonParameters,
+                        T:               float = 1.,
+                        N_T:             int   = 100,
+                        n_simulations:   int   = 10_000,
+                        **kwargs) -> np.ndarray
+                \end{pythoncode}
+                In \texttt{mc\_price}:
+                \begin{pythoncode}
+    while length_conf_interval > absolute_error and iter_count < MAX_ITER:
+        batch_new = payoff(simulate(**args)[0])
+        sigma_n = recompute_variance(sigma_n, batch_new)
+        current_Pt_sum = current_Pt_sum + np.sum(batch_new) 
+        length_conf_interval = C * sqrt(sigma_n / n)
+                \end{pythoncode}
+            \end{frame}

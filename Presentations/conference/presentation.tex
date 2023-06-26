@@ -1,0 +1,51 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{vega}
+
+\addbibresource{assets/pricing_lib.bib}
+
+\usepackage{minted}
+\newminted{python}{linenos=true,fontsize=\footnotesize}
+
+\DeclareMathOperator*{\plim}{\ensuremath{\operatorname{\P-lim}}}
+
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cN}{\mathcal{N}}
+
+\subtitle{Student Research Group 'Stochastic Volatility Models', Project 'Heston--2'}
+\title{Monte-Carlo Pricing under the Heston Model}
+\author{Artemy Sazonov, Danil Legenky, Kirill Korban}
+\institute{Lomonosov Moscow State Univesity, Faculty of Mechanics and Mathematics}
+\date{February 25, 2023}
+
+\begin{document}
+    \maketitle
+
+    \begin{frame}{Heston Model Definition}
+        Assume that the spot asset at time $t$ follows the diffusion
+        \begin{align}
+            dS(t) & = \mu S(t)dt + \sqrt{v(t)} S(t) dZ_1(t), \label{Heston:price}\\
+            dv(t) & = \kappa\left(\bar v -  v(t)\right) dt + \gamma\sqrt{v(t)} dZ_2(t), \label{Heston:variance}
+        \end{align}
+        where $Z_1$, $Z_2$ are the correlated Wiener processes with $dZ_1dZ_2 = \rho dt$.
+    \end{frame}
+
+    \section{Introduction to Monte-Carlo Methods}
+        \input{part1/part1.tex}
+
+    \section{Discretization Methods}
+        \input{part2/part2.tex}
+
+    \section{Practical Questions}
+        \input{part3/part3.tex}
+
+    \section{Accuracy-Performance Trade-Off Analysis}
+        \input{part4/part4.tex}
+
+    \section{Variance Reduction Methods Efficiency}
+        \input{part5/part5.tex}
+
+    \section{Problems, Issues, and Plans}
+        \input{part6/part6.tex}
+\end{document}

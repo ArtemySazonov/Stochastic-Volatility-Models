@@ -1,0 +1,79 @@
+\begin{frame}{Discretization Schemes for SDEs}{Strong and weak convergence as a global truncation error analogue}
+    \begin{definition}
+        Let $\hat X^n(t)$ be a mesh approximation of an SDE solution $X(t)$ (we assume that there exists a unique strong solution). 
+        Then a scheme is said to have a strong convergence of order $p$ if 
+        \begin{equation}
+            \E\left[\left|\hat X^n(T) - X(T)\right|\right] \leq Ch^p, \quad n \to \infty.
+        \end{equation}
+        A scheme is said to have a weak convergence of order $p$ if for any polynomial $f: \R \to \R$ we have
+        \begin{equation}
+            \left|\E\left[f(\hat X^n(T))\right] - \E\left[f(X(T))\right]\right| \leq Ch^p, \quad n \to \infty.
+        \end{equation}
+    \end{definition}
+\end{frame}
+
+\begin{frame}{Euler Scheme for the Heston Model}{Modified Euler-Maruyama Discretization Scheme}
+    Suppose we have the Heston model \eqref{Heston:price} -- \eqref{Heston:variance}. Then it could be numerically solved by the following finite difference scheme (for the log-prices $X(t)$):
+    \begin{align}
+        X_{n+1} & = X_n + (\mu - 0.5 v_n^+)h_n + \sqrt{v_n^+} \sqrt{h_n} Z_{1,n}, \label{Euler:Heston:price:posmod}\\
+        v_{n+1} & = v_n + \kappa\left(\bar v - v_n^+\right) h_n + \gamma \sqrt{v_n^+} \sqrt{h_n} Z_{2,n}, \label{Euler:Heston:variance:posmod}
+    \end{align}
+    and then we take the exponential of the log-prices:
+    \begin{equation}
+        S_{n} = S_0 e^{X_{n}}.
+    \end{equation}
+    
+    However, the scheme is not accurate, since we ignore the $dZ_idZ_j$ terms in the It\^o-Taylor series approximation.
+\end{frame}
+
+\subsection{Quadratic-Exponential Discretization Scheme}
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Notation}\label{frame:Andersen:denotemeanstd}
+        We denote 
+        \begin{align}
+            m    &= \E\left[\left.\hat{V}(t+\Delta)\right| \hat{V}(t)\right], \\
+            s^2  &= \E\left[\left.\left(\hat{V}(t+\Delta) - m\right)^2\right| \hat{V}(t)\right], \\
+            \psi &= \frac{s^2}{m^2}.
+        \end{align}
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Idea}
+        Andersen proposes an approximation based on moment-matching techniques. His goal is then to speed up the first step of Broadie and Kaya's method.
+        He observes that the conditional distribution of $\hat{V}(t+\Delta)$ given $\hat{V}(t)$ visually difers when $\hat{V}(t)$ is small or large (in the variation coefficient sense).
+        The scheme is constructed from the following two subschemes:
+        \begin{enumerate}
+            \item Quadratic sampling scheme ($\psi \leq 2$);
+            \item Exponential sampling scheme ($\psi \geq 1$).
+        \end{enumerate}
+        Fortunately, these two intervals cover the whole positive real line. Furthermore, these two schemes could be applied at the same time when $\psi\in[1, 2]$. This implicates that there exist some critical value $\psi_{\text{crit}}\in[1, 2]$, which could be an indicator of which scheme is more applicable at the given value of $\psi$. Let us show you this.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Quadratic case}
+        For large enough $\hat{V}(t)$ we can approximate the distribution of $\hat{V}(t+\Delta)$ by the scaled non-central chi-squared distribution with $1$ degree of freedom:
+        \begin{align}
+            \law\left(\left.\hat{V}(t+\Delta) \right| \hat V(t)\right) =  a(\Delta, \hat{V}(t), VP) \chi'^2_1(b(\Delta, \hat{V}(t), VP)),
+        \end{align}
+        where $VP$ is the vector of parameters of the CIR variance.
+        However, if $\hat{V}(t)$ is close to zero, then we have a problem in finding such $a = a(\Delta, \hat{V}(t), VP)$ and $b = b(\Delta, \hat{V}(t), VP)$ such that the moments of the desired conditional distribution could be properly matched.
+    \end{frame}
+
+    \begin{frame}{Quadratic-Exponential Discretization Scheme}{Exponential case}
+        Therefore, we approximate the desired distribution with the following method. Let $\xi$ and $\eta$ be independent random variables and  $\xi \sim Be(1-p)$, $\eta \sim Exp(\beta)$ for some $p \in (0, 1)$ and $\beta > 0$. Then we have (given $\hat{V}(t)$)
+        \begin{equation}
+            \hat{V}(t+\Delta) = \xi\cdot\eta.
+        \end{equation}
+        Sampling $\xi$ and $\eta$: Smirnov's transform. Or we can use the Smirnov transform with the cdf of the desired distribution.
+    \end{frame}
+
+\subsection{Truncated Gaussian Discretization Scheme}
+    \begin{frame}{Truncated Gaussian Discretization Scheme}{Idea}
+        \begin{block}{Andersen:}
+            \emph{In this scheme the idea is to sample from a moment-matched Gaussian density where all probability
+            mass below zero is inserted into a delta-function at the origin.}
+        \end{block} 
+        Same, but in the formular form:
+        \begin{equation}
+            \left(\left.\hat{V}(t+\Delta)\right| V(t)\right) = \left(\mu + \sigma Z\right)^+,
+        \end{equation}
+        where $Z$ is a standard normal random variable and $\mu$ and $\sigma$ are the 'mean' and the 'standard deviation' of the desired distribution.
+        We find $\mu$ and $\sigma$ from the same old moment-matching techniques (see Slide \ref{frame:Andersen:denotemeanstd}).
+    \end{frame}
